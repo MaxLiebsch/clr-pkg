@@ -41,7 +41,7 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
 
   const productCount = await getProductCount(page, productList);
   if (productCount && onlyCrawlCategories) category['cnt_products'] = productCount;
-
+  if(!category && onlyCrawlCategories && process.env.DEBUG) console.log('failed path', path)
   if (subCategLnks && cntCategs) {
     if (onlyCrawlCategories) {
       category['cnt_category'] = cntCategs;

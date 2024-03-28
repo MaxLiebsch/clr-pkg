@@ -1,5 +1,4 @@
 import { Browser, Page } from 'puppeteer';
-import { getPage } from './extract';
 import { ProxyAuth } from '../types/proxyAuth';
 import { mainBrowser } from './browsers';
 import { ShopObject } from '../types';
@@ -9,6 +8,7 @@ import { checkForBlockingSignals } from '../checkPageHealth';
 import { Query } from '../types/query';
 import { closePage } from './closePage';
 import { shuffle } from 'underscore';
+import { getPage } from './getPage';
 
 export interface QueryRequest {
   prio: number;

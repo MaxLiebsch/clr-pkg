@@ -1,5 +1,4 @@
 import { Browser, Page } from 'puppeteer';
-import { getPage } from './extract';
 import { ProxyAuth } from '../types/proxyAuth';
 import { mainBrowser } from './browsers';
 import { Limit, ShopObject } from '../types';
@@ -10,6 +9,7 @@ import { closePage } from './closePage';
 import { shuffle } from 'underscore';
 import { join } from 'path';
 import { slug } from '..';
+import { getPage } from './getPage';
 
 export interface CrawlerRequest {
   prio: number;
@@ -185,52 +185,52 @@ export class CrawlerQueue {
     const startTime = Date.now();
 
     if (reason === 'rate-limit' || reason === 'blocked') {
-      const now = Date.now();
-      if ((now - this.lastBlock) / 1000 < 30000) {
-        console.log('now - this.lastBlock:', now - this.lastBlock);
-        randomTimeoutmin = randomTimeoutmin * 1.05;
-        randomTimeoutmax = randomTimeoutmax * 1.01;
-      }
-      if (randomTimeoutmin >= randomTimeoutmax) {
-        randomTimeoutmax = randomTimeoutmax + randomTimeoutmin;
-      }
-      const interval = setInterval(() => {
-        console.log(
-          'waiting...',
-          Math.floor((Date.now() - startTime) / 1000),
-          ' Min Timeout: ',
-          randomTimeoutmin,
-          ' Max Timeout: ',
-          randomTimeoutmax,
-        );
-      }, 10000);
+      // const now = Date.now();
+      // if ((now - this.lastBlock) / 1000 < 30000) {
+      //   console.log('now - this.lastBlock:', now - this.lastBlock);
+      //   randomTimeoutmin = randomTimeoutmin * 1.05;
+      //   randomTimeoutmax = randomTimeoutmax * 1.01;
+      // }
+      // if (randomTimeoutmin >= randomTimeoutmax) {
+      //   randomTimeoutmax = randomTimeoutmax + randomTimeoutmin;
+      // }
+      // const interval = setInterval(() => {
+      //   console.log(
+      //     'waiting...',
+      //     Math.floor((Date.now() - startTime) / 1000),
+      //     ' Min Timeout: ',
+      //     randomTimeoutmin,
+      //     ' Max Timeout: ',
+      //     randomTimeoutmax,
+      //   );
+      // }, 10000);
 
-      if (this.blocks === 1) {
-        setTimeout(() => {
-          this.repair().then(() => {
-            this.blocks = 0;
-            randomTimeoutmin = randomTimeoutDefaultmin;
-            randomTimeoutmax = randomTimeoutDefaultmax;
-            this.running = 0;
-            this.resumeQueue();
-            clearInterval(interval);
-          });
-        }, 5000);
-      } else {
-        setTimeout(() => {
-          if (!this.browser?.connected) {
-            this.connect().then(() => {
-              this.running = 0;
-              this.resumeQueue();
-              clearInterval(interval);
-            });
-          } else {
-            this.running = 0;
-            this.resumeQueue();
-            clearInterval(interval);
-          }
-        }, timeout);
-      }
+      // if (this.blocks === 1) {
+      setTimeout(() => {
+        this.repair().then(() => {
+          this.blocks = 0;
+          randomTimeoutmin = randomTimeoutDefaultmin;
+          randomTimeoutmax = randomTimeoutDefaultmax;
+          this.running = 0;
+          this.resumeQueue();
+          // clearInterval(interval);
+        });
+      }, 5000);
+      // } else {
+      //   setTimeout(() => {
+      //     if (!this.browser?.connected) {
+      //       this.connect().then(() => {
+      //         this.running = 0;
+      //         this.resumeQueue();
+      //         clearInterval(interval);
+      //       });
+      //     } else {
+      //       this.running = 0;
+      //       this.resumeQueue();
+      //       clearInterval(interval);
+      //     }
+      //   }, timeout);
+      // }
       this.blocks += 1;
       this.lastBlock = Date.now();
     }
