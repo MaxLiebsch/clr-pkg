@@ -1,1 +1,1 @@
-# DoctorBoxPreisvergleichPackage
+# DipMaxTech Arbitrage Package
