@@ -1,0 +1,448 @@
+{
+  "wreath": {
+    "unit": ["unit", "einheit", "einheiten"],
+    "piece": ["pce","st.","Stk","stück","stü","Stück", "pieces", "pieces", "Stücke", "St.", "St","pie" ],
+    "part": ["parts", "part","teil", "teile"],
+    "package":["Packungen", "package", "Packung","Pack"],
+    "portion": ["Portion", "Port.", "port"],
+    "size": ["Gr.", "Größe", "size"]
+  },
+  "temperature": {
+    "celsius": [
+      "C",
+      "c",
+      "celsius",
+      "°c",
+      "degc",
+      "deg c",
+      "°C",
+      "degC",
+      "deg C"
+    ],
+    "kelvin": [
+      "K",
+      "°k",
+      "k",
+      "kelvin",
+      "degk",
+      "deg k",
+      "°K",
+      "degK",
+      "deg K"
+    ],
+    "fahrenheit": [
+      "F",
+      "f",
+      "fahrenheit",
+      "°f",
+      "degf",
+      "deg f",
+      "°F",
+      "degF",
+      "deg F"
+    ]
+  },
+  "speed": {
+    "meterpersecond": ["m/s", "meter/s"],
+    "kilometerperhour": ["km/h", "kilometer/h"],
+    "meterperhour": ["m/h", "meter/h"],
+    "knot": ["knot"],
+    "feetpersecond": ["ft/s"]
+  },
+  "digital": {
+    "byte": ["B", "byte"],
+    "kilobyte": ["KB", "kb", "kilobyte"],
+    "megabyte": ["MB", "mb", "megabyte"],
+    "gigabyte": ["GB", "gb", "gigabyte"],
+    "terabyte": ["TB", "tb", "terabyte"],
+    "bit": ["b"],
+    "kilobit": ["Kb", "kbit", "kilobit"],
+    "megabit": ["Mb", "mbit", "megabit"],
+    "gigabit": ["Gb", "gbit", "gigabit"],
+    "terabit": ["Tb", "tbit", "terabit"]
+  },
+  "data-rate-bit": {
+    "bitpersecond": ["bit/s", "bits/s"],
+    "kilobitpersecond": ["kbit/s", "kilobits/s", "kilobits per second"],
+    "megabitpersecond": ["mbit/s", "megabits/s", "megabits per second"],
+    "gigabitpersecond": ["gbit/s", "gigabits/s", "gigabits per second"],
+    "terabitpersecond": ["tbit/s", "terrabits/s"]
+  },
+  "data-rate-byte": {
+    "bytepersecond": ["b/s", "byte/s", "bytes/s", "bytes per second"],
+    "kilobytepersecond": [
+      "kb/s",
+      "kbyte/s",
+      "kbytes/s",
+      "kilobytes per second"
+    ],
+    "megabytepersecond": [
+      "mb/s",
+      "mbyte/s",
+      "megabytes/s",
+      "megabytes per second"
+    ],
+    "gigabytepersecond": [
+      "gb/s",
+      "gbyte/s",
+      "gigabytes/s",
+      " gigabytes per second"
+    ],
+    "terabytepersecond": ["tb/s", "tbyte/s", "terrabytes/s"]
+  },
+  "time": {
+    "millisecond": [
+      "ms",
+      "milliseconds",
+      "millisecond",
+      "msec",
+      "msecs",
+      "millisecs",
+      "millisec"
+    ],
+    "mikrosecond": ["mu", "mikrosecond"],
+    "second": ["s", "seconds", "second", "sec", "secs", "Sek.", "Sek"],
+    "minute": ["min", "minutes", "minute", "mins", "Min."],
+    "hour": ["h", "hours", "hour", "hr", "hrs", "Stunden", "Std", "Std."],
+    "day": ["d", "days", "day", "Tage", "Tag"],
+    "week": ["week", "weeks", "Woche", "Wochen"],
+    "month": ["month", "months", "Monate", "Monat"],
+    "years": ["year", "years", "y", "yr", "yrs", "Jahre", "Jahr"]
+  },
+  "massFlowRate": {
+    "kilogrampersecond": ["kg/s"],
+    "kilogramperhour": ["kg/h"],
+    "tonperhour": ["mt/h"],
+    "poundpersecond": ["lb/s"],
+    "poundperhour": ["lb/h"]
+  },
+  "volumeFlowRate": {
+    "kubricmeterpersecond": ["m3/s"],
+    "kubricmeterperminute": ["m3/min"],
+    "kubricmeterperhour": ["m3/h"],
+    "kubricmillimeterpersecond": ["mm3/s"],
+    "kubricpermin": ["m3/min"],
+    "kubricperhour": ["m3/h"],
+    "literpersecond": ["l/s"],
+    "literpermin": ["l/min"],
+    "literperhour": ["l/h"]
+  },
+  "length": {
+    "nanometer": [
+      "nm",
+      "nanometers",
+      "nanometer",
+      "nms",
+      "nanometres",
+      "nanometre",
+      "nanometres",
+      "nanometre",
+      "nanom"
+    ],
+    "micrometer": [
+      "μm",
+      "micrometers",
+      "micrometer",
+      "μms",
+      "micrometres",
+      "micrometre",
+      "micrometres",
+      "micrometre",
+      "microm"
+    ],
+    "millimeter": [
+      "mm",
+      "millimeters",
+      "millimeter",
+      "mms",
+      "millimetres",
+      "millimetre",
+      "millimetres",
+      "millimetre",
+      "millim"
+    ],
+    "centimeter": [
+      "cm",
+      "centimeters",
+      "centimeter",
+      "cms",
+      "centimetre",
+      "centimetres",
+      "centimetre"
+    ],
+    "inch": ["in", "inches", "inch", "\"", "''", "″", "″", "in.", "zoll", "Zoll"],
+    "foot": ["ft", "feet", "foot", "'", "''", "′", "′", "ft."],
+    "yard": ["yd", "yards", "yard", "yds", "y", "yd."],
+    "meter": ["m", "meters", "meter", "metres", "metre", "met"],
+    "kilometer": [
+      "km",
+      "kilometers",
+      "kilometer",
+      "kms",
+      "kilometre",
+      "kilometres",
+      "kilometre",
+      "kilo",
+      "kilos"
+    ],
+    "nauticmile": ["nMi"],
+    "mile": ["mil", "mi", "miles", "mile", "mi.", "miles."],
+    "lightyear": ["lightyears", "light years", "lightyear", "light year", "ly"]
+  },
+  "mass": {
+    "micorgram": [
+      "mcg",
+      "micorgrams",
+      "micorgram",
+      "micorgramme",
+      "micorgrammes"
+    ],
+    "milligram": [
+      "mg",
+      "milligrams",
+      "milligram",
+      "milligramme",
+      "milligrammes"
+    ],
+    "gram": ["g", "grams", "gram", "gramme", "grammes"],
+    "ounce": ["oz", "ounces", "ounce", "oz.", "ozs", "ozs."],
+    "pound": ["lb", "pounds", "pound", "lb.", "lbs", "lbs."],
+    "kilogram": [
+      "kg",
+      "kilograms",
+      "kilogram",
+      "kilogramme",
+      "kilogrammes",
+      "kilo",
+      "kilos"
+    ],
+    "metrictone": ["mt", "tonnes", "tonne"],
+    "ton": [ "tn", "tons", "ton"]
+  },
+  "angle": {
+    "degree": ["deg", "°"],
+    "rad": ["rad"],
+    "grad": ["grad", "Grad"],
+    "arcmin": ["arcmin"],
+    "arcsec": ["arcsec"]
+  },
+  "geometry": {
+    "diameter": ["Ø"]
+  },
+  "electric_current": {
+    "milliampere": [
+      "milliamperes",
+      "milliampere",
+      "milliamp",
+      "milliamps",
+      "mA",
+      "ma"
+    ],
+    "ampere": ["A", "amperes", "ampere", "amp", "amps"],
+    "kiloampere": [
+      "ka",
+      "kiloamperes",
+      "kiloampere",
+      "kiloamper",
+      "kiloamps",
+      "kiloamp",
+      "kiloa"
+    ]
+  },
+  "pressure": {
+    "pascal": ["P", "pascals", "pascal", "Pa"],
+    "kilopascal": ["kPa", "kilopascals", "kilopascal", "kP"],
+    "megapascal": ["MPa", "megapascals", "megapascal", "MP"],
+    "atmosphere": ["atmosphere", "atmosphere", "atm", "atms"],
+    "psi": ["psi", "pounds per square inch", "pound per square inch", "psis"],
+    "bar": ["bar", "bars"]
+  },
+  "power": {
+    "watt": ["W", "w", "watts", "watt"],
+    "kilowatt": ["kW", "kw", "kilowatts", "kilowatt", "kwatt"],
+    "megawatt": ["mW", "mw", "megawatts", "megawatt", "mwatt"],
+    "gigawatt": ["gW", "gw", "gigawatts", "gigawatt", "gwatt"]
+  },
+  "luminous_flux": {
+    "lumen": ["lm", "lumen"]
+  },
+  "illuminance": {
+    "lux": ["lx", "lux"]
+  },
+  "energy": {
+    "joule": ["J", "J", "joules", "joule"],
+    "kilojoule": ["KJ", "kj", "kilojoules", "kilojoule"],
+    "megajoule": ["MJ", "mj", "megajoules", "megajoule"],
+    "gigajoule": ["GJ", "gj", "gigajoules", "gigajoule"],
+    "watthour": ["Wh", "wh", "watt-hours", "watt-hour"],
+    "kilowatthour": ["kWh", "kwh", "kilowatt-hours", "kilowatt-hour"],
+    "megawatthour": ["MWh", "mwh", "megawatt-hours", "megawatt-hour"],
+    "gigawatthour": ["GWh", "gwh", "gigawatt-hours", "gigawatt-hour"]
+  },
+  "voltage": {
+    "volt": ["V", "v", "volt"],
+    "kilovolt": ["kV", "kv", "kilovolt"],
+    "megavolt": ["mV", "mv", "megavolt"],
+    "gigavolt": ["gV", "gv", "gigavolt"]
+  },
+  "frequency": {
+    "millihertz": ["mHz","mhz", "hertz"],
+    "hertz": ["Hz", "hz", "hertz"],
+    "kilohertz": ["kHz", "khz", "kilohertz"],
+    "megahertz": ["MHz","Mhz", "megahertz"],
+    "gigahertz": ["GHz", "ghz", "gigahertz"],
+    "terahertz": ["THz", "thz", "terahertz"]
+  },
+  "volume": {
+    "fl_oz": ["fl-oz", "fluid ounces", "fluid ounce", "fl ozs", "fl oz"],
+    "cup": ["cup", "cups"],
+    "gal": ["gal", "gallons", "gallon"],
+    "l": ["l", "liters", "liter", "ltr"],
+    "dl": ["dl", "deziliters", "dliter"],
+    "ml": ["ml", "milliliters", "milliliter"],
+    "millimetercubed": [
+      "mm3",
+      "millimeterscubed",
+      "millimetercubed",
+      "millimeters cubed",
+      "millimeter cubed",
+      "mm³",
+      "mm^3",
+      "mmcubed",
+      "mmcubic"
+    ],
+    "centimetercubed": [
+      "cm3",
+      "centimeterscubed",
+      "centimetercubed",
+      "centimeters cubed",
+      "centimeter cubed",
+      "centimeter^3",
+      "centimeter3",
+      "cm³",
+      "cm^3",
+      "cmcubed"
+    ],
+    "metercubed": [
+      "m3",
+      "meterscubed",
+      "metercubed",
+      "meters cubed",
+      "meter cubed",
+      "m³",
+      "m^3",
+      "mcubed",
+      "mcubic"
+    ],
+    "inchcubed": [
+      "in3",
+      "inchescubed",
+      "inchescubed",
+      "inches cubed",
+      "inch cubed",
+      "in³",
+      "in^3",
+      "incubed"
+    ],
+    "footcubed": [
+      "ft3",
+      "feetcubed",
+      "footcubed",
+      "feet cubed",
+      "foot cubed",
+      "ft³",
+      "ft^3",
+      "ftcubed"
+    ],
+    "yd3": [
+      "yd3",
+      "yardscubed",
+      "yardcubed",
+      "yards cubed",
+      "yard cubed",
+      "yd³",
+      "yd^3",
+      "ydcubed"
+    ],
+    "kilometercubed": [
+      "km3",
+      "kilometerscubed",
+      "kilometercubed",
+      "kilometers cubed",
+      "kilometer cubed",
+      "km³",
+      "km^3",
+      "kmcubed"
+    ]
+  },
+  "area": {
+    "millimetersquared": [
+      "mm2",
+      "millimeterssquared",
+      "millimetersquared",
+      "millimeters squared",
+      "millimeters quared",
+      "millimetersq",
+      "mm^2",
+      "mm²"
+    ],
+    "centimetersquared": [
+      "cm2",
+      "centimeterssquared",
+      "centimetersquared",
+      "centimeters squared",
+      "centimeter squared",
+      "centimetersq",
+      "cm^2",
+      "cm²"
+    ],
+    "metersquared": [
+      "m2",
+      "meterssquared",
+      "metersquared",
+      "meters squared",
+      "meter squared",
+      "metersq",
+      "m^2",
+      "m²"
+    ],
+    "kilometersquared": [
+      "km2",
+      "kilometerssquared",
+      "kilometersquared",
+      "kilometers squared",
+      "kilometer squared",
+      "km²",
+      "km^2"
+    ],
+    "inchsquared": [
+      "in2",
+      "inchessquared",
+      "inchesquared",
+      "inches squared",
+      "inche squared",
+      "in²",
+      "in^2"
+    ],
+    "footsquared": [
+      "ft2",
+      "feetsquared",
+      "footsquared",
+      "feet squared",
+      "foot squared",
+      "ft²",
+      "ft^2"
+    ],
+    "yardsquared": [
+      "yd2",
+      "yardssquared",
+      "yardsquared",
+      "yards squared",
+      "yard squared",
+      "yd²",
+      "yd^2"
+    ],
+    "acre": ["acres", "acre", "ac"],
+    "hectare": ["hectares", "hectare", "ha"]
+  }
+}

@@ -1,0 +1,645 @@
+import { CheerioAPI, load } from 'cheerio';
+import {
+  Candidate,
+  FailedPage,
+  ImgMeta,
+  ProductInfoRequestResponse,
+  SearchProductWithPZNResponse,
+  ShopObject,
+} from '../../types';
+import * as _ from 'underscore';
+import { platformStrs, proxies, userAgentList } from '../../constants';
+import fetch from 'node-fetch';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import url, { URL } from 'url';
+import {
+  linkPassedURLShopCriteria,
+  removeRandomKeywordInURL,
+  sanitizedURL,
+} from '../sanitize';
+import { antiKeywords } from '../../constants/index';
+import { BrowserInfo } from '../../types/index';
+import { deliveryTime } from '../deliveryTImeCleansing';
+import { get } from 'lodash';
+import { jsonrepair } from 'jsonrepair';
+import mime from 'mime-types';
+import useProxy from 'puppeteer-page-proxy';
+import { Browser, Page, ResourceType, TimeoutError } from 'puppeteer';
+import { ProxyAuth } from '../../types/proxyAuth';
+import { closePage } from '../closePage';
+
+const collectInternalLinks = (
+  $: CheerioAPI,
+  shopObject: ShopObject,
+  url: string,
+): string[] => {
+  const { d, ece, ap } = shopObject;
+  let links: string[] = [];
+  const elements =
+    "a[href^='http://" +
+    d +
+    "']:not(a[href^='mailto']), " +
+    "a[href^='https://" +
+    d +
+    "']:not(a[href^='mailto']), " +
+    "a[href^='https://www." +
+    d +
+    "']:not(a[href^='mailto']), " +
+    "a[href^='http://www." +
+    d +
+    "']:not(a[href^='mailto']), " +
+    "a[href^='/']:not(a[href^='mailto']), " +
+    "a[href^='?']:not(a[href^='mailto']), " +
+    "a[href^='&']:not(a[href^='mailto'])";
+
+  const relativeLinks = $(elements);
+
+  relativeLinks.each(function (i: number, e: any) {
+    let href = $(this).attr('href');
+    if (href !== undefined && linkPassedURLShopCriteria(href, ap)) {
+      const link = href;
+      if (
+        !antiKeywords
+          .filter((antiKeyword) => !shopObject.d.includes(antiKeyword))
+          .some((el: string) => link.toLowerCase().indexOf(el) !== -1)
+      ) {
+        const _sensitizedURL = sanitizedURL(link, d, url);
+        const cleaned = removeRandomKeywordInURL(_sensitizedURL, ece);
+        !links.includes(cleaned) && links.push(cleaned);
+      }
+    }
+  });
+  return links;
+};
+
+const formImageLinks = (url: string, imgMeta?: ImgMeta) => {
+  if (!imgMeta) return url;
+  if (!url.startsWith('https://')) {
+    url = imgMeta.baseurl + url;
+  }
+
+  const imgRegex = new RegExp(imgMeta.imgRegex);
+  const match = extractRegexFromString(url, imgRegex);
+  if (match) {
+    return imgMeta?.suffix
+      ? imgMeta.baseurl + match + imgMeta.suffix
+      : imgMeta.baseurl + match;
+  } else {
+    return imgMeta?.suffix ? url + imgMeta.suffix : url;
+  }
+};
+
+const imageLinks = (
+  $: CheerioAPI,
+  raw_selector: string[],
+  urlRegex: RegExp,
+  imgMeta?: ImgMeta,
+) => {
+  const imageSources: string[] = [];
+  raw_selector.forEach((selector) => {
+    $(selector).each(function () {
+      const src = $(this).attr('src');
+      const datalazy = $(this).attr('data-lazy');
+      if (src && imageSources.indexOf(src) === -1) {
+        const match = extractRegexFromString(decodeURIComponent(src), urlRegex);
+        imageSources.push(formImageLinks(match ?? src, imgMeta));
+      }
+      if (datalazy && imageSources.indexOf(datalazy) === -1) {
+        const match = extractRegexFromString(
+          decodeURIComponent(datalazy),
+          urlRegex,
+        );
+        imageSources.push(formImageLinks(match ?? datalazy));
+      }
+    });
+  });
+  return imageSources;
+};
+
+const extractInfoFromScript = (
+  $: CheerioAPI,
+  raw_selector: string,
+): string | undefined => {
+  const selector = raw_selector.split(';')[0];
+  const path = raw_selector.split(';')[1];
+  const regex = raw_selector.split(';')[2];
+  let parsedPath = path;
+  let value;
+  //@ts-ignore
+  const jsonRaws = $(selector);
+  if (regex) {
+    const match = extractRegexFromString(
+      jsonRaws.text(),
+      new RegExp(regex, 'gm'),
+    );
+    if (match) {
+      return match.replace(/\D+/g, '');
+    }
+  }
+  for (let index = 0; index < jsonRaws.length; index++) {
+    try {
+      //@ts-ignore
+      const data = jsonRaws[index].children[0].data.trim();
+      const repaired = jsonrepair(data);
+      const content = JSON.parse(repaired);
+      if (path?.startsWith && path.startsWith('[')) {
+        parsedPath = JSON.parse(path.trim());
+      }
+      if (content instanceof Array) {
+        content.forEach((contentItem) => {
+          const _value = get(contentItem, parsedPath);
+          if (_value instanceof Array) {
+            value = _value[0].value;
+          } else if (_value !== undefined) {
+            value = _value;
+          }
+        });
+      } else {
+        const _value = get(content, parsedPath);
+        if (_value instanceof Array) {
+          value = _value[0].value;
+        } else if (_value !== undefined) {
+          value = _value;
+        }
+      }
+    } catch (error) {
+      console.error('error in extract InfoFrom Script', error);
+    }
+  }
+  return value;
+};
+
+const extractRegexFromString = (str: string, regex: RegExp) => {
+  const match = str.match(regex);
+  if (match) {
+    return match[0];
+  } else {
+    return null;
+  }
+};
+
+const extractFromVariousLocations = (
+  $: CheerioAPI,
+  raw_selector: string,
+  regex?: RegExp,
+) => {
+  let result: null | string = null;
+  if (raw_selector.includes('meta')) {
+    const elem = $(raw_selector);
+    if (elem.length > 0) {
+      const content = elem.attr('content');
+      if (regex && content) {
+        const match = extractRegexFromString(content, regex);
+        if (match) {
+          return match;
+        }
+      }
+      if (content) {
+        return content;
+      }
+    }
+  }
+  if (raw_selector.includes('script') || raw_selector.includes('NEXT_DATA')) {
+    const value = extractInfoFromScript($, raw_selector);
+    if (value) {
+      return value;
+    }
+  }
+
+  if (regex) {
+    const elem = $(raw_selector);
+    if (elem.length > 0) {
+      let match = elem.text().match(regex);
+      if (match) {
+        return match[0];
+      } else {
+        const dataRegex = raw_selector.match(/(?<=\[).+?(?=\])/gi);
+        const attributes = elem.attr();
+        if (dataRegex && attributes) {
+          return attributes[dataRegex[0]];
+        }
+      }
+    }
+  } else {
+    const elem = $(raw_selector);
+    if (elem.length > 0) {
+      const _text = elem.text();
+      const text = elem.first().text();
+      if (raw_selector.includes('data-content')) {
+      }
+      result = text;
+    }
+  }
+  return result;
+};
+
+export const findProductInfo = (
+  $: CheerioAPI,
+  shopObject: ShopObject,
+  url: string,
+  extractLinks: boolean = true,
+): Candidate => {
+  const regexp = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
+  const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
+  const pznRegex = /\b[0-9]{7}\b|\b[0-9]{8}\b/;
+  const eanRegex = /\b[0-9]{12}\b|\b[0-9]{13}\b/;
+  const urlRegex =
+    /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])?/gm;
+  let p = '';
+  let n = '';
+  let a: string | undefined;
+  let pzn = '';
+  let ean = '';
+  let m = '';
+  let ps = '';
+  let img: string[] = [];
+  let f = '';
+  let ls: string[] = [];
+
+  if (shopObject?.img !== undefined) {
+    img = imageLinks($, shopObject.img, urlRegex, shopObject.imgMeta);
+  }
+
+  //feature
+  if (shopObject?.f !== undefined) {
+    const fResult = extractFromVariousLocations($, shopObject.f);
+    if (fResult) {
+      f = fResult;
+    }
+  }
+  //price
+  shopObject.p.map((selector) => {
+    const pResult = extractFromVariousLocations($, selector, regexp);
+    if (pResult) {
+      p = pResult.toString();
+    }
+  });
+  //name
+  const nResult = extractFromVariousLocations($, shopObject.n);
+  if (nResult) {
+    n = nResult;
+  }
+  //availability
+  const aResult = extractFromVariousLocations($, shopObject.a);
+  if (aResult) {
+    a = deliveryTime(aResult);
+  }
+  //manufactuerer
+  const mResult = extractFromVariousLocations($, shopObject.m);
+  if (mResult) {
+    m = mResult;
+  }
+  //package size
+  const psResult = extractFromVariousLocations($, shopObject.ps);
+  if (psResult) {
+    ps = psResult;
+  }
+  //ean
+  const eanResult = extractFromVariousLocations($, shopObject.ean, eanRegex);
+  if (eanResult) {
+    ean = eanResult;
+  }
+  //pzn
+  const pznResult = extractFromVariousLocations($, shopObject.pzn, pznRegex);
+  if (pznResult) {
+    pzn = pznResult;
+  }
+
+  if (a === undefined) {
+    a = '';
+  }
+  if (m !== '') {
+    m = m
+      .replace(regex, '')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/\banbieter/gi, '')
+      .replace(/\bhersteller/gi, '')
+      .trim();
+  }
+  //collect all internal links of the page
+  ls = extractLinks ? collectInternalLinks($, shopObject, url) : [];
+
+  return {
+    l: '',
+    pzn: pzn !== '' ? pzn.padStart(8, '0') : '',
+    a: a.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
+    n: n.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
+    p: p.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
+    m: m,
+    img,
+    f,
+    ean: ean,
+    ps: ps.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
+    ls: ls,
+  };
+};
+
+export function isCandidate(
+  candidate: Candidate | FailedPage | undefined,
+): candidate is Candidate {
+  return (candidate as Candidate).l !== undefined;
+}
+
+export const sleep = (milliseconds: number) => {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
+export const maxPZNCount = (ctn: string): { pzn: string; cnt: number } => {
+  let res = { pzn: '', cnt: 0 };
+  const pznPattern = /\b[0-9]{7}\b|\b[0-9]{8}\b/g;
+  const arr = [...ctn.matchAll(pznPattern)];
+  arr.reduce((acc: any, match: any) => {
+    const _match = match[0];
+    if (acc[_match] !== undefined) {
+      acc[_match] = acc[_match] + 1;
+      if (acc[_match] > res.cnt) res = { pzn: _match, cnt: acc[_match] };
+    } else {
+      acc[_match] = 1;
+    }
+    return acc;
+  }, {});
+  return res;
+};
+
+export const getCheerioAPI = async (
+  _url: string,
+): Promise<CheerioAPI | undefined> => {
+  const proxy = _.sample(proxies);
+  const userAgent = _.sample(userAgentList);
+  try {
+    if (proxy && userAgent) {
+      const myURL = new URL('http://' + proxy);
+      const options = url.urlToHttpOptions(myURL);
+      const proxyAgent = new HttpsProxyAgent(options as string);
+      const res = await fetch(_url, { agent: proxyAgent });
+      const body = await res.text();
+      if (body !== '') return load(body);
+    }
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+};
+
+export const searchProductWithPZN = async (
+  _url: string,
+  passwordAuth: boolean = false,
+): Promise<SearchProductWithPZNResponse> => {
+  const proxy = _.sample(proxies);
+  const userAgent = _.sample(userAgentList);
+  const _proxy = passwordAuth ? 'resi.proxyscrape.com:8000' : proxy!;
+  try {
+    const timeout = 20000;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    if (proxy && userAgent) {
+      const myURL = new URL('http://' + _proxy);
+      const options = url.urlToHttpOptions(myURL);
+      if (passwordAuth) options.auth = '23oj7wi7uj:89x51dmfs0-country-DE';
+      const proxyAgent = new HttpsProxyAgent(options as string);
+      const res = await fetch(_url, {
+        agent: proxyAgent,
+        method: 'HEAD',
+        headers: { 'User-Agent': userAgent },
+        //@ts-ignore
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (res.ok) {
+        return { url: res.url, err: false, status: 200 };
+      } else {
+        return { url: res.url, status: res.status, err: false };
+      }
+    } else {
+      return { url: _url, err: true, status: 0 };
+    }
+  } catch (error) {
+    console.log('error:', error);
+    return { url: _url, err: true, status: 0 };
+  }
+};
+export const getProductInfoWithFetch = async (
+  _url: string,
+  shopObject: ShopObject,
+): Promise<Candidate | FailedPage> => {
+  const proxy = _.sample(proxies);
+  const userAgent = _.sample(userAgentList);
+  try {
+    if (proxy && userAgent) {
+      const myURL = new URL('http://' + proxy);
+      const options = url.urlToHttpOptions(myURL);
+      const proxyAgent = new HttpsProxyAgent(options as string);
+      const res = await fetch(_url, {
+        agent: proxyAgent,
+        headers: { 'User-Agent': userAgent },
+      });
+      const body = await res.text();
+      const newCandidate = findProductInfo(load(body), shopObject, _url);
+      if (body !== '') return { ...newCandidate, l: _url };
+      else return { url: _url, err: true };
+    } else {
+      return { url: _url, err: true };
+    }
+  } catch (error) {
+    return { url: _url, err: true };
+  }
+};
+
+export const getImageWithFetch = async (_url: string, proxyAuth: ProxyAuth) => {
+  const myProxyURL = new URL('http://' + proxyAuth.host);
+  const options = url.urlToHttpOptions(myProxyURL);
+  options.auth = `${proxyAuth.username}:${proxyAuth.password}`;
+  let userAgent = _.sample(userAgentList);
+  if (userAgent === undefined) userAgent = userAgentList[0];
+
+  const proxyAgent = new HttpsProxyAgent(options);
+  const res = await fetch(_url, {
+    agent: proxyAgent,
+    headers: { 'User-Agent': userAgent },
+  });
+  if (res.ok) {
+    return { buffer: await res.arrayBuffer(), type: mime.lookup(_url) };
+  } else {
+    return false;
+  }
+};
+
+const setPageProperties = async (
+  page: Page,
+  disAllowedResourceTypes?: ResourceType[],
+  lng: string = 'de',
+) => {
+  // await page.setExtraHTTPHeaders({
+  //   'Accept-Language': lng,
+  // });
+
+  await page.setRequestInterception(true);
+  page.on('request', (request) => {
+    const resourceType = request.resourceType();
+    let defaultDisallowedResourcTypes = ['image', 'font', 'media'];
+    if (disAllowedResourceTypes?.length) {
+      defaultDisallowedResourcTypes = disAllowedResourceTypes;
+    }
+    if (defaultDisallowedResourcTypes.includes(resourceType))
+      return request.abort();
+    else {
+      return request.continue();
+    }
+  });
+  const agent = _.sample(userAgentList) || userAgentList[0];
+  let platform = '';
+  if (agent.includes('Windows')) {
+    platform = 'Windows';
+  }
+  if (agent.includes('Linux')) {
+    platform = 'Linux';
+  }
+  if (agent.includes('macOS')) {
+    platform = 'macOS';
+  }
+
+  await page.setUserAgent(agent);
+  await page.setExtraHTTPHeaders({
+    accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en,de-DE;q=0.9,de;q=0.8,en-US;q=0.7',
+    'Cache-Control': 'max-age=0',
+    'upgrade-insecure-requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'same-origin',
+    'Sec-Fetch-User': '?1',
+    'Sec-GPC': '1',
+    'Sec-CH-UA-Platform': platform,
+  });
+  page.setDefaultNavigationTimeout(180000);
+  await page.setViewport({ width: 1920, height: 1080 });
+  await page.setBypassCSP(true);
+};
+
+export async function getPage(
+  browser: Browser,
+  proxyAuth: ProxyAuth,
+  disAllowedResourceTypes?: ResourceType[],
+  lng: string = 'de',
+) {
+  const page = await browser.newPage();
+
+  await setPageProperties(page, disAllowedResourceTypes, lng);
+
+  return page;
+}
+
+export const getProductInfoWithBrowser = async (
+  url: string,
+  shopObject: ShopObject,
+  browserInfo: BrowserInfo,
+  extractLinks: boolean = true,
+  proxyAuth: ProxyAuth,
+): Promise<ProductInfoRequestResponse> => {
+  let newCandidate: Candidate = {
+    a: '',
+    p: '',
+    ean: '',
+    n: '',
+    l: '',
+    m: '',
+    img: [],
+    f: '',
+    ps: '',
+    pzn: '',
+    ls: [],
+  };
+
+  const page = await getPage(
+    browserInfo.brs,
+    proxyAuth,
+    shopObject.resourceTypes['query'],
+  );
+
+  try {
+    await page.goto(url, {
+      waitUntil: shopObject?.waitUntil
+        ? shopObject.waitUntil.entryPoint
+        : 'networkidle2',
+    });
+
+    if (shopObject?.action) {
+      for (const action of shopObject.action) {
+        const selector = await page
+          .waitForSelector(action.sel, {
+            visible: true,
+            timeout: 5000,
+          })
+          .catch((e) => {
+            if (e instanceof TimeoutError) {
+              return 'missing';
+            }
+          });
+        if (selector === 'missing') {
+          continue;
+        }
+        const isClickable = await page.evaluate((selector) => {
+          const element = document.querySelector(selector);
+          return (
+            element &&
+            element.getBoundingClientRect().width > 0 &&
+            element.getBoundingClientRect().height > 0
+          );
+        }, action.sel);
+
+        await page.hover(action.sel);
+
+        if (isClickable) {
+          await page.click(action.sel).catch((e) => e.message);
+        } else {
+          await page
+            .evaluate((selector) => {
+              const element = document.querySelector(
+                selector,
+              ) as HTMLAnchorElement;
+              if (element !== null) {
+                element.click();
+              }
+            }, action.sel)
+            .catch((e) => e.message);
+        }
+        if ('target' in action && typeof action.target === 'string') {
+          const selector = await page
+            .waitForSelector(action.target, {
+              visible: true,
+              timeout: 5000,
+            })
+            .catch((e) => {
+              if (e instanceof TimeoutError) {
+                return 'missing';
+              }
+            });
+          if (selector === 'missing') {
+            continue;
+          }
+        }
+      }
+    }
+    const html = await page.content();
+
+    page.on('error', async (event: any) => {
+      console.error('error', event);
+      await closePage(page);
+      return { err: true, url, newCandidate };
+    });
+    page.on('response', (request) => {
+      console.error(request);
+    });
+    newCandidate = findProductInfo(load(html), shopObject, url, extractLinks);
+    newCandidate.l = url;
+    await closePage(page);
+    return { newCandidate, err: false, url };
+  } catch (error: any) {
+    console.error('catch error getProductInfoWithBrowser', error.message);
+    await closePage(page);
+    return { url, err: true, newCandidate };
+  }
+};

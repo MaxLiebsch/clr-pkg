@@ -1,0 +1,11 @@
+{
+  "color": {
+    "white": ["white", "weiß", "weiss"],
+    "blue": ["blue", "blau"],
+    "green": ["green", "grün"],
+    "yellow": ["yellow", "gelb"],
+    "brown": ["brown", "braun"],
+    "rot": ["red", "red"],
+    "black": ["black", "schwarz"]
+  }
+}
