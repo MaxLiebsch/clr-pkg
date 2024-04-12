@@ -24,6 +24,14 @@ type Task = (page: Page, request: QueryRequest) => Promise<void>;
 const timeoutmin = 1 * 30 * 1000;
 const timeoutmax = 2 * 60 * 1000;
 
+const maxRetries = 10;
+
+let randomTimeoutDefaultmin = 100;
+let randomTimeoutDefaultmax = 500;
+
+let randomTimeoutmin = 100;
+let randomTimeoutmax = 500;
+
 export class QueryQueue {
   private queue: Array<{
     task: Task;
@@ -36,7 +44,7 @@ export class QueryQueue {
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
-  private blockedPages: number = 0;
+  private taskFinished: boolean = false;
   private pause: boolean = false;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth) {
@@ -48,36 +56,31 @@ export class QueryQueue {
 
   pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     if (this.pause) return;
-
     this.pause = true;
-    const startTime = Date.now();
     if (reason === 'rate-limit' || reason === 'blocked') {
-      const interval = setInterval(() => {
-        console.log('waiting...', Math.floor((Date.now() - startTime) / 1000));
+      setTimeout(() => {
+        this.repair().then(() => {
+          randomTimeoutmin = randomTimeoutDefaultmin;
+          randomTimeoutmax = randomTimeoutDefaultmax;
+          this.running = 0;
+          this.resumeQueue();
+        });
       }, 5000);
-      const timeout = Math.random() * (timeoutmax - timeoutmin) + timeoutmin;
-      setTimeout(
-        () => {
-          if (!this.browser?.connected) {
-            this.connect().then(() => {
-              this.running = 0;
-              this.resumeQueue();
-              clearInterval(interval);
-            });
-          } else {
-            this.running = 0;
-            this.resumeQueue();
-            clearInterval(interval);
-          }
-        },
-        timeout,
-      );
     }
     if (reason === 'error') {
       this.repair().then(() => {
         this.resumeQueue();
       });
     }
+  }
+
+  public async clearQueue() {
+    await this.disconnect(true);
+    this.queue = [];
+    this.browser = null;
+    this.running = 0;
+    this.waitingForRepairResolvers = [];
+    this.repairing = false;
   }
 
   resumeQueue() {
@@ -88,9 +91,24 @@ export class QueryQueue {
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(taskFinished = false): Promise<void> {
+    console.log('disconnecting');
+    this.taskFinished = taskFinished;
     try {
-      this.browser && (await this.browser.close());
+      if (this.browser?.connected && !taskFinished) {
+        const pages = await this.browser.pages(); // Get all open pages
+        // Iterate through each page and close it
+        for (let page of pages) {
+          await closePage(page);
+        }
+      }
+    } catch (error) {
+      console.log('Could not close all pages');
+    }
+    try {
+      if (this.browser?.connected) {
+        await this.browser.close();
+      }
     } catch (error) {
       console.log('Could not restart browser');
     }
@@ -102,7 +120,6 @@ export class QueryQueue {
     } catch (error) {
       console.log('Browser crashed big time', error);
       await this.repair();
-      this.browser = await mainBrowser(this.proxyAuth);
     }
   }
 
@@ -139,8 +156,8 @@ export class QueryQueue {
     return this.browser?.connected;
   }
 
-  public workload(){
-    return this.queue.length
+  public workload() {
+    return this.queue.length;
   }
 
   async browserHealth() {
@@ -151,9 +168,6 @@ export class QueryQueue {
       urls = pages.map((page) => {
         try {
           const url = page.url();
-          if (url.includes('chrome://new-tab-page/')) {
-            closePage(page).then();
-          }
           return url;
         } catch (error) {
           console.log('error:', error);
@@ -174,22 +188,10 @@ export class QueryQueue {
     return this.uniqueLinks.some((link) => link === newLink);
   }
 
-  
-  // async blockChecker() {
-  //   this.blockedPages += 1;
-  //   if (this.blockedPages >= 5) {
-  //     this.repair().then(() => {
-  //       this.blockedPages = 0;
-  //     });
-  //   }
-  // }
-
   private async wrapperFunction(
     task: Task,
     request: QueryRequest,
   ): Promise<Page | undefined> {
-    const maxRetries = 3;
-
     if (request.retries >= maxRetries) return;
 
     const { pageInfo, shop } = request;
@@ -202,6 +204,7 @@ export class QueryQueue {
         this.browser!,
         this.proxyAuth,
         resourceTypes?.query,
+        shop.exceptions,
       );
       await page
         .goto(pageInfo.link, {
@@ -210,31 +213,58 @@ export class QueryQueue {
         .then((response) => {
           if (response) {
             const status = response.status();
-             if (status === 429) {
+            if (status === 429) {
               this.pauseQueue('rate-limit');
               closePage(page).then();
-              this.queue.push({
-                task,
-                request: { ...request, retries: request.retries + 1 },
-              });
+              !this.taskFinished &&
+                this.queue.push({
+                  task,
+                  request: { ...request, retries: request.retries + 1 },
+                });
             }
             if (status >= 500) {
               this.pauseQueue('error');
               closePage(page).then();
-              this.queue.push({
-                task,
-                request: { ...request, retries: request.retries + 1 },
-              });
+              !this.taskFinished &&
+                this.queue.push({
+                  task,
+                  request: { ...request, retries: request.retries + 1 },
+                });
             }
           }
         })
         .catch((e) => {
+          if (
+            e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
+            !this.taskFinished
+          ) {
+            this.pauseQueue('blocked');
+          }
+          if (
+            e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED') &&
+            !this.taskFinished
+          ) {
+            this.pauseQueue('error');
+          }
           closePage(page).then();
-          this.queue.push({
-            task,
-            request: { ...request, retries: request.retries + 1 },
-          });
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
         });
+
+      // Clear cookies
+      const cookies = await page.cookies();
+      await page.deleteCookie(...cookies).catch((e) => {});
+
+      // Clear localStorage and sessionStorage
+      await page
+        .evaluate(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        })
+        .catch((e) => {});
 
       const blocked = await checkForBlockingSignals(page, shop.mimic);
 
@@ -265,12 +295,18 @@ export class QueryQueue {
       clearInterval(monitoringInterval);
       return page;
     } catch (error) {
-      console.log('BROWSER PAGE LOAD FAILED', error);
-      !this.browser?.connected && this.pauseQueue('error');
-      this.queue.push({
-        task,
-        request: { ...request, retries: request.retries + 1 },
-      });
+      if (error instanceof Error)
+        console.log('BROWSER PAGE LOAD FAILED', error.message, error.stack);
+
+      !this.taskFinished &&
+        !this.browser?.connected &&
+        this.pauseQueue('error');
+
+      !this.taskFinished &&
+        this.queue.push({
+          task,
+          request: { ...request, retries: request.retries + 1 },
+        });
     }
   }
 
@@ -282,20 +318,29 @@ export class QueryQueue {
 
   // Process the next task
   private next() {
-    if (this.pause ||
-      this.repairing || this.running >= this.concurrency || this.queue.length === 0) {
+    if (
+      this.pause ||
+      this.repairing ||
+      this.running >= this.concurrency ||
+      this.queue.length === 0
+    ) {
       return;
     }
     this.running++;
     const nextRequest = this.queue.shift();
-    this.queue = shuffle(this.queue)
+    this.queue = shuffle(this.queue);
     if (nextRequest) {
+      const timeout =
+        Math.random() * (randomTimeoutmax - randomTimeoutmin) +
+        randomTimeoutmin;
+      // setTimeout(() => {
       this.wrapperFunction(nextRequest.task, nextRequest.request).then(
         (page) => {
           this.running--;
           this.next();
         },
       );
+      // }, timeout);
     }
   }
 }
