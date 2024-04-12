@@ -53,6 +53,10 @@ export interface Limit {
 export interface Categories {
   sel: string;
   exclude: string[];
+  wait?: number;
+  categoryNameSegmentPos?: number;
+  categoryRegexp?: string;
+  visible?: boolean;
   type: string;
   subCategories: SubCategoriesSel;
 }
@@ -66,6 +70,10 @@ export interface PaginationEl {
   type: string;
   sel: string;
   nav: string;
+  initialUrl?: {
+    type: string,
+    regexp: string;
+  },
   scrollToBottom: boolean;
   paginationUrlSchema?: PaginationUrlSchema;
   calculation: Calculation;
@@ -74,6 +82,10 @@ export interface PaginationEl {
 export interface PaginationUrlSchema {
   replace: string;
   withQuery: boolean;
+  parseAndReplace?: {
+    regexp: string,
+    replace: string;
+  }
   calculation: {
     method: string;
     offset: number;
@@ -83,6 +95,9 @@ export interface PaginationUrlSchema {
 export interface Calculation {
   method: string;
   last: string;
+  productsPerPage?: number;
+  textToMatch?: string;
+  dynamic?: boolean;
   sel: string;
 }
 
@@ -103,6 +118,7 @@ export interface IProductSelector {
 export type Content =
   | 'link'
   | 'price'
+  | 'promoPrice'
   | 'name'
   | 'shop'
   | 'category'
@@ -119,7 +135,10 @@ export interface Detail {
   content: Content;
   sel: string;
   type: string;
-  parse?: string;
+  baseUrl?: string;
+  extractPart?: number;
+  regexp?: string;
+  proprietaryProducts?:string
   attr?: string;
   key?: string;
   redirect_regex?: string;
@@ -191,6 +210,7 @@ export interface Year {
 
 export interface ShopObject {
   _id: string;
+  exceptions?: string[]
   d: string;
   p: string[];
   manualCategories: ICategory[];
