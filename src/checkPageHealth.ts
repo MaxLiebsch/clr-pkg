@@ -6,8 +6,8 @@ export async function checkForBlockingSignals(page: Page, mimic?: string) {
   if (mimic) {
     const isMissing = await contentMissing(page, mimic);
     if (isMissing) {
-      console.log('isMissing:', isMissing);
       if (process.env.DEBUG) {
+        console.log('isMissing:', isMissing);
         await page
           .screenshot({
             type: 'png',
