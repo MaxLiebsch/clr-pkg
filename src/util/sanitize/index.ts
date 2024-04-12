@@ -26,9 +26,9 @@ export const sanitizedURL = (url: string, curr: string, parentUrl: string) => {
   }
 };
 
-export const urlBuilder = (domain:string, schema:string, pzn: string )=>{
-    return 'https://www.' + domain  + schema.replace('{{PZN}}', pzn)
-}
+export const urlBuilder = (domain: string, schema: string, pzn: string) => {
+  return 'https://www.' + domain + schema.replace('{{PZN}}', pzn);
+};
 
 export const HTMLtoString = (html: string): string => {
   const signs: string[] = ['\\', '\n', '\r', '\t', '"'];
@@ -44,8 +44,6 @@ export const HTMLtoString = (html: string): string => {
 
 export const removeRandomKeywordInURL = (url: string, regexArray: string[]) => {
   if (regexArray.length === 0) return url;
-
-  if (!url.includes('random')) return url;
 
   let res: string = url;
 
@@ -64,5 +62,11 @@ export const removeRandomKeywordInURL = (url: string, regexArray: string[]) => {
 
 export const linkPassedURLShopCriteria = (
   url: string,
-  arr: string[]
+  arr: string[],
 ): boolean => (arr.some((el) => url.toLowerCase().includes(el)) ? false : true);
+
+export const linkPassedCategoryNameShopCriteria = (
+  categoryName: string,
+  arr: string[],
+): boolean =>
+  arr.some((el) => categoryName.toLowerCase().includes(el)) ? false : true;

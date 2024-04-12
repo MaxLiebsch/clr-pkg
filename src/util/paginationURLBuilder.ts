@@ -7,26 +7,36 @@ export const paginationUrlBuilder = (
   query?: string,
 ) => {
   let resultUrl = url;
+  let startPointSubstractor = 1;
   for (let index = 0; index < paginationEls.length; index++) {
     const element = paginationEls[index];
-    let navStr = element.nav
+    let navStr = element.nav;
     const { paginationUrlSchema, nav } = element;
     if (paginationUrlSchema) {
       const { withQuery, calculation, replace } = paginationUrlSchema;
       if (withQuery && query) {
         navStr = nav.replace('<query>', encodeURIComponent(query));
       }
+      if (paginationUrlSchema.parseAndReplace) {
+        const { regexp, replace } = paginationUrlSchema.parseAndReplace;
+        const parsedUrlPart = resultUrl.match(new RegExp(regexp));
+        if (parsedUrlPart) {
+          navStr = navStr.replace(replace, parsedUrlPart[0]);
+        }
+      }
       if (calculation.method === 'offset') {
+        const finalNavStr = `${navStr.replace('<page>', ((pageNo - startPointSubstractor) * calculation.offset).toString())}`;
         const replaceRegExp = new RegExp(replace);
         if (replaceRegExp.test(resultUrl)) {
-          return resultUrl.replace(
-            replaceRegExp,
-            `${navStr.replace('<page>', ((pageNo - 1) * calculation.offset).toString())}`,
-          );
+          return resultUrl.replace(replaceRegExp, finalNavStr);
         }
+        if (replace === 'attach_end'){
+          return resultUrl + finalNavStr
+        }
+
         return resultUrl;
       }
     }
   }
-  return resultUrl
+  return resultUrl;
 };

@@ -111,8 +111,18 @@ export const getPrice = (priceStr: string) => {
   }
 };
 
+export const getNumbers = (str: string) => {
+  const match = str.match(/\d+/g);
+  if (match) {
+    return match
+  } else {
+    return null;
+  }
+};
+
+
 export const getNumber = (priceStr: string) => {
-  const match = priceStr.match(/\d+/g);
+  const match = priceStr.match(/\d+(?=\s*\w*$)/g);
   if (match) {
     if (match.length === 2) {
       return parseInt(match[1].replace(/[.,]/, ''));
@@ -142,19 +152,49 @@ export const getSIUints = (str: string) => {
   return siUnits;
 };
 
+/*
+  <-50         -6
+  >-50 && <-30 -3
+  >-30  && <30  0
+  >30 && <50   -3
+  >50          -6
+  
+*/
+
 export const findBestMatch = (
   descriptionSplit: string[],
   foundProducts: CandidateProduct[],
   manufacturer: string,
   name: string,
+  prc: number,
 ) => {
   let bestMatchIndex = -1;
   let highScore = 0;
 
   const nameSplit = getProductNameSplit(name);
   foundProducts.forEach((product, index) => {
+    const curr_prc = parsePrice(getPrice(product.price ?? 0));
+    const mrgn = Number((curr_prc - prc).toFixed(2));
+    const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
     let score = 0;
 
+    switch (true) {
+      case curr_mrgn_pct < -50:
+        score += -4;
+        break;
+      case curr_mrgn_pct >= -50 && curr_mrgn_pct < -30:
+        score += -3;
+        break;
+      case curr_mrgn_pct >= -30 && curr_mrgn_pct < 30:
+        score += +2;
+        break;
+      case curr_mrgn_pct >= 30 && curr_mrgn_pct <= 50:
+        score += -3;
+        break;
+      case curr_mrgn_pct > 50:
+        score += -4;
+        break;
+    }
     descriptionSplit.forEach((giveWord) => {
       if (product.candidateNameSplit.includes(giveWord)) {
         score++;
@@ -195,6 +235,7 @@ export const addBestMatchToProduct = (
     candidates,
     mnfctr,
     nm,
+    prc,
   );
 
   if (bestMatch) {

@@ -9,6 +9,7 @@ import {
 } from '../types/index';
 import { getNumber } from './compare_helper';
 import { load } from 'cheerio';
+import { unescape } from 'underscore';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
   Object.keys(browserGroup).reduce(
@@ -16,11 +17,13 @@ export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
     browserGroup[Object.keys(browserGroup)[0]],
   );
 
-
 export function makeSuitableObjectKey(string: string) {
-    // Replace characters that are not allowed in object property keys with an underscore
-    return string.replace(/[\s]/g,'').replace(/[\\/]/g, ' ')
-  }
+  // Replace characters that are not allowed in object property keys with an underscore
+  return string
+    .replace(/[\s+]/g, ' ')
+    .replace(/[.]/g, '')
+    .replace(/[\\/]/g, ' ');
+}
 
 export const getAFreeProcess = (browserGroup: {
   [key: string]: ChildProcessInfo;
@@ -48,6 +51,48 @@ export const myQuerySelectorAll = async (page: Page, sel: string) =>
     }
   });
 
+export function extractPart(str: string, pattern: string, part: number) {
+  const regex = new RegExp(pattern);
+  const match = str.match(regex);
+  if (match && match[part]) {
+    return match[part];
+  } else {
+    return '';
+  }
+}
+
+function capitalizeWords(str: string) {
+  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+export function extractCategoryNameAndCapitalize(
+  url: string,
+  segmentIndex: number,
+  categoryRegexp?: string,
+): string {
+  try {
+    if (categoryRegexp) {
+      return capitalizeWords(extractPart(url, categoryRegexp,1).replace(/[-]/, ' '));
+    }
+    const urlObj = new URL(url);
+
+    const segments = urlObj.pathname.split('/').filter(Boolean); // filter(Boolean) removes any empty strings from the array
+
+    let segment = segments[segmentIndex];
+
+    if (!segment) {
+      throw new Error('Segment does not exist at the provided index.');
+    }
+
+    return (
+      segment.charAt(0).toUpperCase() + segment.slice(1).replaceAll(/[-]/g, ' ')
+    );
+  } catch (error) {
+    if (error instanceof Error) console.error('Error:', error.message);
+    return '';
+  }
+}
+
 export const getProductCount = async (
   page: Page,
   productList: ProductList[],
@@ -57,7 +102,7 @@ export const getProductCount = async (
     if (productCntSel.length) {
       for (let index = 0; index < productCntSel.length; index++) {
         const selector = productCntSel[index];
-        const productCnt = await getInnerText(page, selector); 
+        const productCnt = await getInnerText(page, selector);
         if (productCnt) {
           const cnt = getNumber(productCnt);
           if (productsPerPage && cnt) {
@@ -213,7 +258,9 @@ export const contentMissing = async (page: Page, mimic: string) =>
 
 export function cleanUpHTML(html: string) {
   const $ = load(html);
-  return $('body').text().replaceAll(/[ ]+/g, ' ');
+  return $('body')
+    .text()
+    .replaceAll(/[ \n]+/g, ' ');
 }
 
 export const waitForSelector = async (

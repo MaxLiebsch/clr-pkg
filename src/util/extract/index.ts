@@ -491,6 +491,7 @@ export const getProductInfoWithBrowser = async (
     browserInfo.brs,
     proxyAuth,
     shopObject.resourceTypes['query'],
+    shopObject.exceptions
   );
 
   try {

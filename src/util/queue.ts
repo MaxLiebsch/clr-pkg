@@ -6,10 +6,10 @@ import { ProductRecord } from '../types/product';
 import { ICategory } from './getCategories';
 import { checkForBlockingSignals } from '../checkPageHealth';
 import { closePage } from './closePage';
-import { shuffle } from 'underscore';
-import { join } from 'path';
-import { slug } from '..';
+// import { shuffle } from 'underscore';
 import { getPage } from './getPage';
+import { Query } from '../types/query';
+import { createLabeledTimeout } from './createLabeledTimeout';
 
 export interface CrawlerRequest {
   prio: number;
@@ -18,7 +18,14 @@ export interface CrawlerRequest {
   parentPath: string;
   parent: ICategory | null;
   limit: Limit;
+  noOfPages?: number;
+  productCount?: number | null;
+  initialProductPageUrl?: string;
+  pageNo?: number;
   pageInfo: ICategory;
+  productPagePath?: string;
+  paginationType?: string;
+  query?: Query;
   queue: CrawlerQueue;
   onlyCrawlCategories: boolean;
   addProduct: (product: ProductRecord) => Promise<void>;
@@ -26,14 +33,12 @@ export interface CrawlerRequest {
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
-const timeoutmin = 1 * 15 * 1000;
-const timeoutmax = 1 * 30 * 1000;
-const maxRetries = 10;
+const maxRetries = 3;
 
 let randomTimeoutDefaultmin = 100;
 let randomTimeoutDefaultmax = 500;
 
-let randomTimeoutmin = 100;
+let randomTimeoutmin = 150;
 let randomTimeoutmax = 500;
 
 export class CrawlerQueue {
@@ -49,10 +54,9 @@ export class CrawlerQueue {
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
   private uniqueCategoryLinks: string[] = [];
-  private blockedPages: number = 0;
   private pause: boolean = false;
-  private lastBlock: number = 0;
-  private blocks: number = 0;
+  private taskFinished: boolean = false;
+  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
 
   constructor(concurrency: number, proxyAuth: ProxyAuth) {
     this.concurrency = concurrency + 1; //new page
@@ -61,10 +65,15 @@ export class CrawlerQueue {
     this.proxyAuth = proxyAuth;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(taskFinished = false): Promise<void> {
     console.log('disconnecting');
+    this.taskFinished = taskFinished;
     try {
-      if (this.browser?.connected) {
+      if (taskFinished) {
+        this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
+        this.timeouts = [];
+      }
+      if (this.browser?.connected && !taskFinished) {
         const pages = await this.browser.pages(); // Get all open pages
         // Iterate through each page and close it
         for (let page of pages) {
@@ -126,6 +135,16 @@ export class CrawlerQueue {
     );
   }
 
+  public async clearQueue() {
+    await this.disconnect(true);
+    this.queue = [];
+    this.browser = null;
+    this.timeouts = [];
+    this.running = 0;
+    this.waitingForRepairResolvers = [];
+    this.repairing = false;
+  }
+
   public workload() {
     return this.queue.length;
   }
@@ -145,9 +164,6 @@ export class CrawlerQueue {
       urls = pages.map((page) => {
         try {
           const url = page.url();
-          // if (url.includes('chrome://new-tab-page/')) {
-          //   closePage(page);
-          // }
           return url;
         } catch (error) {
           console.log('error:', error);
@@ -168,71 +184,18 @@ export class CrawlerQueue {
     return this.uniqueLinks.some((link) => link === newLink);
   }
 
-  // async blockChecker() {
-  //   this.blockedPages += 1;
-  //   if (this.blockedPages >= 5) {
-  //     this.repair().then(() => {
-  //       this.blockedPages = 0;
-  //     });
-  //   }
-  // }
-
   pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     if (this.pause) return;
-
     this.pause = true;
-    const timeout = Math.random() * (timeoutmax - timeoutmin) + timeoutmin;
-    const startTime = Date.now();
-
     if (reason === 'rate-limit' || reason === 'blocked') {
-      // const now = Date.now();
-      // if ((now - this.lastBlock) / 1000 < 30000) {
-      //   console.log('now - this.lastBlock:', now - this.lastBlock);
-      //   randomTimeoutmin = randomTimeoutmin * 1.05;
-      //   randomTimeoutmax = randomTimeoutmax * 1.01;
-      // }
-      // if (randomTimeoutmin >= randomTimeoutmax) {
-      //   randomTimeoutmax = randomTimeoutmax + randomTimeoutmin;
-      // }
-      // const interval = setInterval(() => {
-      //   console.log(
-      //     'waiting...',
-      //     Math.floor((Date.now() - startTime) / 1000),
-      //     ' Min Timeout: ',
-      //     randomTimeoutmin,
-      //     ' Max Timeout: ',
-      //     randomTimeoutmax,
-      //   );
-      // }, 10000);
-
-      // if (this.blocks === 1) {
       setTimeout(() => {
         this.repair().then(() => {
-          this.blocks = 0;
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.running = 0;
           this.resumeQueue();
-          // clearInterval(interval);
         });
       }, 5000);
-      // } else {
-      //   setTimeout(() => {
-      //     if (!this.browser?.connected) {
-      //       this.connect().then(() => {
-      //         this.running = 0;
-      //         this.resumeQueue();
-      //         clearInterval(interval);
-      //       });
-      //     } else {
-      //       this.running = 0;
-      //       this.resumeQueue();
-      //       clearInterval(interval);
-      //     }
-      //   }, timeout);
-      // }
-      this.blocks += 1;
-      this.lastBlock = Date.now();
     }
     if (reason === 'error') {
       this.repair().then(() => {
@@ -244,8 +207,13 @@ export class CrawlerQueue {
   resumeQueue() {
     this.pause = false;
     const concurrent = this.concurrency - this.running;
+    let delay = 100;
     for (let index = 0; index <= concurrent; index++) {
-      this.next();
+      if (index === 0) {
+        this.next();
+      } else {
+        setTimeout(() => this.next(), delay * index);
+      }
     }
   }
 
@@ -263,6 +231,7 @@ export class CrawlerQueue {
         this.browser!,
         this.proxyAuth,
         resourceTypes?.crawl,
+        shop.exceptions,
       );
 
       page
@@ -276,32 +245,43 @@ export class CrawlerQueue {
               //after five blocks
               this.pauseQueue('rate-limit');
               closePage(page).then();
-              this.queue.push({
-                task,
-                request: { ...request, retries: request.retries + 1 },
-              });
+              !this.taskFinished &&
+                this.queue.push({
+                  task,
+                  request: { ...request, retries: request.retries + 1 },
+                });
             }
             if (status >= 500) {
               this.pauseQueue('error');
               closePage(page).then();
-              this.queue.push({
-                task,
-                request: { ...request, retries: request.retries + 1 },
-              });
+              !this.taskFinished &&
+                this.queue.push({
+                  task,
+                  request: { ...request, retries: request.retries + 1 },
+                });
             }
           }
         })
         .catch((e) => {
-          if (e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
+          if (
+            e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
+            !this.taskFinished
+          ) {
             this.pauseQueue('blocked');
           }
+          if (
+            e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED') &&
+            !this.taskFinished
+          ) {
+            this.pauseQueue('error');
+          }
           closePage(page).then();
-
           console.log('e:goto:', e.message);
-          this.queue.push({
-            task,
-            request: { ...request, retries: request.retries + 1 },
-          });
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
         });
 
       await page
@@ -311,11 +291,25 @@ export class CrawlerQueue {
         .catch((e) => {
           console.log('e:wait for navigation', e.message);
           closePage(page).then();
-          this.queue.push({
-            task,
-            request: { ...request, retries: request.retries + 1 },
-          });
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
         });
+
+      // Clear cookies
+      const cookies = await page.cookies();
+      await page.deleteCookie(...cookies).catch((e) => {});
+
+      // Clear localStorage and sessionStorage
+      await page
+        .evaluate(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        })
+        .catch((e) => {});
+
       const blocked = await checkForBlockingSignals(page, shop.mimic);
 
       if (blocked) {
@@ -344,12 +338,20 @@ export class CrawlerQueue {
       clearInterval(monitoringInterval);
       return page;
     } catch (error) {
-      console.log('BROWSER PAGE LOAD FAILED', error);
-      !this.browser?.connected && this.pauseQueue('error');
-      this.queue.push({
-        task,
-        request: { ...request, retries: request.retries + 1 },
-      });
+      if (error instanceof Error)
+        console.log(
+          'BROWSER PAGE LOAD FAILED: ',
+          `${error.message}\n${error.stack}`,
+        );
+
+      !this.browser?.connected &&
+        !this.taskFinished &&
+        this.pauseQueue('error');
+      !this.taskFinished &&
+        this.queue.push({
+          task,
+          request: { ...request, retries: request.retries + 1 },
+        });
     }
   }
 
@@ -370,20 +372,23 @@ export class CrawlerQueue {
       return;
     }
     this.running++;
-    this.queue = shuffle(this.queue);
+    this.queue = this.queue;
     const nextRequest = this.queue.shift();
     if (nextRequest) {
-      const timeout =
+      const timeoutTime =
         Math.random() * (randomTimeoutmax - randomTimeoutmin) +
         randomTimeoutmin;
-      setTimeout(() => {
-        this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-          (page) => {
-            this.running--;
-            this.next();
-          },
-        );
-      }, timeout);
+      const timeout = createLabeledTimeout(
+        () =>
+          this.wrapperFunction(nextRequest.task, nextRequest.request).then(
+            (page) => {
+              this.running--;
+              this.next();
+            },
+          ),
+        timeoutTime,
+      );
+      this.timeouts.push(timeout);
     }
   }
 }

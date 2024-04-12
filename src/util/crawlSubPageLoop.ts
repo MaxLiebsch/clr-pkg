@@ -17,6 +17,7 @@ export const subPageLoop = async (options: {
   const { shop, queue } = request;
   for (let a = 0; a < maxCategs; a++) {
     const pageInfo = {
+      ...request.pageInfo,
       name: categLinks[a].name,
       link: categLinks[a].link,
     };

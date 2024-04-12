@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
-
     /* Projects */
     // "incremental": true,                              /* Enable incremental compilation */
     // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
@@ -14,7 +13,7 @@
     "target": "ES2021" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     "lib": [
       "dom",
-      "ES2021"
+      "ES2021",
     ] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
     // "jsx": "preserve",                                /* Specify what JSX code is generated. */
     // "experimentalDecorators": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */
@@ -98,7 +97,7 @@
 
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
-    "skipLibCheck": true /* Skip type checking all .d.ts files. */
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */,
   },
-  "include": ["src"]
+  "include": ["src"],
 }

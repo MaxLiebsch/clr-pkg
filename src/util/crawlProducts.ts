@@ -2,6 +2,7 @@ import { Page, TimeoutError } from 'puppeteer';
 import { ShopObject } from '../types';
 import {
   cleanUpHTML,
+  extractPart,
   nestedProductName,
   slug,
   waitForSelector,
@@ -9,7 +10,7 @@ import {
 import { ProductRecord } from '../types/product';
 import { ICategory } from './getCategories';
 import { ProductPage, StatService } from './fs/stats';
-import { join } from 'path';
+import { prefixLink } from './compare_helper';
 
 export const crawlProducts = async (
   page: Page,
@@ -37,8 +38,7 @@ export const crawlProducts = async (
   for (let index = 0; index < productList.length; index++) {
     const { sel, product } = productList[index];
 
-    const selector = await waitForSelector(page, sel, 10000, false);
-
+    const selector = await waitForSelector(page, sel, 5000, false);
     if (selector !== 'missing' && selector) {
       const productEls = await page.$$(product.sel).catch((e) => {
         if (e instanceof TimeoutError) {
@@ -53,13 +53,22 @@ export const crawlProducts = async (
         const { type, details } = product;
         for (let i = 0; i < productEls.length; i++) {
           const productEl = productEls[i];
+          const category: string[] = [];
+          if (pageInfo.entryCategory) {
+            category.push(pageInfo.entryCategory);
+          }
+          if (pageInfo.name) {
+            category.push(pageInfo.name);
+          }
+
           const product: ProductRecord = {
             link: '',
             image: '',
             shop: shop.d,
-            category: pageInfo.name === '' ? '' : pageInfo.name,
+            category,
             name: '',
             price: '',
+            promoPrice: '',
             createdAt: '',
             year: '',
             updatedAt: '',
@@ -80,8 +89,14 @@ export const crawlProducts = async (
               }
             }
           }
+          let proprietaryProducts: null | string = null;
+
           for (const index in details) {
             const detail = details[index];
+
+            if (detail?.proprietaryProducts)
+              proprietaryProducts = detail.proprietaryProducts;
+
             const { sel, type, content } = detail;
             if (type === 'text') {
               const el = await productEl
@@ -94,9 +109,20 @@ export const crawlProducts = async (
                     return innerHTML;
                   }
                 })
-                .catch(e=>{});
+                .catch((e) => {});
               if (el) {
-                product[content] = cleanUpHTML(el);
+                let foundEl = el;
+                if (content === 'price') {
+                  foundEl = foundEl.replace(/\s/g, '');
+                }
+                if (content === 'image' && 'regexp' in detail) {
+                  foundEl = extractPart(
+                    foundEl,
+                    detail.regexp!,
+                    detail?.extractPart ?? 1,
+                  );
+                }
+                product[content] = cleanUpHTML(foundEl);
               }
             } else if (type === 'nested') {
               const name = await nestedProductName(productEl, detail);
@@ -143,51 +169,65 @@ export const crawlProducts = async (
               const el = await productEl
                 .$eval(sel, (i, type) => i.getAttribute(type), type)
                 .catch((e) => {});
-              if (type === 'href' || type === 'src') {
-                if (el)
-                  if (el.startsWith('https://')) {
-                    product[content] = el;
-                  } else {
-                    product[content] = 'https://' + shop.d + el;
+              if (el) {
+                let foundAttr = el;
+                if (type === 'href' || type === 'src' || type === 'srcset') {
+                  if ('regexp' in detail && 'baseUrl' in detail) {
+                    const regexp = new RegExp(detail.regexp!);
+                    if (regexp.test(foundAttr)) {
+                      const match = foundAttr.match(regexp);
+                      if (match) {
+                        foundAttr = detail.baseUrl + match[0].trim();
+                      }
+                    }
                   }
+                  product[content] = prefixLink(foundAttr, shop.d);
+                } else {
+                  product[content] = foundAttr;
+                }
               }
             }
           }
           product['createdAt'] = new Date().toISOString();
           product['updatedAt'] = new Date().toISOString();
+
+          if (proprietaryProducts) {
+            product.name = proprietaryProducts + ' ' + product.name;
+          }
+
           await addProductCb(product);
         }
       } else {
-        if (process.env.DEBUG) {
-          await page
-            .screenshot({
-              type: 'png',
-              path: join(
-                process.cwd(),
-                `/data/shop/debug/${shop.d}_products_missing.${slug(pageInfo.link)}.png`,
-              ),
-              fullPage: true,
-            })
-            .then()
-            .catch((e) => {});
-        }
+        // if (process.env.DEBUG) {
+        //   await page
+        //     .screenshot({
+        //       type: 'png',
+        //       path: join(
+        //         process.cwd(),
+        //         `/data/shop/debug/${shop.d}_products_missing.${slug(pageInfo.link)}.png`,
+        //       ),
+        //       fullPage: true,
+        //     })
+        //     .then()
+        //     .catch((e) => {});
+        // }
         if (scanShop) {
           productPage['missing'] = 'Products in ' + ' ' + product.sel;
         }
       }
     } else {
-      if (process.env.DEBUG) {
-        await page
-          .screenshot({
-            type: 'png',
-            path: join(
-              process.cwd(),
-              `/data/shop/debug/${shop.d}_container_missing.${slug(pageInfo.link)}.png`,
-            ),
-            fullPage: true,
-          })
-          .catch((e) => {});
-      }
+      // if (process.env.DEBUG) {
+      //   await page
+      //     .screenshot({
+      //       type: 'png',
+      //       path: join(
+      //         process.cwd(),
+      //         `/data/shop/debug/${shop.d}_container_missing.${slug(pageInfo.link)}.png`,
+      //       ),
+      //       fullPage: true,
+      //     })
+      //     .catch((e) => {});
+      // }
       if (scanShop) {
         productPage['missing'] = 'ProductContainer in ' + ' ' + sel;
       }
