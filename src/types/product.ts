@@ -6,7 +6,7 @@ export interface Product {
    image: string;
    name: string;
    price: string;
-   category?: string;
+   category?: string[];
    description?: string;
    shop?: string;
    nameSub?:string;
@@ -21,7 +21,6 @@ export interface CandidateProduct extends Product {
 }
 
 export interface SrcProductDetails {
-   
       nm: string
       nmSubSplit: string[]
       prc: number
@@ -30,7 +29,7 @@ export interface SrcProductDetails {
 }
 
 
-export type ProductRecord = Record<Content, string | boolean>
+export type ProductRecord = Record<Content, string | boolean | Array<string>>
 
 
 export interface DbProduct {
@@ -38,7 +37,7 @@ export interface DbProduct {
    ean: string
    pblsh: boolean;
    vrfd: boolean
-   ctgry: string
+   ctgry: string[]
    mnfctr: string
    nm: string
    img: string
