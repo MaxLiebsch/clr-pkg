@@ -7,10 +7,12 @@ export * from './schemas/medication';
 export * from './schemas/performance';
 export * from './types/index';
 export * from './types/status'
+export * from './util/crawlSubpage'
 export * from './util/queryURLBuilder'
 export * from './util/extract/index';
 export * from './util/sanitize/index';
 export * from './util/browsers';
+export * from './util/getPage';
 export * from './util/dbOperations';
 export * from './util/helpers';
 export * from './util/extractProductAvailabilityInfo';
