@@ -1,24 +1,16 @@
 import { Page } from 'puppeteer';
-import { getCategories } from './getCategories';
-import { browseProductpages } from './browseProductPages';
+import { ICategory, getCategories } from './getCategories';
 import { CrawlerRequest } from './queue';
 import { getProductCount } from './helpers';
 import { StatService } from './fs/stats';
 import { retrieveSubPagesRecursive } from './retrieveSubPagesRecursive';
 import { transformCategories } from './transformCategories';
 import { closePage } from './closePage';
+import { browseProductPagesQueue } from './browseProductPagesQueue';
 
 export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
-  const {
-    shop,
-    pageInfo,
-    addProduct,
-    queue,
-    parent,
-    parentPath,
-    onlyCrawlCategories,
-    limit
-  } = request;
+  const { shop, pageInfo, queue, parentPath, onlyCrawlCategories, limit } =
+    request;
   let category = null;
   const path = parentPath + '.subcategories.' + pageInfo.name;
   const statService = StatService.getSingleton(shop.d);
@@ -26,7 +18,7 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
     category = statService.get(path);
   }
 
-  const {  categories, productList } = shop;
+  const { categories, productList } = shop;
   const { subCategory: subCateg } = limit;
 
   const subCategLnks = await getCategories(
@@ -34,30 +26,35 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
     categories,
     request.queue,
     shop.d,
+    shop?.ece,
     true,
   );
 
   const cntCategs = subCategLnks?.length ?? 0;
 
   const productCount = await getProductCount(page, productList);
-  if (productCount && onlyCrawlCategories) category['cnt_products'] = productCount;
-  if(!category && onlyCrawlCategories && process.env.DEBUG) console.log('failed path', path)
+
+  if (productCount && onlyCrawlCategories)
+    category['cnt_products'] = productCount;
+
+  if (!category && onlyCrawlCategories && process.env.DEBUG)
+    console.log('failed path', path);
+
   if (subCategLnks && cntCategs) {
     if (onlyCrawlCategories) {
       category['cnt_category'] = cntCategs;
       category['subcategories'] = transformCategories(subCategLnks);
     }
 
-    await closePage(page);
-
     const maxSubCategs = subCateg
-    ? subCateg > cntCategs
-    ? cntCategs
-    : subCateg
-    : cntCategs;
-     
+      ? subCateg > cntCategs
+        ? cntCategs
+        : subCateg
+      : cntCategs;
+
     for (let index = 0; index < maxSubCategs; index++) {
-      const pageInfo = {
+      const pageInfo: ICategory = {
+        ...request.pageInfo,
         name: subCategLnks[index].name,
         link: subCategLnks[index].link,
       };
@@ -68,18 +65,19 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
         parentPath: path,
       });
     }
+    await closePage(page);
   } else {
     if (onlyCrawlCategories) {
       await closePage(page);
     } else {
-      await browseProductpages(
-        page,
-        shop,
-        addProduct,
-        pageInfo,
+      await browseProductPagesQueue(page, {
+        ...request,
         limit,
-        onlyCrawlCategories ? path : undefined,
-      );
+        productCount,
+        retries: 0,
+        pageInfo,
+        productPagePath: onlyCrawlCategories ? path : undefined,
+      });
     }
   }
   if (onlyCrawlCategories) {

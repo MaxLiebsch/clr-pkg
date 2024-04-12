@@ -1,11 +1,7 @@
-import { ElementHandle, Page, TimeoutError } from 'puppeteer';
-import { Content, Limit, ShopObject } from '../types';
+import {  Page } from 'puppeteer';
+import {  Limit, ShopObject } from '../types';
 import {
-  getElementHandleInnerText,
-  getInnerText,
-  myQuerySelectorAll,
   scrollToBottom,
-  waitForSelector,
 } from './helpers';
 import { crawlProducts } from './crawlProducts';
 import { ProductRecord } from '../types/product';
@@ -15,6 +11,8 @@ import { ICategory } from './getCategories';
 import { StatService, SubCategory } from './fs/stats';
 import { checkForBlockingSignals } from '../checkPageHealth';
 import { closePage } from './closePage';
+import findPagination from './findPagination';
+import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 
 const addPageCountAndPushSubPages = (
   category: SubCategory | null,
@@ -57,79 +55,34 @@ export async function browseProductpages(
     link: '',
     productpages: [],
   };
-  
+
   if (productPagePath) {
     category = statService.get(productPagePath);
   }
   const scanShop = category && productPagePath;
   const { paginationEl: paginationEls, waitUntil } = shop;
-  let pagination: ElementHandle<Element> | 'missing' | null | undefined;
-  let paginationEl = paginationEls[0];
+
   let pages: number[] = [];
 
-  for (let index = 0; index < paginationEls.length; index++) {
-    paginationEl = paginationEls[index];
-    const { sel } = paginationEl;
-
-    pagination = sel ? await waitForSelector(page, sel) : 'missing';
-
-    if (pagination !== 'missing' && pagination) break;
-  }
+  let { pagination, paginationEl } = await findPagination(page, paginationEls);
 
   if (pagination !== 'missing' && pagination) {
     const { calculation, type } = paginationEl;
 
     if (type === 'pagination') {
       const initialpageurl = page.url();
-      if (calculation) {
-        if (calculation.method === 'button') {
-          const pageButtons = await myQuerySelectorAll(page, calculation.sel);
-          if (pageButtons !== 'missing' && pageButtons) {
-            pages = new Array(pageButtons.length);
-          }
-        }
-        if (calculation.method === 'first_last') {
-          const last = await getInnerText(page, calculation.last);
-          if (last) {
-            pages = new Array(parseInt(last));
-          } else {
-            const next = await getInnerText(page, calculation.sel);
-            if (next) {
-              pages = new Array(parseInt(next));
-            }
-          }
-        }
-        if (calculation.method === 'count') {
-          const paginationEls = await page.$$(calculation.sel).catch((e) => {
-            if (e instanceof TimeoutError) {
-              return 'missing';
-            }
-          });
-          if (paginationEls !== 'missing' && paginationEls) {
-            let pagesCount = 0;
-            for (let index = 0; index < paginationEls.length; index++) {
-              const paginationEl = paginationEls[index];
-              const innerText = await getElementHandleInnerText(paginationEl);
-              if (innerText) {
-                const parsedNumber = parseInt(innerText);
-                if (parsedNumber && parsedNumber > pagesCount) {
-                  pagesCount = parsedNumber;
-                }
-              }
-            }
-            pages = new Array(pagesCount);
-          }
-        }
-      }
 
-      const noOfFoundPages = pages?.length ?? 0;
+      const { pages, noOfFoundPages } = await getPageNumberFromPagination(
+        page,
+        paginationEl
+      );
 
       if (noOfFoundPages) {
         if (scanShop) {
           category['cnt_pages'] = pages.length;
         }
         const limitPages = limit?.pages ? limit?.pages : 0;
-        
+
         const noOfPages = limitPages
           ? limitPages > noOfFoundPages
             ? noOfFoundPages
@@ -147,6 +100,7 @@ export async function browseProductpages(
                 cnt: 0,
               });
             }
+
             await crawlProducts(
               page,
               shop,
