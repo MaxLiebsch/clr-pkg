@@ -58,7 +58,7 @@ export class QueryQueue {
     this.proxyAuth = proxyAuth;
   }
 
- async log(msg: string | { [key: string]: any }) {
+  async log(msg: string | { [key: string]: any }) {
     let message = {
       shopDomain: this.queueTask.shopDomain,
       taskid: this.queueTask.id ?? '',
@@ -158,8 +158,9 @@ export class QueryQueue {
     await this.disconnect();
     try {
       await this.connect();
+      this.log('repaired');
     } catch (error) {
-      throw new Error('Cannot restart browser');
+      this.log('Cannot restart browser');
     }
     this.running = 0;
     this.repairing = false;
@@ -258,12 +259,12 @@ export class QueryQueue {
         })
         .catch((e) => {
           !this.taskFinished &&
-          this.log({
-            location: 'Page.goTo',
-            msg: e?.message,
-            stack: e?.stack,
-            link: pageInfo.link,
-          });
+            this.log({
+              location: 'Page.goTo',
+              msg: e?.message,
+              stack: e?.stack,
+              link: pageInfo.link,
+            });
           if (
             e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
             !this.taskFinished
@@ -284,6 +285,26 @@ export class QueryQueue {
             });
         });
 
+      await page
+        .waitForNavigation({
+          waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+        })
+        .catch((e) => {
+          !this.taskFinished &&
+            this.log({
+              location: 'Page.waitForNavigation',
+              msg: e?.message,
+              stack: e?.stack,
+              link: pageInfo.link,
+            });
+          closePage(page).then();
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
+        });
+
       // Clear cookies
       const cookies = await page.cookies();
       await page.deleteCookie(...cookies).catch((e) => {});
@@ -296,7 +317,12 @@ export class QueryQueue {
         })
         .catch((e) => {});
 
-      const blocked = await checkForBlockingSignals(page, shop.mimic, pageInfo.link, this.queueTask);
+      const blocked = await checkForBlockingSignals(
+        page,
+        shop.mimic,
+        pageInfo.link,
+        this.queueTask,
+      );
 
       if (blocked) {
         this.pauseQueue('blocked');
@@ -307,7 +333,12 @@ export class QueryQueue {
         });
       }
       const monitoringInterval = setInterval(async () => {
-        const blocked = await checkForBlockingSignals(page, request.shop.mimic, pageInfo.link, this.queueTask);
+        const blocked = await checkForBlockingSignals(
+          page,
+          request.shop.mimic,
+          pageInfo.link,
+          this.queueTask,
+        );
         if (blocked) {
           this.pauseQueue('blocked');
           clearInterval(monitoringInterval);
@@ -326,12 +357,13 @@ export class QueryQueue {
       return page;
     } catch (error) {
       if (error instanceof Error)
-        !this.taskFinished && this.log({
-          location: 'PageloadCatchBlock',
-          msg: error?.message,
-          stack: error?.stack,
-          link: pageInfo.link,
-        });
+        !this.taskFinished &&
+          this.log({
+            location: 'PageloadCatchBlock',
+            msg: error?.message,
+            stack: error?.stack,
+            link: pageInfo.link,
+          });
 
       !this.taskFinished &&
         !this.browser?.connected &&

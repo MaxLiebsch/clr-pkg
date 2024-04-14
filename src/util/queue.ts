@@ -135,7 +135,7 @@ export class CrawlerQueue {
       await this.connect();
       this.log('repaired');
     } catch (error) {
-      throw new Error('Cannot restart browser');
+      this.log('Cannot restart browser')
     }
     this.repairing = false;
     this.running = 0;
