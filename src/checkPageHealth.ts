@@ -30,9 +30,6 @@ export async function checkForBlockingSignals(
           hostname: hostname(),
         });
 
-      LoggerService.getSingleton().logger.info(
-        `${mimic} is missing in URL: ${link}`,
-      );
       if (process.env.DEBUG) {
         await page
           .screenshot({
