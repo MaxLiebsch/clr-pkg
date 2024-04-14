@@ -55,6 +55,7 @@ export class QueryQueue {
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = {
       'Navigating frame was detached': { count: 0, lastOccurred: null },
+      'Requesting main frame too early!': { count: 0, lastOccurred: null },
     };
     this.queueTask = task;
     this.concurrency = concurrency;
@@ -100,6 +101,8 @@ export class QueryQueue {
     }
     this.errorLog['Navigating frame was detached'].count = 0;
     this.errorLog['Navigating frame was detached'].lastOccurred = null;
+    this.errorLog['Requesting main frame too early!'].count = 0;
+    this.errorLog['Requesting main frame too early!'].lastOccurred = null;
   }
 
   public async clearQueue() {
@@ -349,7 +352,7 @@ export class QueryQueue {
       return page;
     } catch (error) {
       if (!this.taskFinished) {
-        if (error instanceof Error)
+        if (error instanceof Error) {
           this.log({
             location: 'PageloadCatchBlock',
             msg: error?.message,
@@ -358,6 +361,17 @@ export class QueryQueue {
             stack: error?.stack,
             link: pageInfo.link,
           });
+
+          // if (error.message.includes('Requesting main frame too early!')) {
+          //   let errorType = 'Requesting main frame too early!';
+          //   this.errorLog[errorType].count += 1;
+          //   this.errorLog[errorType].lastOccurred = Date.now();
+
+          //   if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+          //     this.pauseQueue('error');
+          //   }
+          // }
+        }
 
         if (!this.browser?.connected && !this.repairing)
           this.pauseQueue('error');
