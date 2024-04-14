@@ -1,8 +1,11 @@
-import { proxies} from '../constants';
+import { proxies } from '../constants';
 import { BrowserGroup, BrowserInfo } from '../types';
 import { browserLoadChecker } from './helpers';
 import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
+import { LoggerService } from './logger';
+import { QueueTask } from '../types/QueueTask';
+import { hostname } from 'os';
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
@@ -110,9 +113,26 @@ export const mainBrowsers = async (
         ];
         if (!proxyPerPage) args.push(proxySetting);
         const res = await acc;
-        puppeteer.use(StealthPlugin())
+        try {
+          puppeteer.use(StealthPlugin());
+        } catch (error) {
+          if (error instanceof Error)
+            LoggerService.getSingleton().logger.info({
+              location: `'StealthPluginCatch`,
+              msg: error.message,
+              stack: error?.stack,
+              hostname: hostname(),
+            
+            });
+          else
+            LoggerService.getSingleton().logger.info({
+              location: `'StealthPluginCatch`,
+              msg: error,
+              hostname: hostname(),
+            });
+        }
         const b = await puppeteer.launch({
-          headless: process.env.NODE_ENV === 'production'? true: false,
+          headless: process.env.NODE_ENV === 'production' ? true : false,
           args,
           defaultViewport: null,
         });
@@ -129,27 +149,53 @@ export const mainBrowsers = async (
     resolve(browsers);
   });
 
-export const mainBrowser = async (proxyAuth?: { host: string }) => {
+export const mainBrowser = async (
+  task: QueueTask,
+  proxyAuth?: { host: string },
+) => {
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-gpu',
     '--disable-web-security',
     '--start-maximized',
-    'javascript:close()'
+    'javascript:close()',
   ];
 
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
   }
-  puppeteer.use(StealthPlugin());
+  try {
+    puppeteer.use(StealthPlugin());
+  } catch (error) {
+    if (error instanceof Error)
+      LoggerService.getSingleton().logger.info({
+        location: `'StealthPluginCatch`,
+        msg: error.message,
+        stack: error?.stack,
+        hostname: hostname(),
+        type: task.type,
+        typeId: task.id,
+        shopDomain: task.shopDomain,
+      });
+    else
+      LoggerService.getSingleton().logger.info({
+        location: `'StealthPluginCatch`,
+        msg: error,
+        hostname: hostname(),
+        type: task.type,
+        typeId: task.id,
+        shopDomain: task.shopDomain,
+      });
+  }
   const browser = puppeteer.launch({
-    headless: process.env.NODE_ENV === 'production'?true: false,
+    headless: process.env.NODE_ENV === 'production' ? true : false,
     devtools: process.env.NODE_ENV !== 'production',
     args,
     defaultViewport: null,
-    timeout: 600000
-  })
+    timeout: 600000,
+    protocolTimeout: 60000,
+  });
   return browser;
 };
