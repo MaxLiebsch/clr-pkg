@@ -11,6 +11,7 @@ import { Query } from '../types/query';
 import { createLabeledTimeout } from './createLabeledTimeout';
 import { QueueTask } from '../types/QueueTask';
 import { LoggerService } from './logger';
+import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
 
 export interface CrawlerRequest {
   prio: number;
@@ -59,8 +60,12 @@ export class CrawlerQueue {
   private pause: boolean = false;
   private taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.errorLog = {
+      'Navigating frame was detached': { count: 0, lastOccurred: null },
+    };
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
@@ -222,6 +227,8 @@ export class CrawlerQueue {
         }, 5000);
       });
     }
+    this.errorLog['Navigating frame was detached'].count = 0;
+    this.errorLog['Navigating frame was detached'].lastOccurred = null;
   }
 
   resumeQueue() {
@@ -260,52 +267,58 @@ export class CrawlerQueue {
           timeout: 60000,
         })
         .catch((e) => {
-          !this.taskFinished &&
+          if (!this.taskFinished) {
             this.log({
               location: 'Page.goTo',
               msg: e?.message,
               stack: e?.stack,
+              repairing: this.repairing,
+              connected: this.browser?.connected,
               link: pageInfo.link,
             });
-          if (
-            e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
-            !this.taskFinished
-          ) {
-            this.pauseQueue('blocked');
-          }
-          if (
-            e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED') &&
-            !this.taskFinished
-          ) {
-            this.pauseQueue('error');
-          }
-          closePage(page).then();
-          !this.taskFinished &&
+
+            if (e.message.includes('Navigating frame was detached')) {
+              let errorType = 'Navigating frame was detached';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error');
+              }
+            }
+
+            if (e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
+              this.pauseQueue('blocked');
+            }
+            if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
+              this.pauseQueue('error');
+            }
             this.queue.push({
               task,
               request: { ...request, retries: request.retries + 1 },
             });
+          }
+          closePage(page).then();
         });
 
       if (response) {
         const status = response.status();
-        if (status === 429) {
-          !this.taskFinished && this.pauseQueue('rate-limit');
-          await closePage(page)
-          !this.taskFinished &&
-            this.queue.push({
-              task,
-              request: { ...request, retries: request.retries + 1 },
-            });
+        if (status === 429 && !this.taskFinished) {
+          this.pauseQueue('rate-limit');
+          closePage(page).then();
+          this.queue.push({
+            task,
+            request: { ...request, retries: request.retries + 1 },
+          });
         }
-        if (status >= 500) {
-          !this.taskFinished && this.pauseQueue('error');
-          await closePage(page)
-          !this.taskFinished &&
-            this.queue.push({
-              task,
-              request: { ...request, retries: request.retries + 1 },
-            });
+        if (status >= 500 && !this.taskFinished) {
+          this.pauseQueue('error');
+          closePage(page).then();
+
+          this.queue.push({
+            task,
+            request: { ...request, retries: request.retries + 1 },
+          });
         }
       }
 
@@ -359,22 +372,23 @@ export class CrawlerQueue {
       clearInterval(monitoringInterval);
       return page;
     } catch (error) {
-      if (error instanceof Error)
-        !this.taskFinished &&
+      if (!this.taskFinished) {
+        if (error instanceof Error)
           this.log({
             location: 'PageloadCatchBlock',
             msg: error?.message,
             stack: error?.stack,
             link: pageInfo.link,
           });
-      !this.browser?.connected &&
-        !this.taskFinished &&
-        this.pauseQueue('error');
-      !this.taskFinished &&
+
+        if (!this.browser?.connected && !this.repairing)
+          this.pauseQueue('error');
+
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },
         });
+      }
     }
   }
 

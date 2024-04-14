@@ -122,7 +122,6 @@ export const mainBrowsers = async (
               msg: error.message,
               stack: error?.stack,
               hostname: hostname(),
-            
             });
           else
             LoggerService.getSingleton().logger.info({
