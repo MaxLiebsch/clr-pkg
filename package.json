@@ -34,6 +34,7 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
     "convert-units": "^2.3.4",
+    "dotenv": "^16.4.5",
     "fs-jetpack": "^5.1.0",
     "https-proxy-agent": "5.0.1",
     "jsonrepair": "^3.0.2",
@@ -44,6 +45,8 @@
     "mongoose": "8.1.1",
     "node-fetch": "2.7.0",
     "parse-price": "^1.1.8",
+    "pino": "^8.20.0",
+    "pino-mongodb": "^4.3.0",
     "puppeteer": "^22.4.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

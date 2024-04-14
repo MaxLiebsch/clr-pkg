@@ -6,6 +6,7 @@ import { subPageLoop } from './crawlSubPageLoop';
 import { performCrawlAction } from './performCrawlaction';
 import { transformCategories } from './transformCategories';
 import { closePage } from './closePage';
+import { LoggerService } from './logger';
 
 export const crawlShop = async (page: Page, request: CrawlerRequest) => {
   const { pageInfo, shop, queue, onlyCrawlCategories, limit } = request;
@@ -60,7 +61,11 @@ export const crawlShop = async (page: Page, request: CrawlerRequest) => {
       request,
     });
   } else {
-    console.log('no categories found closing page...');
+    try {
+      LoggerService.getSingleton().logger.info(`no categories found in ${page.url()} closing page `)
+    } catch (error) {
+      console.log('error:', error)
+    }
     await closePage(page);
   }
 };
