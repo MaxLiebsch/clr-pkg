@@ -229,33 +229,10 @@ export class QueryQueue {
         resourceTypes?.query,
         shop.exceptions,
       );
-      await page
+      const response = await page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
           timeout: 60000,
-        })
-        .then((response) => {
-          if (response) {
-            const status = response.status();
-            if (status === 429) {
-              this.pauseQueue('rate-limit');
-              closePage(page).then();
-              !this.taskFinished &&
-                this.queue.push({
-                  task,
-                  request: { ...request, retries: request.retries + 1 },
-                });
-            }
-            if (status >= 500) {
-              this.pauseQueue('error');
-              closePage(page).then();
-              !this.taskFinished &&
-                this.queue.push({
-                  task,
-                  request: { ...request, retries: request.retries + 1 },
-                });
-            }
-          }
         })
         .catch((e) => {
           !this.taskFinished &&
@@ -285,25 +262,27 @@ export class QueryQueue {
             });
         });
 
-      await page
-        .waitForNavigation({
-          waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-        })
-        .catch((e) => {
-          !this.taskFinished &&
-            this.log({
-              location: 'Page.waitForNavigation',
-              msg: e?.message,
-              stack: e?.stack,
-              link: pageInfo.link,
-            });
+      if (response) {
+        const status = response.status();
+        if (status === 429) {
+          !this.taskFinished && this.pauseQueue('rate-limit');
           closePage(page).then();
           !this.taskFinished &&
             this.queue.push({
               task,
               request: { ...request, retries: request.retries + 1 },
             });
-        });
+        }
+        if (status >= 500) {
+          !this.taskFinished && this.pauseQueue('error');
+          closePage(page).then();
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
+        }
+      }
 
       // Clear cookies
       const cookies = await page.cookies();

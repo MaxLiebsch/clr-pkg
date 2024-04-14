@@ -135,7 +135,7 @@ export class CrawlerQueue {
       await this.connect();
       this.log('repaired');
     } catch (error) {
-      this.log('Cannot restart browser')
+      this.log('Cannot restart browser');
     }
     this.repairing = false;
     this.running = 0;
@@ -254,34 +254,10 @@ export class CrawlerQueue {
         shop.exceptions,
       );
 
-      page
+      const response = await page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
           timeout: 60000,
-        })
-        .then((response) => {
-          if (response) {
-            const status = response.status();
-            if (status === 429) {
-              //after five blocks
-              this.pauseQueue('rate-limit');
-              closePage(page).then();
-              !this.taskFinished &&
-                this.queue.push({
-                  task,
-                  request: { ...request, retries: request.retries + 1 },
-                });
-            }
-            if (status >= 500) {
-              this.pauseQueue('error');
-              closePage(page).then();
-              !this.taskFinished &&
-                this.queue.push({
-                  task,
-                  request: { ...request, retries: request.retries + 1 },
-                });
-            }
-          }
         })
         .catch((e) => {
           !this.taskFinished &&
@@ -311,25 +287,27 @@ export class CrawlerQueue {
             });
         });
 
-      await page
-        .waitForNavigation({
-          waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-        })
-        .catch((e) => {
-          !this.taskFinished &&
-            this.log({
-              location: 'Page.waitForNavigation',
-              msg: e?.message,
-              stack: e?.stack,
-              link: pageInfo.link,
-            });
-          closePage(page).then();
+      if (response) {
+        const status = response.status();
+        if (status === 429) {
+          !this.taskFinished && this.pauseQueue('rate-limit');
+          await closePage(page)
           !this.taskFinished &&
             this.queue.push({
               task,
               request: { ...request, retries: request.retries + 1 },
             });
-        });
+        }
+        if (status >= 500) {
+          !this.taskFinished && this.pauseQueue('error');
+          await closePage(page)
+          !this.taskFinished &&
+            this.queue.push({
+              task,
+              request: { ...request, retries: request.retries + 1 },
+            });
+        }
+      }
 
       // Clear cookies
       const cookies = await page.cookies();
@@ -343,7 +321,12 @@ export class CrawlerQueue {
         })
         .catch((e) => {});
 
-      const blocked = await checkForBlockingSignals(page, shop.mimic, pageInfo.link, this.queueTask);
+      const blocked = await checkForBlockingSignals(
+        page,
+        shop.mimic,
+        pageInfo.link,
+        this.queueTask,
+      );
 
       if (blocked) {
         this.pauseQueue('blocked');
@@ -355,7 +338,12 @@ export class CrawlerQueue {
       }
 
       const monitoringInterval = setInterval(async () => {
-        const blocked = await checkForBlockingSignals(page, request.shop.mimic, pageInfo.link, this.queueTask);
+        const blocked = await checkForBlockingSignals(
+          page,
+          request.shop.mimic,
+          pageInfo.link,
+          this.queueTask,
+        );
         if (blocked) {
           this.pauseQueue('blocked');
           clearInterval(monitoringInterval);
