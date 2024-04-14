@@ -6,10 +6,11 @@ import { ProductRecord } from '../types/product';
 import { ICategory } from './getCategories';
 import { checkForBlockingSignals } from '../checkPageHealth';
 import { closePage } from './closePage';
-// import { shuffle } from 'underscore';
 import { getPage } from './getPage';
 import { Query } from '../types/query';
 import { createLabeledTimeout } from './createLabeledTimeout';
+import { QueueTask } from '../types/QueueTask';
+import { LoggerService } from './logger';
 
 export interface CrawlerRequest {
   prio: number;
@@ -48,6 +49,7 @@ export class CrawlerQueue {
   }>;
   private running: number;
   private concurrency: number;
+  private queueTask: QueueTask;
   private browser: Browser | null = null;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
@@ -58,15 +60,31 @@ export class CrawlerQueue {
   private taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
 
-  constructor(concurrency: number, proxyAuth: ProxyAuth) {
+  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
     this.running = 0;
     this.proxyAuth = proxyAuth;
   }
 
+  async log(msg: string | { [key: string]: any }) {
+    let message = {
+      shopDomain: this.queueTask.shopDomain,
+      taskid: this.queueTask.id ?? '',
+      type: this.queueTask.type,
+      msg: '',
+    };
+    if (typeof msg === 'string') {
+      message['msg'] = msg;
+    } else {
+      message = { ...message, ...msg };
+    }
+    LoggerService.getSingleton().logger.info(message);
+  }
+
   async disconnect(taskFinished = false): Promise<void> {
-    console.log('disconnecting');
+    this.log('disconnecting');
     this.taskFinished = taskFinished;
     try {
       if (taskFinished) {
@@ -81,41 +99,41 @@ export class CrawlerQueue {
         }
       }
     } catch (error) {
-      console.log('Could not close all pages');
+      this.log('Could not close all pages');
     }
     try {
       if (this.browser?.connected) {
         await this.browser.close();
       }
     } catch (error) {
-      console.log('Could not restart browser');
+      this.log('Could not restart browser');
     }
   }
 
   async connect(): Promise<void> {
     try {
-      console.log('connecting');
-      this.browser = await mainBrowser(this.proxyAuth);
+      this.log('connecting');
+      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
     } catch (error) {
-      console.log('Browser crashed big time', error);
+      this.log(`Browser crashed big time' ${error}`);
       await this.repair();
     }
   }
 
   async repair(): Promise<void> {
     if (this.repairing) {
-      console.log('already reparing');
       await new Promise<void>((resolve) =>
         this.waitingForRepairResolvers.push(resolve),
       );
       return;
     }
     this.repairing = true;
-    console.log('start repairing');
+    this.log('start repairing');
     await this.disconnect();
 
     try {
       await this.connect();
+      this.log('repaired');
     } catch (error) {
       throw new Error('Cannot restart browser');
     }
@@ -166,7 +184,7 @@ export class CrawlerQueue {
           const url = page.url();
           return url;
         } catch (error) {
-          console.log('error:', error);
+          console.log(`error: ${error}`);
           closePage(page);
           return 'failed';
         }
@@ -188,18 +206,20 @@ export class CrawlerQueue {
     if (this.pause) return;
     this.pause = true;
     if (reason === 'rate-limit' || reason === 'blocked') {
-      setTimeout(() => {
-        this.repair().then(() => {
+      this.repair().then(() => {
+        setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.running = 0;
           this.resumeQueue();
-        });
-      }, 5000);
+        }, 5000);
+      });
     }
     if (reason === 'error') {
       this.repair().then(() => {
-        this.resumeQueue();
+        setTimeout(() => {
+          this.resumeQueue();
+        }, 5000);
       });
     }
   }
@@ -237,6 +257,7 @@ export class CrawlerQueue {
       page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+          timeout: 60000,
         })
         .then((response) => {
           if (response) {
@@ -263,6 +284,13 @@ export class CrawlerQueue {
           }
         })
         .catch((e) => {
+          !this.taskFinished &&
+            this.log({
+              location: 'Page.goTo',
+              msg: e?.message,
+              stack: e?.stack,
+              link: pageInfo.link,
+            });
           if (
             e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
             !this.taskFinished
@@ -276,7 +304,6 @@ export class CrawlerQueue {
             this.pauseQueue('error');
           }
           closePage(page).then();
-          console.log('e:goto:', e.message);
           !this.taskFinished &&
             this.queue.push({
               task,
@@ -289,7 +316,13 @@ export class CrawlerQueue {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
         })
         .catch((e) => {
-          console.log('e:wait for navigation', e.message);
+          !this.taskFinished &&
+            this.log({
+              location: 'Page.waitForNavigation',
+              msg: e?.message,
+              stack: e?.stack,
+              link: pageInfo.link,
+            });
           closePage(page).then();
           !this.taskFinished &&
             this.queue.push({
@@ -310,7 +343,7 @@ export class CrawlerQueue {
         })
         .catch((e) => {});
 
-      const blocked = await checkForBlockingSignals(page, shop.mimic);
+      const blocked = await checkForBlockingSignals(page, shop.mimic, pageInfo.link, this.queueTask);
 
       if (blocked) {
         this.pauseQueue('blocked');
@@ -322,7 +355,7 @@ export class CrawlerQueue {
       }
 
       const monitoringInterval = setInterval(async () => {
-        const blocked = await checkForBlockingSignals(page, request.shop.mimic);
+        const blocked = await checkForBlockingSignals(page, request.shop.mimic, pageInfo.link, this.queueTask);
         if (blocked) {
           this.pauseQueue('blocked');
           clearInterval(monitoringInterval);
@@ -339,11 +372,13 @@ export class CrawlerQueue {
       return page;
     } catch (error) {
       if (error instanceof Error)
-        console.log(
-          'BROWSER PAGE LOAD FAILED: ',
-          `${error.message}\n${error.stack}`,
-        );
-
+        !this.taskFinished &&
+          this.log({
+            location: 'PageloadCatchBlock',
+            msg: error?.message,
+            stack: error?.stack,
+            link: pageInfo.link,
+          });
       !this.browser?.connected &&
         !this.taskFinished &&
         this.pauseQueue('error');

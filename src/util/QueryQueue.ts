@@ -9,6 +9,8 @@ import { Query } from '../types/query';
 import { closePage } from './closePage';
 import { shuffle } from 'underscore';
 import { getPage } from './getPage';
+import { QueueTask } from '../types/QueueTask';
+import { LoggerService } from './logger';
 
 export interface QueryRequest {
   prio: number;
@@ -38,6 +40,7 @@ export class QueryQueue {
     request: QueryRequest;
   }>;
   private running: number;
+  private queueTask: QueueTask;
   private concurrency: number;
   private browser: Browser | null = null;
   private proxyAuth: ProxyAuth;
@@ -47,29 +50,47 @@ export class QueryQueue {
   private taskFinished: boolean = false;
   private pause: boolean = false;
 
-  constructor(concurrency: number, proxyAuth: ProxyAuth) {
+  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.queueTask = task;
     this.concurrency = concurrency;
     this.queue = [];
     this.running = 0;
     this.proxyAuth = proxyAuth;
   }
 
+ async log(msg: string | { [key: string]: any }) {
+    let message = {
+      shopDomain: this.queueTask.shopDomain,
+      taskid: this.queueTask.id ?? '',
+      type: this.queueTask.type,
+      msg: '',
+    };
+    if (typeof msg === 'string') {
+      message['msg'] = msg;
+    } else {
+      message = { ...message, ...msg };
+    }
+    LoggerService.getSingleton().logger.info(message);
+  }
+
   pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     if (this.pause) return;
     this.pause = true;
     if (reason === 'rate-limit' || reason === 'blocked') {
-      setTimeout(() => {
-        this.repair().then(() => {
+      this.repair().then(() => {
+        setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.running = 0;
           this.resumeQueue();
-        });
-      }, 5000);
+        }, 5000);
+      });
     }
     if (reason === 'error') {
       this.repair().then(() => {
-        this.resumeQueue();
+        setTimeout(() => {
+          this.resumeQueue();
+        }, 5000);
       });
     }
   }
@@ -92,7 +113,7 @@ export class QueryQueue {
   }
 
   async disconnect(taskFinished = false): Promise<void> {
-    console.log('disconnecting');
+    this.log('disconnecting');
     this.taskFinished = taskFinished;
     try {
       if (this.browser?.connected && !taskFinished) {
@@ -103,36 +124,37 @@ export class QueryQueue {
         }
       }
     } catch (error) {
-      console.log('Could not close all pages');
+      this.log('Could not close all pages');
     }
     try {
       if (this.browser?.connected) {
         await this.browser.close();
       }
     } catch (error) {
-      console.log('Could not restart browser');
+      this.log('Could not restart browser');
     }
   }
 
   async connect(): Promise<void> {
     try {
-      this.browser = await mainBrowser(this.proxyAuth);
+      this.log('connecting');
+      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
     } catch (error) {
-      console.log('Browser crashed big time', error);
+      this.log(`Browser crashed big time  ${error}`);
       await this.repair();
     }
   }
 
   async repair(): Promise<void> {
     if (this.repairing) {
-      console.log('already reparing');
+      this.log('already reparing');
       await new Promise<void>((resolve) =>
         this.waitingForRepairResolvers.push(resolve),
       );
       return;
     }
     this.repairing = true;
-    console.log('start repairing');
+    this.log('start repairing');
     await this.disconnect();
     try {
       await this.connect();
@@ -170,7 +192,7 @@ export class QueryQueue {
           const url = page.url();
           return url;
         } catch (error) {
-          console.log('error:', error);
+          this.log(`error  ${error}`);
           closePage(page).then();
           return 'failed';
         }
@@ -209,6 +231,7 @@ export class QueryQueue {
       await page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+          timeout: 60000,
         })
         .then((response) => {
           if (response) {
@@ -234,6 +257,13 @@ export class QueryQueue {
           }
         })
         .catch((e) => {
+          !this.taskFinished &&
+          this.log({
+            location: 'Page.goTo',
+            msg: e?.message,
+            stack: e?.stack,
+            link: pageInfo.link,
+          });
           if (
             e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR') &&
             !this.taskFinished
@@ -266,7 +296,7 @@ export class QueryQueue {
         })
         .catch((e) => {});
 
-      const blocked = await checkForBlockingSignals(page, shop.mimic);
+      const blocked = await checkForBlockingSignals(page, shop.mimic, pageInfo.link, this.queueTask);
 
       if (blocked) {
         this.pauseQueue('blocked');
@@ -277,7 +307,7 @@ export class QueryQueue {
         });
       }
       const monitoringInterval = setInterval(async () => {
-        const blocked = await checkForBlockingSignals(page, request.shop.mimic);
+        const blocked = await checkForBlockingSignals(page, request.shop.mimic, pageInfo.link, this.queueTask);
         if (blocked) {
           this.pauseQueue('blocked');
           clearInterval(monitoringInterval);
@@ -296,7 +326,12 @@ export class QueryQueue {
       return page;
     } catch (error) {
       if (error instanceof Error)
-        console.log('BROWSER PAGE LOAD FAILED', error.message, error.stack);
+        !this.taskFinished && this.log({
+          location: 'PageloadCatchBlock',
+          msg: error?.message,
+          stack: error?.stack,
+          link: pageInfo.link,
+        });
 
       !this.taskFinished &&
         !this.browser?.connected &&
