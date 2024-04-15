@@ -62,6 +62,7 @@ export async function checkForBlockingSignals(
     if (task)
       LoggerService.getSingleton().logger.info({
         location: `BlockedBlock`,
+        link,
         msg: 'isBlocked',
         accessDenied,
         spamdetection,
@@ -74,6 +75,7 @@ export async function checkForBlockingSignals(
       LoggerService.getSingleton().logger.info({
         location: `BlockedBlock`,
         msg: 'isBlocked',
+        link,
         accessDenied,
         spamdetection,
         hostname: hostname(),
