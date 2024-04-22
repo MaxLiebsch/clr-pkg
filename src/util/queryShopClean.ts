@@ -150,7 +150,7 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
                     ...shop,
                     image: rawProd.image,
                     shop: targetRetailerList[targetShopIndex].d,
-                    name: rawProd.name,
+                    name: shop.name,
                   } as Product,
                   targetRetailerList[targetShopIndex],
                 );
