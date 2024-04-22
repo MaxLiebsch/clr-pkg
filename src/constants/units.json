@@ -107,7 +107,7 @@
     "day": ["d", "days", "day", "Tage", "Tag"],
     "week": ["week", "weeks", "Woche", "Wochen"],
     "month": ["month", "months", "Monate", "Monat"],
-    "years": ["year", "years", "y", "yr", "yrs", "Jahre", "Jahr"]
+    "years": ["year", "years", "y", "yr", "yrs","Jahren" ,"Jahre", "Jahr"]
   },
   "massFlowRate": {
     "kilogrampersecond": ["kg/s"],
