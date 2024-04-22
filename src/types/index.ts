@@ -4,6 +4,7 @@ import mongoose, { Query, Schema } from 'mongoose';
 import { Browser, PuppeteerLifeCycleEvent } from 'puppeteer';
 import { QueryKeys } from './query';
 import { ICategory } from '../util/getCategories';
+import { Rule } from './rules';
 
 export interface ImgMeta {
   baseurl: string;
@@ -27,6 +28,7 @@ export interface BaseAction {
 export interface ButtonAction extends BaseAction {
   action: string;
   wait: boolean;
+  waitDuration?: number;
   target?: string;
   btn_sel?: string;
 }
@@ -71,9 +73,9 @@ export interface PaginationEl {
   sel: string;
   nav: string;
   initialUrl?: {
-    type: string,
+    type: string;
     regexp: string;
-  },
+  };
   scrollToBottom: boolean;
   paginationUrlSchema?: PaginationUrlSchema;
   calculation: Calculation;
@@ -83,9 +85,9 @@ export interface PaginationUrlSchema {
   replace: string;
   withQuery: boolean;
   parseAndReplace?: {
-    regexp: string,
+    regexp: string;
     replace: string;
-  }
+  };
   calculation: {
     method: string;
     offset: number;
@@ -104,6 +106,7 @@ export interface Calculation {
 export interface ProductList {
   sel: string;
   type: string;
+  timeout?: number;
   productsPerPage?: number;
   productCntSel: string[];
   product: IProductSelector;
@@ -119,6 +122,9 @@ export type Content =
   | 'link'
   | 'price'
   | 'promoPrice'
+  | 'van'
+  | 'vendor'
+  | 'vendorLink'
   | 'name'
   | 'shop'
   | 'category'
@@ -138,7 +144,7 @@ export interface Detail {
   baseUrl?: string;
   extractPart?: number;
   regexp?: string;
-  proprietaryProducts?:string
+  proprietaryProducts?: string;
   attr?: string;
   key?: string;
   redirect_regex?: string;
@@ -208,11 +214,18 @@ export interface Year {
   max: string;
 }
 
+export interface TargetShop {
+  prefix: string;
+  d: string;
+}
+
 export interface ShopObject {
   _id: string;
-  exceptions?: string[]
+  exceptions?: string[];
+  pauseOnProductPage?: { pause: boolean; max: number; min: number };
   d: string;
   p: string[];
+  rules?: Rule[]
   manualCategories: ICategory[];
   a: string;
   n: string;
@@ -227,6 +240,7 @@ export interface ShopObject {
   waitUntil: WaitUntil;
   queryActions: QueryAction[];
   crawlActions: CrawlAction[];
+  actions: QueryAction[];
   entryPoints: EntryPoint[];
   categories: Categories;
   paginationEl: PaginationEl[];
@@ -234,7 +248,6 @@ export interface ShopObject {
   img: string[];
   f?: string;
   imgMeta: ImgMeta;
-  action: QueryAction[];
   l: string;
   active: boolean;
   ean: string;

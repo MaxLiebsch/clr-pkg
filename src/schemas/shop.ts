@@ -55,7 +55,7 @@ const ShopSchema = new Schema<ShopObject>(
       imgRegex: { type: String },
       suffix: { type: String },
     },
-    action: {
+    actions: {
       type: [],
       default: [],
     },
