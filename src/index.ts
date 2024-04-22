@@ -23,6 +23,7 @@ export * from './util/queryShopClean';
 export * from './util/crawlShop';
 export * from './util/queue';
 export * from './util/QueryQueue';
+export * from './util/matchHelper';
 export * from './util/logger';
 export * from './util/fs/stats';
 export * from './util/normalizeSIUnits'
