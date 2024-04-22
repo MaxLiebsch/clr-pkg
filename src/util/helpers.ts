@@ -325,7 +325,7 @@ export async function scrollToBottom(page: Page) {
       .evaluate('window.scrollTo(0,document.body.scrollHeight)')
       .catch((e) => {});
 
-    new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 5000));
 
     let newHeight = await page
       .evaluate('document.body.scrollHeight')
@@ -359,7 +359,7 @@ export async function humanScroll(page: Page) {
 
     // Random pause: between 100 and 500 milliseconds
     let pause = Math.floor(Math.random() * 200) + 100;
-    new Promise((r) => setTimeout(r, pause));
+    await new Promise((r) => setTimeout(r, pause));
 
     // Occasionally scroll up a little
     if (Math.random() < 0.1) {
@@ -370,7 +370,7 @@ export async function humanScroll(page: Page) {
           window.scrollTo(0, newScrollPosition);
         }, newScrollPosition)
         .catch((e) => {});
-      new Promise((r) => setTimeout(r, pause));
+      await new Promise((r) => setTimeout(r, pause));
     }
 
     lastScrollPosition = newScrollPosition;
