@@ -7,7 +7,7 @@ import {
 } from '../util/helpers';
 import { removeRandomKeywordInURL } from '../util/sanitize';
 
-describe('slug', () => {
+describe('Helper.ts', () => {
   // test('create slug ', () => {
   //   expect(slug('\n\t\t\t\t\t\t\tComputer &amp; Büro\n\t\t\t\t\t\t')).toBe(
   //     'computer & buero',
