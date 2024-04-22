@@ -62,7 +62,11 @@ export function extractPart(str: string, pattern: string, part: number) {
 }
 
 function capitalizeWords(str: string) {
-  return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 export function extractCategoryNameAndCapitalize(
@@ -72,7 +76,9 @@ export function extractCategoryNameAndCapitalize(
 ): string {
   try {
     if (categoryRegexp) {
-      return capitalizeWords(extractPart(url, categoryRegexp,1).replace(/[-]/, ' '));
+      return capitalizeWords(
+        extractPart(url, categoryRegexp, 1).replace(/[-]/, ' '),
+      );
     }
     const urlObj = new URL(url);
 
@@ -122,6 +128,7 @@ export const clickBtn = async (
   sel: string,
   wait: boolean,
   waitUntil: WaitUntil,
+  waitDuration?: number,
 ) => {
   const isClickable = await page.evaluate((sel) => {
     const element = document.querySelector(sel);
@@ -142,6 +149,9 @@ export const clickBtn = async (
       ]);
     } else {
       await page.click(sel).catch((e) => console.log(e.message));
+      if (waitDuration) {
+        await new Promise((r) => setTimeout(r, waitDuration));
+      }
     }
   } else {
     await page

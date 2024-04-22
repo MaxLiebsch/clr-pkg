@@ -1,8 +1,6 @@
-import {  Page } from 'puppeteer';
-import {  Limit, ShopObject } from '../types';
-import {
-  scrollToBottom,
-} from './helpers';
+import { Page } from 'puppeteer';
+import { Limit, ShopObject } from '../types';
+import { scrollToBottom } from './helpers';
 import { crawlProducts } from './crawlProducts';
 import { ProductRecord } from '../types/product';
 import { paginationUrlBuilder } from './paginationURLBuilder';
@@ -64,10 +62,10 @@ export async function browseProductpages(
   const { paginationEl: paginationEls, waitUntil } = shop;
 
   let pages: number[] = [];
+  let { pagination, paginationEl } = await findPagination(page, paginationEls, limit);
+  const limitPages = limit?.pages ? limit?.pages : 0;
 
-  let { pagination, paginationEl } = await findPagination(page, paginationEls);
-
-  if (pagination !== 'missing' && pagination) {
+  if (pagination !== 'missing' && pagination  && limitPages > 0) {
     const { calculation, type } = paginationEl;
 
     if (type === 'pagination') {
@@ -75,24 +73,25 @@ export async function browseProductpages(
 
       const { pages, noOfFoundPages } = await getPageNumberFromPagination(
         page,
-        paginationEl
+        paginationEl,
       );
 
       if (noOfFoundPages) {
         if (scanShop) {
           category['cnt_pages'] = pages.length;
         }
-        const limitPages = limit?.pages ? limit?.pages : 0;
 
         const noOfPages = limitPages
-          ? limitPages > noOfFoundPages
-            ? noOfFoundPages
-            : limitPages
-          : noOfFoundPages;
+        ? limitPages > noOfFoundPages
+        ? noOfFoundPages
+        : limitPages
+        : noOfFoundPages;
 
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
-          LoggerService.getSingleton().logger.info(`Page ${pageNo} of ${noOfPages} Pages`)
+          LoggerService.getSingleton().logger.info(
+            `Page ${pageNo} of ${noOfPages} Pages`,
+          );
           if (i === 0) {
             if (scanShop) {
               category.productpages!.push({
@@ -140,8 +139,11 @@ export async function browseProductpages(
                 scanShop ? productPagePath : undefined,
               ),
             ]);
-            const blocked = await checkForBlockingSignals(page, shop.mimic, pageInfo.link);
-            //TODO: Endless loop!
+            const blocked = await checkForBlockingSignals(
+              page,
+              shop.mimic,
+              pageInfo.link,
+            );
             if (blocked) {
               await Promise.all([
                 page
@@ -164,6 +166,7 @@ export async function browseProductpages(
             await closePage(page);
           }
         }
+        return 'crawled'
       }
     } else {
       // type === 'infinite_scroll'

@@ -1,8 +1,8 @@
 import { Browser, Page } from 'puppeteer';
 import { ProxyAuth } from '../types/proxyAuth';
 import { mainBrowser } from './browsers';
-import { ShopObject } from '../types';
-import { ProductRecord } from '../types/product';
+import { Limit, ShopObject, TargetShop } from '../types';
+import { DbProduct, ProductRecord } from '../types/product';
 import { ICategory } from './getCategories';
 import { checkForBlockingSignals } from '../checkPageHealth';
 import { Query } from '../types/query';
@@ -12,13 +12,26 @@ import { getPage } from './getPage';
 import { QueueTask } from '../types/QueueTask';
 import { LoggerService } from './logger';
 import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
-import { createLabeledTimeout } from './createLabeledTimeout';
+import { IntermediateProdInfo } from './matchHelper';
+
+export interface ProdInfo {
+  procProd: DbProduct;
+  rawProd: ProductRecord;
+  dscrptnSegments: string[];
+  nmSubSegments: string[];
+}
 
 export interface QueryRequest {
   prio: number;
   retries: number;
   shop: ShopObject;
+  extendedLookUp?: boolean;
+  targetShop?: TargetShop;
+  prodInfo?: ProdInfo;
+  queue: QueryQueue;
   query: Query;
+  limit?: Limit;
+  isFinished?: (interm?: IntermediateProdInfo) => Promise<void>;
   pageInfo: ICategory;
   addProduct: (product: ProductRecord) => Promise<void>;
 }
@@ -58,6 +71,7 @@ export class QueryQueue {
     this.errorLog = {
       'Navigating frame was detached': { count: 0, lastOccurred: null },
       'Requesting main frame too early!': { count: 0, lastOccurred: null },
+      'net::ERR_TIMED_OUT': { count: 0, lastOccurred: null },
     };
     this.queueTask = task;
     this.concurrency = concurrency;
@@ -110,6 +124,8 @@ export class QueryQueue {
     this.errorLog['Navigating frame was detached'].lastOccurred = null;
     this.errorLog['Requesting main frame too early!'].count = 0;
     this.errorLog['Requesting main frame too early!'].lastOccurred = null;
+    this.errorLog['net::ERR_TIMED_OUT'].count = 0;
+    this.errorLog['net::ERR_TIMED_OUT'].lastOccurred = null;
   }
 
   public async clearQueue() {
@@ -149,9 +165,8 @@ export class QueryQueue {
       this.log({ msg: 'Could not close all pages', taskFinished });
     }
     try {
-      if (this.browser?.connected) {
-        await this.browser.close();
-      }
+      await this.browser?.close();
+      this.log({ msg: 'Browser disconnected', taskFinished });
     } catch (error) {
       this.log({ msg: 'Could not restart browser', taskFinished });
     }
@@ -250,6 +265,7 @@ export class QueryQueue {
         this.proxyAuth,
         resourceTypes?.query,
         shop.exceptions,
+        shop.rules
       );
       const response = await page
         .goto(pageInfo.link, {
@@ -295,6 +311,16 @@ export class QueryQueue {
                 'net::ERR_TUNNEL_CONNECTION_FAILED',
                 pageInfo.link,
               );
+            }
+
+            if (e.message.includes('net::ERR_TIMED_OUT')) {
+              let errorType = 'net::ERR_TIMED_OUT';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error', 'net::ERR_TIMED_OUT', pageInfo.link);
+              }
             }
 
             this.queue.push({
@@ -445,17 +471,12 @@ export class QueryQueue {
       const timeoutTime =
         Math.random() * (randomTimeoutmax - randomTimeoutmin) +
         randomTimeoutmin;
-      const timeout = createLabeledTimeout(
-        () =>
-          this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-            (page) => {
-              this.running--;
-              this.next();
-            },
-          ),
-        timeoutTime,
+      this.wrapperFunction(nextRequest.task, nextRequest.request).then(
+        (page) => {
+          this.running--;
+          this.next();
+        },
       );
-      this.timeouts.push(timeout);
     }
   }
 }

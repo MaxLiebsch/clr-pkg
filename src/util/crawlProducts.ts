@@ -11,6 +11,7 @@ import { ProductRecord } from '../types/product';
 import { ICategory } from './getCategories';
 import { ProductPage, StatService } from './fs/stats';
 import { prefixLink } from './compare_helper';
+import { removeRandomKeywordInURL } from './sanitize';
 
 export const crawlProducts = async (
   page: Page,
@@ -32,13 +33,18 @@ export const crawlProducts = async (
     productPage = statService.get(path);
   }
 
+  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
+    const { min, max } = shop.pauseOnProductPage;
+    let pause = Math.floor(Math.random() * max) + min;
+    await new Promise((r) => setTimeout(r, pause));
+  }
   const scanShop = productPagePath !== undefined;
 
   const { productList } = shop;
   for (let index = 0; index < productList.length; index++) {
-    const { sel, product } = productList[index];
+    const { sel, product, timeout } = productList[index];
+    const selector = await waitForSelector(page, sel, timeout?? 5000, false);
 
-    const selector = await waitForSelector(page, sel, 5000, false);
     if (selector !== 'missing' && selector) {
       const productEls = await page.$$(product.sel).catch((e) => {
         if (e instanceof TimeoutError) {
@@ -67,6 +73,8 @@ export const crawlProducts = async (
             shop: shop.d,
             category,
             name: '',
+            van: '',
+            vendor: '',
             price: '',
             promoPrice: '',
             createdAt: '',
@@ -76,7 +84,9 @@ export const crawlProducts = async (
             description: '',
             nameSub: '',
             redirect_link: '',
+            vendorLink: '',
           };
+
           if (type === 'link') {
             const href = await productEl
               .evaluate((el) => el.getAttribute('href'))
@@ -156,7 +166,7 @@ export const crawlProducts = async (
                   if (value) {
                     const redirect = new RegExp(redirect_regex!);
                     if (redirect.test(value)) {
-                      product[content] = urls.redirect + value;
+                      product[content] = urls.redirect.replace('<key>', value);
                     } else {
                       product[content] = urls.default + value;
                     }
@@ -191,46 +201,19 @@ export const crawlProducts = async (
           product['createdAt'] = new Date().toISOString();
           product['updatedAt'] = new Date().toISOString();
 
+          if (shop?.ece && shop.ece.length) {
+            product.link = removeRandomKeywordInURL(
+              product.link as string,
+              shop.ece,
+            );
+          }
           if (proprietaryProducts) {
             product.name = proprietaryProducts + ' ' + product.name;
           }
-
           await addProductCb(product);
         }
-      } else {
-        // if (process.env.DEBUG) {
-        //   await page
-        //     .screenshot({
-        //       type: 'png',
-        //       path: join(
-        //         process.cwd(),
-        //         `/data/shop/debug/${shop.d}_products_missing.${slug(pageInfo.link)}.png`,
-        //       ),
-        //       fullPage: true,
-        //     })
-        //     .then()
-        //     .catch((e) => {});
-        // }
-        if (scanShop) {
-          productPage['missing'] = 'Products in ' + ' ' + product.sel;
-        }
       }
-    } else {
-      // if (process.env.DEBUG) {
-      //   await page
-      //     .screenshot({
-      //       type: 'png',
-      //       path: join(
-      //         process.cwd(),
-      //         `/data/shop/debug/${shop.d}_container_missing.${slug(pageInfo.link)}.png`,
-      //       ),
-      //       fullPage: true,
-      //     })
-      //     .catch((e) => {});
-      // }
-      if (scanShop) {
-        productPage['missing'] = 'ProductContainer in ' + ' ' + sel;
-      }
+      break;
     }
   }
   scanShop && statService.set(path, productPage);

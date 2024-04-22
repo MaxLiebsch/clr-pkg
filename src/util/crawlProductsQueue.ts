@@ -5,7 +5,6 @@ import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { paginationUrlBuilder } from './paginationURLBuilder';
 import { closePage } from './closePage';
 import { crawlProducts } from './crawlProducts';
-import { waitForSelector } from './helpers';
 
 export const crawlProductsQueue = async (
   page: Page,
@@ -35,7 +34,7 @@ export const crawlProductsQueue = async (
     lastPage &&
     paginationType === 'pagination'
   ) {
-    let { paginationEl } = await findPagination(page, paginationEls);
+    let { paginationEl } = await findPagination(page, paginationEls, limit);
 
     const { productList } = shop;
     let hasProducts = false;

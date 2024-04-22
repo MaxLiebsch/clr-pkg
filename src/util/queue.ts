@@ -259,6 +259,7 @@ export class CrawlerQueue {
         this.proxyAuth,
         resourceTypes?.crawl,
         shop.exceptions,
+        shop.rules,
       );
 
       const response = await page

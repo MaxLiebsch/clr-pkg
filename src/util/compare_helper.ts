@@ -1,9 +1,11 @@
+import { TargetShop } from '../types';
 import {
   CandidateProduct,
   DbProduct,
   Product,
   SrcProductDetails,
 } from '../types/product';
+import { ProdInfo } from './QueryQueue';
 import {
   buildRegexForSiUnits,
   classifyMeasurements,
@@ -15,21 +17,33 @@ import parsePrice from 'parse-price';
 const regexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
 const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
 const dimensionRegex =
-  /(Ø|)\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|Stück|St|kapseln|pixel)/gi;
+  /(Ø|)(\d+\s*[xX-a]|)\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|Stück|St|kapseln|pixel|)/gi;
+const inOperatorRegex = /(\d+)\s*(in|from|of|von)\s*(\d+)/gi;
 
-export const getProductNameSplit = (name: string) =>
+export const excludeCharsAndSplit = (name: string) =>
   cleanString(name)
     .split(' ')
     .map((item: string) => item.toLowerCase());
 
-export const getProductNameSplitAdv = (name: string) => {
-  const split = [];
+export const segmentString = (name: string) => {
+  const segments = [];
   let update = name;
-  let dimensions = getDimensions(name);
+  update = update.replaceAll(/[-]/g, ' ');
+  update = update.replaceAll(/[\/]/g, ' ');
 
+  // inOperators
+  let inOperators = getInOperators(name);
+  inOperators.forEach((unit) => {
+    update = update.toLowerCase().replaceAll(unit.toLowerCase(), '');
+  });
+  inOperators = inOperators.map((d) => d.replaceAll(' ', '').trim());
+
+  //dimensions
+  let dimensions = getDimensions(name);
   dimensions.forEach((unit) => {
     update = update.toLowerCase().replaceAll(unit.toLowerCase(), '');
   });
+  dimensions = dimensions.map((d) => d.replaceAll(' ', '').trim());
 
   const siUnits = getSIUints(update);
 
@@ -42,27 +56,24 @@ export const getProductNameSplitAdv = (name: string) => {
 
   update = cleanString(update);
 
-  dimensions = dimensions.map((d) => d.replaceAll(' ', '').trim());
-
   const normalizedMeasurements = levelNormalizedMeasurements(
     classifyMeasurements(siUnits),
   ).map((measure) => measure.str);
 
-  split.push(
+  segments.push(
     ...normalizedMeasurements,
     ...dimensions,
-    ...getProductNameSplit(update),
+    ...inOperators,
+    ...excludeCharsAndSplit(update),
   );
-  return split;
+  return segments;
 };
 
-export const getProductCandidates = (candidates: Product[]) =>
+export const segmentFoundProds = (candidates: Product[]) =>
   candidates.map((candidate) => {
     return {
       ...candidate,
-      candidateNameSplit: candidate?.name
-        ? getProductNameSplitAdv(candidate.name)
-        : [],
+      nameSegments: candidate?.name ? segmentString(candidate.name) : [],
     };
   });
 
@@ -79,13 +90,13 @@ export function getManufacturer(src: string) {
   const split = src.split(' ');
   if (split.length > 1) {
     return {
-      manufacturer: split[0],
-      name: src.replace(split[0], '').trim(),
+      mnfctr: split[0],
+      prodNm: src.replace(split[0], '').trim(),
     };
   } else {
     return {
-      manufacturer: '',
-      name: src,
+      mnfctr: '',
+      prodNm: src,
     };
   }
 }
@@ -114,12 +125,11 @@ export const getPrice = (priceStr: string) => {
 export const getNumbers = (str: string) => {
   const match = str.match(/\d+/g);
   if (match) {
-    return match
+    return match;
   } else {
     return null;
   }
 };
-
 
 export const getNumber = (priceStr: string) => {
   const match = priceStr.match(/\d+(?=\s*\w*$)/g);
@@ -132,6 +142,15 @@ export const getNumber = (priceStr: string) => {
   } else {
     return null;
   }
+};
+
+export const getInOperators = (str: string) => {
+  const inOperators: string[] = [];
+  const matches = [...str.matchAll(inOperatorRegex)];
+  matches.forEach((unit) => {
+    inOperators.push(unit[0]);
+  });
+  return inOperators;
 };
 
 export const getDimensions = (str: string) => {
@@ -162,17 +181,15 @@ export const getSIUints = (str: string) => {
 */
 
 export const findBestMatch = (
-  descriptionSplit: string[],
-  foundProducts: CandidateProduct[],
-  manufacturer: string,
-  name: string,
-  prc: number,
+  foundProds: CandidateProduct[],
+  prodInfo: ProdInfo,
 ) => {
   let bestMatchIndex = -1;
   let highScore = 0;
-
-  const nameSplit = getProductNameSplit(name);
-  foundProducts.forEach((product, index) => {
+  const { procProd, dscrptnSegments, nmSubSegments } = prodInfo;
+  const { nm, prc, mnfctr } = procProd;
+  const nameSplit = segmentString(nm);
+  foundProds.forEach((product, index) => {
     const curr_prc = parsePrice(getPrice(product.price ?? 0));
     const mrgn = Number((curr_prc - prc).toFixed(2));
     const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
@@ -195,17 +212,18 @@ export const findBestMatch = (
         score += -4;
         break;
     }
-    descriptionSplit.forEach((giveWord) => {
-      if (product.candidateNameSplit.includes(giveWord)) {
+
+    dscrptnSegments.forEach((giveWord) => {
+      if (product.nameSegments.includes(giveWord)) {
         score++;
       }
     });
-    if (product.candidateNameSplit.includes(manufacturer.toLowerCase())) {
-      score += 3;
+    if (product.nameSegments.includes(mnfctr.toLowerCase())) {
+      score += 2;
     }
 
     nameSplit.forEach((giveWord) => {
-      if (product.candidateNameSplit.includes(giveWord)) {
+      if (product.nameSegments.includes(giveWord)) {
         score += 2;
       }
     });
@@ -215,61 +233,89 @@ export const findBestMatch = (
       bestMatchIndex = index;
     }
   });
-  return bestMatchIndex >= 0 ? foundProducts[bestMatchIndex] : null;
+  return bestMatchIndex >= 0 ? foundProds[bestMatchIndex] : null;
 };
 
 interface ResultObject {
   [key: string]: any;
 }
 
+interface Arbitrage {
+  [key: string]: any;
+}
+
 export const addBestMatchToProduct = (
   candidates: CandidateProduct[],
   shop: { d: string; prefix: string },
-  srcProductDetails: SrcProductDetails,
+  prodInfo: ProdInfo,
 ) => {
-  const { d: domain, prefix } = shop;
-  const { nm, dscrptnSplit, prc, nmSubSplit, mnfctr } = srcProductDetails;
-  const result: ResultObject = {};
-  const bestMatch = findBestMatch(
-    [...dscrptnSplit, ...nmSubSplit],
-    candidates,
-    mnfctr,
-    nm,
-    prc,
-  );
+  const { procProd } = prodInfo;
+  const { nm, prc, mnfctr } = procProd;
+  let result: ResultObject = {};
+  const bestMatch = findBestMatch(candidates, prodInfo);
 
   if (bestMatch) {
-    if (typeof prc === 'number' && typeof bestMatch.price === 'string') {
-      Object.entries(bestMatch).forEach(([key, value]) => {
-        if (['link', 'image', 'name', 'price'].includes(key)) {
-          if (key === 'link') {
-            result[`${prefix}` + key.replace(/[aeiou]/gi, '')] = prefixLink(
-              value,
-              domain,
-            );
-          } else if (key === 'image') {
-            result[`${prefix}` + key.replace(/[aeou]/gi, '')] = value;
-          } else {
-            result[`${prefix}` + key.replace(/[aeiou]/gi, '')] = value;
-          }
-        }
-      });
-      const bm_prc = parsePrice(getPrice(bestMatch.price ?? 0));
+    const arbitrage = calculateArbitrage(prc, bestMatch, shop);
+    result = { ...result, arbitrage };
+  }
+  return { arbitrage: result as Arbitrage, bestMatch };
+};
 
-      if (bm_prc && prc) {
-        const mrgn = Number((bm_prc - prc).toFixed(2));
-        const mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
-        const arbitrage = {
-          prc: bm_prc,
-          mrgn,
-          fat: mrgn > 0 ? true : false,
-          mrgn_pct,
-        };
-        Object.entries(arbitrage).forEach(([key, value]) => {
-          result[`${prefix}` + key] = value;
-        });
+export function calculateArbitrage(
+  srcPrice: number,
+  bestMatch: Product,
+  targetShop: TargetShop,
+) {
+  const { price } = bestMatch;
+  const arbitrageInfo: { [key: string]: any } = {};
+  const { d: domain, prefix } = targetShop;
+  if (typeof srcPrice === 'number' && typeof price === 'string') {
+    Object.entries(bestMatch).forEach(([key, value]) => {
+      if (['link', 'image', 'name', 'price'].includes(key)) {
+        if (key === 'link') {
+          //TODO: remove legacy, since it is now usually prefixed on the fly
+          arbitrageInfo[`${prefix}` + key.replace(/[aeiou]/gi, '')] =
+            prefixLink(value, domain);
+        } else if (key === 'image') {
+          arbitrageInfo[`${prefix}` + key.replace(/[aeou]/gi, '')] = value;
+        } else {
+          arbitrageInfo[`${prefix}` + key.replace(/[aeiou]/gi, '')] = value;
+        }
       }
+    });
+    const bm_prc = parsePrice(getPrice(price ?? 0));
+
+    if (bm_prc && srcPrice) {
+      const mrgn = Number((bm_prc - srcPrice).toFixed(2));
+      const mrgn_pct = Number(((mrgn / srcPrice) * 100).toFixed(1));
+      const arbitrage = {
+        prc: bm_prc,
+        mrgn,
+        fat: mrgn > 0 ? true : false,
+        mrgn_pct,
+      };
+      Object.entries(arbitrage).forEach(([key, value]) => {
+        arbitrageInfo[`${prefix}` + key] = value;
+      });
     }
   }
-  return result as DbProduct;
-};
+  return arbitrageInfo;
+}
+
+export function reduceString(str: string, limit: number) {
+  // Check if the string is already within the limit
+  if (str.length <= limit) return str;
+
+  // Find the index of the last space within the limit
+  let lastSpace = str.substring(0, limit).lastIndexOf(' ');
+
+  // If there is no space in the range, try to find the first space after the limit
+  if (lastSpace === -1) {
+    lastSpace = str.indexOf(' ', limit);
+    // If there is still no space, return the whole string
+    if (lastSpace === -1) return str;
+  }
+
+  // Return the substring up to the last space found
+  return str.substring(0, lastSpace);
+}

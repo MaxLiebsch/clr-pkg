@@ -49,7 +49,7 @@ export async function browseProductPagesQueue(
   const scanShop = category && productPagePath;
   const { paginationEl: paginationEls, waitUntil } = shop;
 
-  let { pagination, paginationEl } = await findPagination(page, paginationEls);
+  let { pagination, paginationEl } = await findPagination(page, paginationEls, limit);
 
   if (pagination !== 'missing' && pagination) {
     const { type } = paginationEl;

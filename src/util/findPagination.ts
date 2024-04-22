@@ -1,9 +1,9 @@
 import { ElementHandle, Page } from 'puppeteer';
-import { PaginationEl } from '../types';
+import { Limit, PaginationEl } from '../types';
 import { waitForSelector } from './helpers';
 
-const findPagination = async (page: Page, paginationEls: PaginationEl[]) => {
-  if (!paginationEls.length)
+const findPagination = async (page: Page, paginationEls: PaginationEl[], limit?: Limit ) => {
+  if (!paginationEls.length || limit?.pages === 0)
     return {
       pagination: 'missing',
       paginationEl: {} as PaginationEl,

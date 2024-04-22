@@ -1,13 +1,15 @@
 import { Browser, Page, ResourceType } from 'puppeteer';
 import { ProxyAuth } from '../types/proxyAuth';
-import { screenResolutions, userAgentList } from '../constants';
+import { screenResolutions, userAgentList, uuidRegex } from '../constants';
 import { sample } from 'underscore';
+import { shouldAbortRequest } from './pageHelper';
+import { Rule } from '../types/rules';
 
 const setPageProperties = async (
   page: Page,
   exceptions: string[] = [],
   disAllowedResourceTypes?: ResourceType[],
-  lng: string = 'de',
+  rules?: Rule[]
 ) => {
   await page.setRequestInterception(true);
   page.on('request', (request) => {
@@ -17,13 +19,16 @@ const setPageProperties = async (
     if (disAllowedResourceTypes?.length) {
       defaultDisallowedResourcTypes = disAllowedResourceTypes;
     }
-    if (exceptions.includes(requestUrl)) {
+    if (exceptions.some((exception) => requestUrl.includes(exception))) {
       return request.continue();
     }
 
     if (defaultDisallowedResourcTypes.includes(resourceType))
       return request.abort();
     else {
+      if (shouldAbortRequest(requestUrl, rules)) {
+        return request.abort();
+      }
       return request.continue();
     }
   });
@@ -65,12 +70,11 @@ export async function getPage(
   proxyAuth: ProxyAuth,
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
-  lng: string = 'de',
+  rules?: Rule[]
 ) {
-  // const context = await browser.createBrowserContext();
   const page = await browser.newPage();
 
-  await setPageProperties(page, exceptions, disAllowedResourceTypes, lng);
+  await setPageProperties(page, exceptions, disAllowedResourceTypes, rules);
 
   return page;
 }

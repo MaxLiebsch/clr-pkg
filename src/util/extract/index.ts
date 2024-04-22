@@ -501,8 +501,8 @@ export const getProductInfoWithBrowser = async (
         : 'networkidle2',
     });
 
-    if (shopObject?.action) {
-      for (const action of shopObject.action) {
+    if (shopObject?.actions) {
+      for (const action of shopObject.actions) {
         const selector = await page
           .waitForSelector(action.sel, {
             visible: true,
