@@ -70,10 +70,7 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
           );
           if (targetShopIndex !== -1) {
             // search in either amazon and ebay
-            // console.log(
-            //   'found in amazon or ebay, search in missing',
-            //   targetRetailerList[targetShopIndex === 0 ? 1 : 0],
-            // );
+            
             const arbitrage = calculateArbitrage(
               procProd.prc,
               bestMatch,
@@ -92,7 +89,6 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
               });
           } else if (vendor.includes((rawProd.shop as string).split('.')[0])) {
             // search in amazon and ebay
-            // console.log('found vendor, search in amazon and ebay');
             await closePage(page);
             isFinished &&
               isFinished({
@@ -106,7 +102,6 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
                 targetShops: targetRetailerList,
                 intermProcProd: procProd,
               });
-            // console.log('Nor targetshops [amazon, ebay], nor idealo');
           }
         } else {
           //goto page
@@ -167,7 +162,6 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
               targetShops: missingShops,
               intermProcProd: procProd,
             });
-          console.log('goto page product page and get shops');
         }
       } else {
         isFinished &&
@@ -176,7 +170,6 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
             intermProcProd: procProd,
           });
         await closePage(page);
-        console.log('No best match found');
       }
     } else {
       await closePage(page);

@@ -305,13 +305,13 @@ export class QueryQueue {
                 pageInfo.link,
               );
             }
-            if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
-              this.pauseQueue(
-                'error',
-                'net::ERR_TUNNEL_CONNECTION_FAILED',
-                pageInfo.link,
-              );
-            }
+            // if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
+            //   this.pauseQueue(
+            //     'error',
+            //     'net::ERR_TUNNEL_CONNECTION_FAILED',
+            //     pageInfo.link,
+            //   );
+            // }
 
             if (e.message.includes('net::ERR_TIMED_OUT')) {
               let errorType = 'net::ERR_TIMED_OUT';
