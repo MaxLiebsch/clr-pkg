@@ -161,7 +161,7 @@ export const clickBtn = async (
           (element as HTMLButtonElement).click();
         }
       }, sel)
-      .catch((e) => console.log(e.message));
+      .catch((e) => console.log("evaluate button",e.message));
   }
 };
 
@@ -195,7 +195,9 @@ export const clickShadowBtn = async (
         .waitForNavigation({
           waitUntil: waitUntil ? waitUntil.product : 'networkidle2',
         })
-        .catch((e) => {}),
+        .catch((e) => {
+          console.log(e)
+        }),
       clickElementInShadowRoot(elementHandle, btn_sel),
     ]);
   } else {

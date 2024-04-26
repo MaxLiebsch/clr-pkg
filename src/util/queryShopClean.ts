@@ -110,26 +110,17 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
           const addProductCb = async (product: ProductRecord) => {
             foundShops.push(product);
           };
-          const res = await Promise.all([
-            page
-              .goto(bestMatch.link, {
-                waitUntil: waitUntil ? waitUntil.product : 'load',
-              })
-              .catch((e) => {
-                console.log(e);
-              }),
-            runActions(page, shop),
-          ]);
-          if (res) {
-            await crawlProducts(
-              page,
-              shop,
-              1,
-              addProductCb,
-              pageInfo,
-              undefined,
-            );
-          }
+          await page
+            .goto(bestMatch.link, {
+              waitUntil: waitUntil ? waitUntil.product : 'load',
+            })
+            .catch((e) => {
+              console.log(e);
+            });
+          await runActions(page, shop);
+
+          await crawlProducts(page, shop, 1, addProductCb, pageInfo, undefined);
+
           await closePage(page);
 
           let missingShops: TargetShop[] = targetRetailerList;
