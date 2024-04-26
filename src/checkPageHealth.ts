@@ -20,6 +20,7 @@ export async function checkForBlockingSignals(
           msg: 'isBlocked',
           hostname: hostname(),
           type: task.type,
+          link,
           typeId: task.id,
           shopDomain: task.shopDomain,
         });

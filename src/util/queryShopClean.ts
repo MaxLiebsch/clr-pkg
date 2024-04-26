@@ -51,8 +51,9 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
 
   if (res === 'crawled' && !page.isClosed()) {
     if (extendedLookUp && prodInfo && targetShop) {
+      //TODO: THERE SHOULD BE ALWAYS A LINK
       const candidates = segmentFoundProds(
-        (products as Product[]).filter((p) => p.price !== ''),
+        (products as Product[]).filter((p) => p.price !== '' && p.link !== ''),
       );
       let { procProd, rawProd } = prodInfo;
 
@@ -70,16 +71,16 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
           );
           if (targetShopIndex !== -1) {
             // search in either amazon and ebay
-            
+
             const arbitrage = calculateArbitrage(
               procProd.prc,
               bestMatch,
               targetRetailerList[targetShopIndex],
             );
             procProd = { ...procProd, ...arbitrage };
-            
+
             await closePage(page);
-            
+
             isFinished &&
               isFinished({
                 targetShops: [
