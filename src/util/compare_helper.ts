@@ -1,9 +1,7 @@
 import { TargetShop } from '../types';
 import {
   CandidateProduct,
-  DbProduct,
   Product,
-  SrcProductDetails,
 } from '../types/product';
 import { ProdInfo } from './QueryQueue';
 import {
@@ -171,15 +169,6 @@ export const getSIUints = (str: string) => {
   return siUnits;
 };
 
-/*
-  <-50         -6
-  >-50 && <-30 -3
-  >-30  && <30  0
-  >30 && <50   -3
-  >50          -6
-  
-*/
-
 export const findBestMatch = (
   foundProds: CandidateProduct[],
   prodInfo: ProdInfo,
@@ -240,7 +229,7 @@ interface ResultObject {
   [key: string]: any;
 }
 
-interface Arbitrage {
+export interface Arbitrage {
   [key: string]: any;
 }
 

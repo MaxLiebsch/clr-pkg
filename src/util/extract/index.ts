@@ -23,7 +23,6 @@ import { deliveryTime } from '../deliveryTImeCleansing';
 import { get } from 'lodash';
 import { jsonrepair } from 'jsonrepair';
 import mime from 'mime-types';
-import useProxy from 'puppeteer-page-proxy';
 import { Browser, Page, ResourceType, TimeoutError } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { closePage } from '../closePage';

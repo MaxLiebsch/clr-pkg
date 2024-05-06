@@ -35,6 +35,17 @@ export type ProductRecord = Record<Content, string | boolean | Array<string>>;
 export interface DbProduct {
   s: string;
   ean: string;
+  asin: string;
+  lckd: boolean;
+  a_props: boolean;
+  taskId: string;
+  bsr: [
+    {
+      number: number;
+      createdAt: string;
+      category: string;
+    },
+  ];
   anr: string; //article number
   pblsh: boolean;
   vrfd: boolean;

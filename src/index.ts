@@ -20,6 +20,7 @@ export * from './util/deliveryTImeCleansing';
 export * from './util/submitQuery';
 export * from './util/queryShop';
 export * from './util/queryShopClean';
+export * from './util/lookupProductQueue';
 export * from './util/crawlShop';
 export * from './util/queue';
 export * from './util/QueryQueue';

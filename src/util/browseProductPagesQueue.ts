@@ -4,11 +4,11 @@ import { paginationUrlBuilder } from './paginationURLBuilder';
 import { ICategory } from './getCategories';
 import { StatService, SubCategory } from './fs/stats';
 import { closePage } from './closePage';
-import { CrawlerRequest } from './queue';
 import { crawlProductsQueue } from './crawlProductsQueue';
 import findPagination from './findPagination';
 import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { crawlProducts } from './crawlProducts';
+import { CrawlerRequest } from '../types/query-request';
 
 const addPageCountAndPushSubPages = (
   category: SubCategory | null,

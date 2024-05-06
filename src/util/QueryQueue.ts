@@ -1,39 +1,21 @@
 import { Browser, Page } from 'puppeteer';
 import { ProxyAuth } from '../types/proxyAuth';
 import { mainBrowser } from './browsers';
-import { Limit, ShopObject, TargetShop } from '../types';
 import { DbProduct, ProductRecord } from '../types/product';
-import { ICategory } from './getCategories';
 import { checkForBlockingSignals } from '../checkPageHealth';
-import { Query } from '../types/query';
 import { closePage } from './closePage';
 import { shuffle } from 'underscore';
 import { getPage } from './getPage';
 import { QueueTask } from '../types/QueueTask';
 import { LoggerService } from './logger';
 import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
-import { IntermediateProdInfo } from './matchHelper';
+import { QueryRequest } from '../types/query-request';
 
 export interface ProdInfo {
   procProd: DbProduct;
   rawProd: ProductRecord;
   dscrptnSegments: string[];
   nmSubSegments: string[];
-}
-
-export interface QueryRequest {
-  prio: number;
-  retries: number;
-  shop: ShopObject;
-  extendedLookUp?: boolean;
-  targetShop?: TargetShop;
-  prodInfo?: ProdInfo;
-  queue: QueryQueue;
-  query: Query;
-  limit?: Limit;
-  isFinished?: (interm?: IntermediateProdInfo) => Promise<void>;
-  pageInfo: ICategory;
-  addProduct: (product: ProductRecord) => Promise<void>;
 }
 
 type Task = (page: Page, request: QueryRequest) => Promise<void>;
@@ -265,7 +247,7 @@ export class QueryQueue {
         this.proxyAuth,
         resourceTypes?.query,
         shop.exceptions,
-        shop.rules
+        shop.rules,
       );
       const response = await page
         .goto(pageInfo.link, {
@@ -333,9 +315,14 @@ export class QueryQueue {
 
       if (response) {
         const status = response.status();
+        if(status === 404){
+          await closePage(page)
+          if(request?.onNotFound) request.onNotFound()
+          return;
+        }
         if (status === 429 && !this.taskFinished) {
           this.pauseQueue('rate-limit', 'status:429', pageInfo.link);
-          closePage(page).then();
+          await closePage(page)
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
@@ -343,7 +330,7 @@ export class QueryQueue {
         }
         if (status >= 500 && !this.taskFinished) {
           this.pauseQueue('error', 'status:500', pageInfo.link);
-          closePage(page).then();
+          await closePage(page)
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
@@ -352,8 +339,8 @@ export class QueryQueue {
       }
 
       // Clear cookies
-      const cookies = await page.cookies();
-      await page.deleteCookie(...cookies).catch((e) => {});
+      const cookies = await page.cookies().catch((e) => {});
+      if (cookies) await page.deleteCookie(...cookies).catch((e) => {});
 
       // Clear localStorage and sessionStorage
       await page

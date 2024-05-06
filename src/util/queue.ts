@@ -1,37 +1,15 @@
 import { Browser, Page } from 'puppeteer';
 import { ProxyAuth } from '../types/proxyAuth';
 import { mainBrowser } from './browsers';
-import { Limit, ShopObject } from '../types';
-import { ProductRecord } from '../types/product';
-import { ICategory } from './getCategories';
 import { checkForBlockingSignals } from '../checkPageHealth';
 import { closePage } from './closePage';
 import { getPage } from './getPage';
-import { Query } from '../types/query';
 import { createLabeledTimeout } from './createLabeledTimeout';
 import { QueueTask } from '../types/QueueTask';
 import { LoggerService } from './logger';
 import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
+import { CrawlerRequest } from '../types/query-request';
 
-export interface CrawlerRequest {
-  prio: number;
-  retries: number;
-  shop: ShopObject;
-  parentPath: string;
-  parent: ICategory | null;
-  limit: Limit;
-  noOfPages?: number;
-  productCount?: number | null;
-  initialProductPageUrl?: string;
-  pageNo?: number;
-  pageInfo: ICategory;
-  productPagePath?: string;
-  paginationType?: string;
-  query?: Query;
-  queue: CrawlerQueue;
-  onlyCrawlCategories: boolean;
-  addProduct: (product: ProductRecord) => Promise<void>;
-}
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
@@ -306,7 +284,7 @@ export class CrawlerQueue {
         const status = response.status();
         if (status === 429 && !this.taskFinished) {
           this.pauseQueue('rate-limit');
-          closePage(page).then();
+          await closePage(page)
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
@@ -314,7 +292,7 @@ export class CrawlerQueue {
         }
         if (status >= 500 && !this.taskFinished) {
           this.pauseQueue('error');
-          closePage(page).then();
+          await closePage(page)
 
           this.queue.push({
             task,
@@ -324,8 +302,8 @@ export class CrawlerQueue {
       }
 
       // Clear cookies
-      const cookies = await page.cookies();
-      await page.deleteCookie(...cookies).catch((e) => {});
+      const cookies = await page.cookies().catch(e=> {})
+      if(cookies) await page.deleteCookie(...cookies).catch((e) => {});
 
       // Clear localStorage and sessionStorage
       await page

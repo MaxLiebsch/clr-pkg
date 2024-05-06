@@ -4,6 +4,7 @@ import { DbProduct, Product, ProductRecord } from '../types/product';
 import { Query } from '../types/query';
 import { ProdInfo, QueryQueue } from './QueryQueue';
 import {
+  Arbitrage,
   addBestMatchToProduct,
   getPrice,
   segmentFoundProds,
@@ -50,7 +51,9 @@ export const queryTargetShops = async (
           const isFinished = async (interm?: IntermediateProdInfo) => {
             if (interm) {
               const { intermProcProd, targetShops: intermTargetShops } = interm;
+
               procProd = { ...procProd, ...intermProcProd };
+
               if (intermTargetShops.length) {
                 task.extendedLookUp = false;
                 const shopQueryPromises = queryTargetShops(
@@ -61,9 +64,11 @@ export const queryTargetShops = async (
                   task,
                   prodInfo,
                 );
+
                 const targetShopProds = (await Promise.all(
                   await shopQueryPromises,
                 )) as TargetShopProducts[];
+
                 const { procProd: arbitragePerMatchedTargetShopProduct } =
                   matchTargetShopProdsWithRawProd(targetShopProds, prodInfo);
                 procProd = {
@@ -78,9 +83,9 @@ export const queryTargetShops = async (
               res({ products, targetShop });
             }
           };
-  
+
           const shop = shops[targetShop.d];
-  
+
           queue.pushTask(queryShopClean, {
             retries: 0,
             shop,
@@ -100,10 +105,8 @@ export const queryTargetShops = async (
               name: shop.d,
             },
           });
-          
         } catch (error) {
-          console.log('error:', error)
-          
+          console.log('error:', error);
         }
       }),
   );
@@ -134,7 +137,7 @@ export const matchTargetShopProdsWithRawProd = (
     if (products && products.length) {
       const { foundProds, candidatesToSave } =
         reduceTargetShopCandidates(products);
-      
+
       candidates[targetShop.d] = candidatesToSave;
       const { arbitrage, bestMatch } = addBestMatchToProduct(
         foundProds,
@@ -144,5 +147,5 @@ export const matchTargetShopProdsWithRawProd = (
       procProd = { ...procProd, ...arbitrage.arbitrage };
     }
   });
-  return { procProd, candidates };
+  return { procProd, candidates};
 };

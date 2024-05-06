@@ -1,12 +1,12 @@
 import { Page } from 'puppeteer';
 import { ICategory, getCategories } from './getCategories';
-import { CrawlerRequest } from './queue';
 import { getProductCount } from './helpers';
 import { StatService } from './fs/stats';
 import { retrieveSubPagesRecursive } from './retrieveSubPagesRecursive';
 import { transformCategories } from './transformCategories';
 import { closePage } from './closePage';
 import { browseProductPagesQueue } from './browseProductPagesQueue';
+import { CrawlerRequest } from '../types/query-request';
 
 export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
   const { shop, pageInfo, queue, parentPath, onlyCrawlCategories, limit } =

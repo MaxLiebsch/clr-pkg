@@ -103,6 +103,18 @@ export interface Calculation {
   sel: string;
 }
 
+export interface ProductInfos {
+  timeout?: number;
+  sel: string;
+  product:[
+    type: string,
+    
+  ]
+  productDetails: ProductDetailSelector[];
+}
+
+export interface ProductDetailSelector  { content: string; type: string; sel: string };
+
 export interface ProductList {
   sel: string;
   type: string;
@@ -225,7 +237,7 @@ export interface ShopObject {
   pauseOnProductPage?: { pause: boolean; max: number; min: number };
   d: string;
   p: string[];
-  rules?: Rule[]
+  rules?: Rule[];
   manualCategories: ICategory[];
   a: string;
   n: string;

@@ -1,7 +1,6 @@
 import { Page } from 'puppeteer';
 import { browseProductpages } from './browseProductPages';
 import { submitQuery } from './submitQuery';
-import { QueryRequest } from './QueryQueue';
 import { Product, ProductRecord } from '../types/product';
 import { closePage } from './closePage';
 import {
@@ -12,6 +11,7 @@ import {
 import { crawlProducts } from './crawlProducts';
 import { runActions } from './runActions';
 import { TargetShop } from '../types';
+import { QueryRequest } from '../types/query-request';
 
 export const targetRetailerList = [
   { d: 'amazon.de', prefix: 'a_', name: 'amazon' },
