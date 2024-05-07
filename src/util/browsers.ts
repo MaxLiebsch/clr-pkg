@@ -107,8 +107,6 @@ export const mainBrowsers = async (
         const args = [
           '--no-sandbox',
           '--disable-gpu',
-          '--disable-infobars',
-          '--disable-extensions',
           '--disable-setuid-sandbox',
           '--disable-web-security',
           '--start-maximized',
@@ -158,8 +156,6 @@ export const mainBrowser = async (
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
-    '--disable-infobars',
-    '--disable-extensions',
     '--disable-gpu',
     '--disable-web-security',
     '--start-maximized',
