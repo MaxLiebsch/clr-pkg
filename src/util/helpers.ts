@@ -10,6 +10,7 @@ import {
 import { getNumber } from './compare_helper';
 import { load } from 'cheerio';
 import { unescape } from 'underscore';
+import { NestedNameDetail } from '../types/productInfoDetails';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
   Object.keys(browserGroup).reduce(
@@ -161,7 +162,7 @@ export const clickBtn = async (
           (element as HTMLButtonElement).click();
         }
       }, sel)
-      .catch((e) => console.log("evaluate button",e.message));
+      .catch((e) => console.log('evaluate button', e.message));
   }
 };
 
@@ -196,7 +197,7 @@ export const clickShadowBtn = async (
           waitUntil: waitUntil ? waitUntil.product : 'networkidle2',
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e);
         }),
       clickElementInShadowRoot(elementHandle, btn_sel),
     ]);
@@ -294,9 +295,9 @@ export const waitForSelector = async (
 
 export async function nestedProductName(
   elementHandle: ElementHandle,
-  detail: Detail,
+  detail: NestedNameDetail,
 ) {
-  const { content, sel, type, remove } = detail;
+  const { sel, remove } = detail;
   return elementHandle
     .evaluate(
       (element, remove, sel) => {
