@@ -33,18 +33,20 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     }
   }
 
-  const productDetails =[{
-    content: 'a_img',
-    type: 'src',
-    parent: '#imgTagWrapperId',
-    sel: 'img',
-  },
-  {
-    type: 'text',
-    parent: '#corePrice_feature_div',
-    sel: 'span.a-offscreen',
-    content: 'a_prc',
-  }]
+  const productDetails = [
+    {
+      type: 'src',
+      parent: '#imgTagWrapperId',
+      sel: 'img',
+      content: 'a_img',
+    },
+    {
+      type: 'text',
+      parent: '#corePrice_feature_div',
+      sel: 'span.a-offscreen',
+      content: 'a_prc',
+    },
+  ];
 
   const productInfos: any[] = [
     {
@@ -53,7 +55,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       timeout: 1000,
       listItem: '#detailBulletsWrapper_feature_div li span.a-list-item',
       seperator: ':',
-      productDetails
+      productDetails,
     },
     {
       sel: '#productDetails_db_sections',
@@ -61,12 +63,11 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       type: 'table',
       th: '#productDetails_db_sections tbody th.prodDetSectionEntry',
       td: '#productDetails_db_sections tbody td',
-      productDetails
+      productDetails,
     },
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
-  
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
@@ -169,8 +170,9 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     });
 
     if (addProductInfo) addProductInfo(cleanedProductInfo);
+    await closePage(page);
   } else {
     if (addProductInfo) addProductInfo(null);
+    await closePage(page);
   }
-  closePage(page);
 }
