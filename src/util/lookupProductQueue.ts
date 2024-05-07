@@ -33,60 +33,47 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     }
   }
 
+  const productDetails =[{
+    content: 'a_img',
+    type: 'src',
+    parent: '#imgTagWrapperId',
+    sel: 'img',
+  },
+  {
+    type: 'text',
+    parent: '#corePrice_feature_div',
+    sel: 'span.a-offscreen',
+    content: 'a_prc',
+  }]
+
   const productInfos: any[] = [
     {
       sel: '#detailBulletsWrapper_feature_div',
       type: 'list',
-      timeout: 500,
+      timeout: 1000,
       listItem: '#detailBulletsWrapper_feature_div li span.a-list-item',
       seperator: ':',
-      productDetails: [
-        {
-          content: 'img',
-          type: 'src',
-          parent: '#imgTagWrapperId',
-          sel: 'img',
-        },
-        {
-          type: 'text',
-          parent: '#corePrice_feature_div',
-          sel: 'span.a-offscreen',
-          content: 'prc',
-        },
-      ],
+      productDetails
     },
     {
       sel: '#productDetails_db_sections',
-      timeout: 500,
+      timeout: 1000,
       type: 'table',
       th: '#productDetails_db_sections tbody th.prodDetSectionEntry',
       td: '#productDetails_db_sections tbody td',
-      productDetails: [
-        {
-          content: 'a_img',
-          type: 'src',
-          parent: '#imgTagWrapperId',
-          sel: 'img',
-        },
-        {
-          type: 'text',
-          parent: '#corePrice_feature_div',
-          sel: 'span.a-offscreen',
-          content: 'a_prc',
-        },
-      ],
+      productDetails
     },
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
-  //slow server
-  const pause = Math.floor(Math.random() * 500) + 300;
-  await new Promise((r) => setTimeout(r, pause));
-
+  
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
     const selector = await waitForSelector(page, sel, timeout ?? 5000, false);
+    //slow server
+    const pause = Math.floor(Math.random() * 1500) + 1000;
+    await new Promise((r) => setTimeout(r, pause));
     if (selector !== 'missing' && selector) {
       if (type === 'table' && 'th' in productInfo && 'td' in productInfo) {
         const { th, td } = productInfo;
