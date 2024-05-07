@@ -107,6 +107,8 @@ export const mainBrowsers = async (
         const args = [
           '--no-sandbox',
           '--disable-gpu',
+          '--disable-infobars',
+          '--disable-extensions',
           '--disable-setuid-sandbox',
           '--disable-web-security',
           '--start-maximized',
@@ -135,6 +137,7 @@ export const mainBrowsers = async (
           args,
           defaultViewport: null,
         });
+        console.log(await b.version());
         res[index] = {
           brs: b,
           load: 0,
@@ -155,6 +158,8 @@ export const mainBrowser = async (
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
+    '--disable-infobars',
+    '--disable-extensions',
     '--disable-gpu',
     '--disable-web-security',
     '--start-maximized',
@@ -188,7 +193,7 @@ export const mainBrowser = async (
         shopDomain: task.shopDomain,
       });
   }
-  const browser = puppeteer.launch({
+  const browser = await puppeteer.launch({
     headless: process.env.NODE_ENV === 'production' ? true : false,
     devtools: process.env.NODE_ENV !== 'production',
     args,
@@ -196,5 +201,6 @@ export const mainBrowser = async (
     timeout: 600000,
     protocolTimeout: 60000,
   });
+  console.log('Browser Version: ', await browser.version());
   return browser;
 };
