@@ -252,6 +252,7 @@ export class QueryQueue {
         shop.exceptions,
         shop.rules,
       );
+      const navigationPromise = page.waitForNavigation();
       const response = await page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
@@ -322,7 +323,7 @@ export class QueryQueue {
             await closePage(page);
           }
         });
-      
+      await navigationPromise;
 
       if (response) {
         const status = response.status();
