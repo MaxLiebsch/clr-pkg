@@ -54,6 +54,7 @@ export class QueryQueue {
       'Navigating frame was detached': { count: 0, lastOccurred: null },
       'Requesting main frame too early!': { count: 0, lastOccurred: null },
       'net::ERR_TIMED_OUT': { count: 0, lastOccurred: null },
+      'net::ERR_TUNNEL_CONNECTION_FAILED': { count: 0, lastOccurred: null },
     };
     this.queueTask = task;
     this.concurrency = concurrency;
@@ -108,6 +109,8 @@ export class QueryQueue {
     this.errorLog['Requesting main frame too early!'].lastOccurred = null;
     this.errorLog['net::ERR_TIMED_OUT'].count = 0;
     this.errorLog['net::ERR_TIMED_OUT'].lastOccurred = null;
+    this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].count = 0;
+    this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].lastOccurred = null;
   }
 
   public async clearQueue() {
@@ -289,11 +292,17 @@ export class QueryQueue {
             }
             
             if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
-              this.pauseQueue(
-                'error',
-                'net::ERR_TUNNEL_CONNECTION_FAILED',
-                pageInfo.link,
-              );
+              let errorType = 'net::ERR_TUNNEL_CONNECTION_FAILED';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue(
+                  'error',
+                  'net::ERR_TUNNEL_CONNECTION_FAILED',
+                  pageInfo.link,
+                );
+              }
             }
 
             if (e.message.includes('net::ERR_TIMED_OUT')) {
