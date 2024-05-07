@@ -8,9 +8,10 @@ import { closePage } from './closePage';
 import { getPrice } from './compare_helper';
 import parsePrice from 'parse-price';
 import { QueryRequest } from '../types/query-request';
+import { PageParser } from './extract/productDetailPageParser.gateway';
 
 export async function lookupProductQueue(page: Page, request: QueryRequest) {
-  const { addProductInfo } = request;
+  const { addProductInfo, shop } = request;
 
   const bsrRegex =
     /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
@@ -36,33 +37,52 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     {
       sel: '#detailBulletsWrapper_feature_div',
       type: 'list',
-      timeout: 50,
+      timeout: 500,
       listItem: '#detailBulletsWrapper_feature_div li span.a-list-item',
       seperator: ':',
       productDetails: [
         {
+          content: 'img',
+          type: 'src',
+          parent: '#imgTagWrapperId',
+          sel: 'img',
+        },
+        {
           type: 'text',
-          sel: '#corePrice_feature_div span.a-offscreen',
-          content: 'price',
+          parent: '#corePrice_feature_div',
+          sel: 'span.a-offscreen',
+          content: 'prc',
         },
       ],
     },
     {
       sel: '#productDetails_db_sections',
-      timeout: 50,
+      timeout: 500,
       type: 'table',
       th: '#productDetails_db_sections tbody th.prodDetSectionEntry',
       td: '#productDetails_db_sections tbody td',
       productDetails: [
         {
+          content: 'a_img',
+          type: 'src',
+          parent: '#imgTagWrapperId',
+          sel: 'img',
+        },
+        {
           type: 'text',
-          sel: '#corePrice_feature_div span.a-offscreen',
-          content: 'price',
+          parent: '#corePrice_feature_div',
+          sel: 'span.a-offscreen',
+          content: 'a_prc',
         },
       ],
     },
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
+
+  //slow server
+  const pause = Math.floor(Math.random() * 500) + 300;
+  await new Promise((r) => setTimeout(r, pause));
+
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
@@ -135,14 +155,14 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
         }
       }
       if (productDetails) {
-        await Promise.all(
-          productDetails.map(async (detail: any) => {
-            const innerText = await getInnerText(page, detail.sel);
-            if (innerText) {
-              rawProductInfos.push({ key: detail.content, value: innerText });
-            }
-          }),
-        );
+        const pageParser = new PageParser(shop.d, []);
+        productDetails.forEach((detail: any) => {
+          pageParser.registerDetailExtractor(detail.type, detail);
+        });
+        const details = await pageParser.parse(page);
+        Object.entries(details).map(([key, value]) => {
+          rawProductInfos.push({ key, value });
+        });
       }
     }
   }
@@ -152,7 +172,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       if (key.toLowerCase().includes('bestseller')) {
         return { key: 'bsr', value: splitNumberAndCategory(value) };
       }
-      if (key === 'price') {
+      if (key === 'a_prc') {
         return { key, value: parsePrice(getPrice(value)) };
       }
       if (key.toLowerCase().includes('asin')) {
