@@ -10,7 +10,6 @@ import { LoggerService } from './logger';
 import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
 import { CrawlerRequest } from '../types/query-request';
 
-
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
 const maxRetries = 3;
@@ -43,6 +42,8 @@ export class CrawlerQueue {
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = {
       'Navigating frame was detached': { count: 0, lastOccurred: null },
+      'Requesting main frame too early!': { count: 0, lastOccurred: null },
+      'net::ERR_TIMED_OUT': { count: 0, lastOccurred: null },
     };
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
@@ -103,7 +104,7 @@ export class CrawlerQueue {
     }
   }
 
-  async repair(): Promise<void> {
+  async repair(reason?: string): Promise<void> {
     if (this.repairing) {
       await new Promise<void>((resolve) =>
         this.waitingForRepairResolvers.push(resolve),
@@ -184,12 +185,16 @@ export class CrawlerQueue {
   linkExists(newLink: string) {
     return this.uniqueLinks.some((link) => link === newLink);
   }
-
-  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
+  pauseQueue(
+    reason: 'error' | 'rate-limit' | 'blocked',
+    error: string,
+    link: string,
+  ) {
     if (this.pause) return;
+    this.log({ location: 'pauseQueue', reason, link });
     this.pause = true;
     if (reason === 'rate-limit' || reason === 'blocked') {
-      this.repair().then(() => {
+      this.repair(reason).then(() => {
         setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
@@ -199,7 +204,7 @@ export class CrawlerQueue {
       });
     }
     if (reason === 'error') {
-      this.repair().then(() => {
+      this.repair(reason).then(() => {
         setTimeout(() => {
           this.resumeQueue();
         }, 5000);
@@ -207,8 +212,12 @@ export class CrawlerQueue {
     }
     this.errorLog['Navigating frame was detached'].count = 0;
     this.errorLog['Navigating frame was detached'].lastOccurred = null;
+    this.errorLog['Requesting main frame too early!'].count = 0;
+    this.errorLog['Requesting main frame too early!'].lastOccurred = null;
+    this.errorLog['net::ERR_TIMED_OUT'].count = 0;
+    this.errorLog['net::ERR_TIMED_OUT'].lastOccurred = null;
   }
-
+  
   resumeQueue() {
     this.pause = false;
     const concurrent = this.concurrency - this.running;
@@ -262,15 +271,33 @@ export class CrawlerQueue {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error');
+                this.pauseQueue('error', errorType, pageInfo.link);
               }
             }
 
             if (e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
-              this.pauseQueue('blocked');
+              this.pauseQueue(
+                'blocked',
+                'net::ERR_HTTP2_PROTOCOL_ERROR',
+                pageInfo.link,
+              );
             }
             if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
-              this.pauseQueue('error');
+              this.pauseQueue(
+                'error',
+                'net::ERR_TUNNEL_CONNECTION_FAILED',
+                pageInfo.link,
+              );
+            }
+
+            if (e.message.includes('net::ERR_TIMED_OUT')) {
+              let errorType = 'net::ERR_TIMED_OUT';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error', 'net::ERR_TIMED_OUT', pageInfo.link);
+              }
             }
             this.queue.push({
               task,
@@ -283,16 +310,16 @@ export class CrawlerQueue {
       if (response) {
         const status = response.status();
         if (status === 429 && !this.taskFinished) {
-          this.pauseQueue('rate-limit');
-          await closePage(page)
+          this.pauseQueue('rate-limit', 'status:429', pageInfo.link);
+          await closePage(page);
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
           });
         }
         if (status >= 500 && !this.taskFinished) {
-          this.pauseQueue('error');
-          await closePage(page)
+          this.pauseQueue('error', 'status:500', pageInfo.link);
+          await closePage(page);
 
           this.queue.push({
             task,
@@ -302,8 +329,8 @@ export class CrawlerQueue {
       }
 
       // Clear cookies
-      const cookies = await page.cookies().catch(e=> {})
-      if(cookies) await page.deleteCookie(...cookies).catch((e) => {});
+      const cookies = await page.cookies().catch((e) => {});
+      if (cookies) await page.deleteCookie(...cookies).catch((e) => {});
 
       // Clear localStorage and sessionStorage
       await page
@@ -321,7 +348,7 @@ export class CrawlerQueue {
       );
 
       if (blocked) {
-        this.pauseQueue('blocked');
+        this.pauseQueue('blocked', 'checkForBlockingSignals', pageInfo.link);
         await closePage(page);
         this.queue.push({
           task,
@@ -337,7 +364,11 @@ export class CrawlerQueue {
           this.queueTask,
         );
         if (blocked) {
-          this.pauseQueue('blocked');
+          this.pauseQueue(
+            'blocked',
+            'interval:checkForBlockingSignals',
+            pageInfo.link,
+          );
           clearInterval(monitoringInterval);
           await closePage(page);
           this.queue.push({
@@ -356,12 +387,19 @@ export class CrawlerQueue {
           this.log({
             location: 'PageloadCatchBlock',
             msg: error?.message,
+            pause: this.pause,
+            repairing: this.repairing,
+            connected: this.browser?.connected,
             stack: error?.stack,
             link: pageInfo.link,
           });
 
         if (!this.browser?.connected && !this.repairing)
-          this.pauseQueue('error');
+          this.pauseQueue(
+            'error',
+            error instanceof Error ? error?.message : 'No Instance of Error',
+            pageInfo.link,
+          );
 
         this.queue.push({
           task,
