@@ -180,7 +180,7 @@ export class QueryQueue {
     await this.disconnect();
     try {
       await this.connect(reason);
-      this.log({ msg: 'start repairing', reason });
+      this.log({ msg: 'repaired', reason });
     } catch (error) {
       this.log({ msg: 'Cannot restart browser', reason });
     }
@@ -290,7 +290,7 @@ export class QueryQueue {
                 pageInfo.link,
               );
             }
-            
+
             if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
               let errorType = 'net::ERR_TUNNEL_CONNECTION_FAILED';
               this.errorLog[errorType].count += 1;
@@ -322,17 +322,18 @@ export class QueryQueue {
             await closePage(page);
           }
         });
+      
 
       if (response) {
         const status = response.status();
-        if(status === 404){
-          await closePage(page)
-          if(request?.onNotFound) request.onNotFound()
+        if (status === 404) {
+          await closePage(page);
+          if (request?.onNotFound) request.onNotFound();
           return;
         }
         if (status === 429 && !this.taskFinished) {
           this.pauseQueue('rate-limit', 'status:429', pageInfo.link);
-          await closePage(page)
+          await closePage(page);
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
@@ -340,7 +341,7 @@ export class QueryQueue {
         }
         if (status >= 500 && !this.taskFinished) {
           this.pauseQueue('error', 'status:500', pageInfo.link);
-          await closePage(page)
+          await closePage(page);
           this.queue.push({
             task,
             request: { ...request, retries: request.retries + 1 },
