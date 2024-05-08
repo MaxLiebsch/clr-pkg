@@ -68,13 +68,16 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
+  //slow server
+  console.time('startPause')
+  const pause = Math.floor(Math.random() * 1500) + 1000;
+  await new Promise((r) => setTimeout(r, pause));
+  console.timeEnd('startPause')
+
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
     const selector = await waitForSelector(page, sel, timeout ?? 5000, false);
-    //slow server
-    const pause = Math.floor(Math.random() * 1500) + 1000;
-    await new Promise((r) => setTimeout(r, pause));
     if (selector !== 'missing' && selector) {
       if (type === 'table' && 'th' in productInfo && 'td' in productInfo) {
         const { th, td } = productInfo;
@@ -99,6 +102,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
             let valueText = '';
             const key = keyHandles[i];
             const keyText = await getElementHandleInnerText(key);
+            console.log('keyText:', keyText);
             if (keyText) {
               const innerText = await getElementHandleInnerText(
                 valueHandles[i],
@@ -130,6 +134,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
           for (let i = 0; i < listItemHandles.length; i++) {
             const listItemHandle = listItemHandles[i];
             const innerText = await getElementHandleInnerText(listItemHandle);
+            console.log('ListItem:innerText:', innerText)
             if (innerText) {
               const split = innerText.split(seperator);
               if (split.length === 2) {
@@ -157,7 +162,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   if (rawProductInfos.length) {
     const cleanedProductInfo = rawProductInfos.map((rawInfo) => {
       const { key, value } = rawInfo;
-      if (key.toLowerCase().includes('bestseller')) {
+      if (key.includes('Rang') || key.includes('Bestseller')) {
         return { key: 'bsr', value: splitNumberAndCategory(value) };
       }
       if (key === 'a_prc') {
@@ -168,7 +173,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       }
       return { key, value };
     });
-
+    console.log('cleanedProductInfo:', cleanedProductInfo)
     if (addProductInfo) addProductInfo(cleanedProductInfo);
     await closePage(page);
   } else {
