@@ -10,28 +10,34 @@ import parsePrice from 'parse-price';
 import { QueryRequest } from '../types/query-request';
 import { PageParser } from './extract/productDetailPageParser.gateway';
 
+const de_bsrRegex =
+  /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
+const en_bsrRegex =
+  /(\d{1,3}(?:,\d{3})*(?:\.\d{2,4})?|\d+) in ([A-Za-z&\s]+(?:|$))/g;
+const replaceBrackets = /\([^)]+\)/g
+
+export function splitNumberAndCategory(input: string, lng: 'de' | 'en') {
+  let str = input;
+  if(lng === 'en'){
+    str = input.replaceAll(replaceBrackets, '')
+  }
+  const matches = str.matchAll(lng === 'de' ? de_bsrRegex : en_bsrRegex);
+  const results = [];
+  if (matches) {
+    for (const match of matches) {
+      results.push({
+        number: parseInt(match[1].replaceAll(/[,.]/g, '')),
+        category: match[2].trim(),
+        createdAt: new Date().toISOString(),
+      });
+    }
+    return results;
+  } else {
+    return null; // Return null if no match is found
+  }
+}
 export async function lookupProductQueue(page: Page, request: QueryRequest) {
   const { addProductInfo, shop } = request;
-
-  const bsrRegex =
-    /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
-
-  function splitNumberAndCategory(input: string) {
-    const matches = input.matchAll(bsrRegex);
-    const results = [];
-    if (matches) {
-      for (const match of matches) {
-        results.push({
-          number: parseInt(match[1].replaceAll(/[,.]/g, '')),
-          category: match[2].trim(),
-          createdAt: new Date().toISOString(),
-        });
-      }
-      return results;
-    } else {
-      return null; // Return null if no match is found
-    }
-  }
 
   const productDetails = [
     {
@@ -68,10 +74,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
-  //slow server
-  const pause = Math.floor(Math.random() * 1500) + 1000;
-  await new Promise((r) => setTimeout(r, pause));
-
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
@@ -100,7 +102,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
             let valueText = '';
             const key = keyHandles[i];
             const keyText = await getElementHandleInnerText(key);
-            console.log('keyText:', keyText);
             if (keyText) {
               const innerText = await getElementHandleInnerText(
                 valueHandles[i],
@@ -132,7 +133,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
           for (let i = 0; i < listItemHandles.length; i++) {
             const listItemHandle = listItemHandles[i];
             const innerText = await getElementHandleInnerText(listItemHandle);
-            console.log('ListItem:innerText:', innerText)
             if (innerText) {
               const split = innerText.split(seperator);
               if (split.length === 2) {
@@ -160,8 +160,14 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   if (rawProductInfos.length) {
     const cleanedProductInfo = rawProductInfos.map((rawInfo) => {
       const { key, value } = rawInfo;
-      if (key.includes('Rang') || key.includes('Bestseller')) {
-        return { key: 'bsr', value: splitNumberAndCategory(value) };
+      if (
+        key.includes('Rang') ||
+        key.includes('Bestseller')
+      ) {
+        return { key: 'bsr', value: splitNumberAndCategory(value, 'de') };
+      }
+      if (key.includes('Rank') || key.includes('BestSeller')) {
+        return { key: 'bsr', value: splitNumberAndCategory(value, 'en') };
       }
       if (key === 'a_prc') {
         return { key, value: parsePrice(getPrice(value)) };
@@ -171,7 +177,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       }
       return { key, value };
     });
-    console.log('cleanedProductInfo:', cleanedProductInfo)
     if (addProductInfo) addProductInfo(cleanedProductInfo);
     await closePage(page);
   } else {
