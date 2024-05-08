@@ -69,10 +69,8 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   const rawProductInfos: { key: string; value: string }[] = [];
 
   //slow server
-  console.time('startPause')
   const pause = Math.floor(Math.random() * 1500) + 1000;
   await new Promise((r) => setTimeout(r, pause));
-  console.timeEnd('startPause')
 
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];

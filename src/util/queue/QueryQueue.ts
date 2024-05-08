@@ -53,6 +53,9 @@ export class QueryQueue {
   async browserHealth() {
     return await BaseQueue.prototype.browserHealth.call(this);
   }
+  async repair(reason?: string): Promise<void> {
+     return BaseQueue.prototype.repair.call(this,reason)
+  }
   connected() {
     return this.browser?.connected;
   }
@@ -70,7 +73,7 @@ export class QueryQueue {
   ) {
     return BaseQueue.prototype.pauseQueue.call(this, reason, error, link);
   }
-
+  
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }

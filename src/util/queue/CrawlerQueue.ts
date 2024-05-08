@@ -58,11 +58,13 @@ export class CrawlerQueue {
       (category) => category === categoryLink,
     );
   }
+  async repair(reason?: string): Promise<void> {
+    return BaseQueue.prototype.repair.call(this,reason)
+ }
   /*  QUEUE RELATED FUNCTIONS  */
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }
-
   private pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
