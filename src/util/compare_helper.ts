@@ -3,7 +3,7 @@ import {
   CandidateProduct,
   Product,
 } from '../types/product';
-import { ProdInfo } from './QueryQueue';
+import { ProdInfo } from './queue/QueryQueue';
 import {
   buildRegexForSiUnits,
   classifyMeasurements,
@@ -81,8 +81,12 @@ export function prefixLink(src: string, shopDomain: string) {
   if (!src.startsWith('https://')) {
     return 'https://www.' + shopDomain + src;
   }
+  if(src.startsWith('https://' + shopDomain)){
+    return src.replace(shopDomain, `www.${shopDomain}`)
+  }
   return src;
 }
+
 
 export function getManufacturer(src: string) {
   const split = src.split(' ');

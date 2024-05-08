@@ -1,28 +1,17 @@
 import { Browser, Page } from 'puppeteer';
-import { ProxyAuth } from '../types/proxyAuth';
-import { mainBrowser } from './browsers';
-import { DbProduct, ProductRecord } from '../types/product';
-import { checkForBlockingSignals } from '../checkPageHealth';
-import { closePage } from './closePage';
-import { shuffle } from 'underscore';
-import { getPage } from './getPage';
-import { QueueTask } from '../types/QueueTask';
-import { LoggerService } from './logger';
-import { ErrorLog, isErrorFrequent } from './isErrorFrequent';
-import { QueryRequest } from '../types/query-request';
+import { ProxyAuth } from '../../types/proxyAuth';
+import { ErrorLog, isErrorFrequent } from '../isErrorFrequent';
+import { QueueTask } from '../../types/QueueTask';
+import { LoggerService } from '../logger';
+import { mainBrowser } from '../browsers';
+import { closePage } from '../closePage';
+import { CrawlerRequest, QueryRequest } from '../../types/query-request';
+import { prefixLink } from '../compare_helper';
+import { getPage } from '../getPage';
+import { checkForBlockingSignals } from '../../checkPageHealth';
+import { errorTypes } from './ErrorTypes';
 
-export interface ProdInfo {
-  procProd: DbProduct;
-  rawProd: ProductRecord;
-  dscrptnSegments: string[];
-  nmSubSegments: string[];
-}
-
-type Task = (page: Page, request: QueryRequest) => Promise<void>;
-
-const timeoutmin = 1 * 30 * 1000;
-const timeoutmax = 2 * 60 * 1000;
-
+type Task = (page: Page, request: any) => Promise<void>;
 const maxRetries = 10;
 
 let randomTimeoutDefaultmin = 100;
@@ -31,38 +20,33 @@ let randomTimeoutDefaultmax = 500;
 let randomTimeoutmin = 100;
 let randomTimeoutmax = 500;
 
-export class QueryQueue {
+export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private queue: Array<{
     task: Task;
-    request: QueryRequest;
+    request: T;
   }>;
   private running: number;
-  private queueTask: QueueTask;
   private concurrency: number;
+  private queueTask: QueueTask;
   private browser: Browser | null = null;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
-  private taskFinished: boolean = false;
+  private uniqueCategoryLinks: string[] = [];
   private pause: boolean = false;
-  private errorLog: ErrorLog;
+  public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-    this.errorLog = {
-      'Navigating frame was detached': { count: 0, lastOccurred: null },
-      'Requesting main frame too early!': { count: 0, lastOccurred: null },
-      'net::ERR_TIMED_OUT': { count: 0, lastOccurred: null },
-      'net::ERR_TUNNEL_CONNECTION_FAILED': { count: 0, lastOccurred: null },
-    };
+    this.errorLog = errorTypes
     this.queueTask = task;
-    this.concurrency = concurrency;
+    this.concurrency = concurrency + 1; //new page
     this.queue = [];
     this.running = 0;
     this.proxyAuth = proxyAuth;
   }
-
   async log(msg: string | { [key: string]: any }) {
     let message = {
       shopDomain: this.queueTask.shopDomain,
@@ -77,14 +61,96 @@ export class QueryQueue {
     }
     LoggerService.getSingleton().logger.info(message);
   }
-
-  pauseQueue(
+  /*  BROWSER RELATED FUNCTIONS  */
+  async disconnect(taskFinished = false): Promise<void> {
+    this.log({ msg: 'disconnecting', taskFinished });
+    this.taskFinished = taskFinished;
+    try {
+      if (taskFinished) {
+        this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
+        this.timeouts = [];
+      }
+      if (this.browser?.connected && !taskFinished) {
+        const pages = await this.browser.pages(); // Get all open pages
+        // Iterate through each page and close it
+        for (let page of pages) {
+          await closePage(page);
+        }
+      }
+    } catch (error) {
+      this.log({ msg: 'Could not close all pages', taskFinished });
+    }
+    try {
+      await this.browser?.close();
+      this.log({ msg: 'Browser disconnected', taskFinished });
+    } catch (error) {
+      this.log({ msg: 'Could not restart browser', taskFinished });
+    }
+  }
+  async repair(reason?: string): Promise<void> {
+    if (this.repairing) {
+      await new Promise<void>((resolve) =>
+        this.waitingForRepairResolvers.push(resolve),
+      );
+      return;
+    }
+    this.repairing = true;
+    this.log({ msg: 'start repairing', reason });
+    await this.disconnect();
+    try {
+      await this.connect(reason);
+      this.log({ msg: 'repaired', reason });
+    } catch (error) {
+      this.log({ msg: 'Cannot restart browser', reason });
+    }
+    this.running = 0;
+    this.repairing = false;
+    this.waitingForRepairResolvers.forEach((resolve) => resolve());
+    this.waitingForRepairResolvers = [];
+  }
+  async connect(reason?: string): Promise<void> {
+    try {
+      this.log({ msg: 'connecting', reason });
+      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
+    } catch (error) {
+      this.log(`Browser crashed big time  ${error}`);
+      await this.repair(`Browser crashed big time  ${error}`);
+    }
+  }
+  private connected() {
+    return this.browser?.connected;
+  }
+  async browserHealth() {
+    const pages = await this.browser?.pages().catch((e) => {});
+    let urls: string[] = [];
+    let numberOfPages = 0;
+    if (pages) {
+      urls = pages.map((page) => {
+        try {
+          const url = page.url();
+          return url;
+        } catch (error) {
+          this.log(`error  ${error}`);
+          closePage(page).then();
+          return 'failed';
+        }
+      });
+      numberOfPages = urls.filter((url) => url !== 'failed').length;
+    }
+    return {
+      urls,
+      connected: this.connected(),
+      numberOfPages,
+    };
+  }
+  /*  QUEUE RELATED FUNCTIONS  */
+  private pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,
   ) {
     if (this.pause) return;
-    this.log({ location: 'pauseQueue', reason, link });
+    this.log({ location: 'pauseQueue', reason, link, error });
     this.pause = true;
     if (reason === 'rate-limit' || reason === 'blocked') {
       this.repair(reason).then(() => {
@@ -112,7 +178,6 @@ export class QueryQueue {
     this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].count = 0;
     this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].lastOccurred = null;
   }
-
   public async clearQueue() {
     await this.disconnect(true);
     this.queue = [];
@@ -122,124 +187,19 @@ export class QueryQueue {
     this.waitingForRepairResolvers = [];
     this.repairing = false;
   }
-
-  resumeQueue() {
-    this.pause = false;
-    const concurrent = this.concurrency - this.running;
-    for (let index = 0; index <= concurrent; index++) {
-      this.next();
-    }
+  
+  public idle() {
+     return this.taskFinished
   }
-
-  async disconnect(taskFinished = false): Promise<void> {
-    this.log({ msg: 'disconnecting', taskFinished });
-    this.taskFinished = taskFinished;
-    try {
-      if (taskFinished) {
-        this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
-        this.timeouts = [];
-      }
-      if (this.browser?.connected && !taskFinished) {
-        const pages = await this.browser.pages(); // Get all open pages
-        // Iterate through each page and close it
-        for (let page of pages) {
-          await closePage(page);
-        }
-      }
-    } catch (error) {
-      this.log({ msg: 'Could not close all pages', taskFinished });
-    }
-    try {
-      await this.browser?.close();
-      this.log({ msg: 'Browser disconnected', taskFinished });
-    } catch (error) {
-      this.log({ msg: 'Could not restart browser', taskFinished });
-    }
-  }
-
-  async connect(reason?: string): Promise<void> {
-    try {
-      this.log({ msg: 'connecting', reason });
-      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
-    } catch (error) {
-      this.log(`Browser crashed big time  ${error}`);
-      await this.repair(`Browser crashed big time  ${error}`);
-    }
-  }
-
-  async repair(reason?: string): Promise<void> {
-    if (this.repairing) {
-      this.log({ msg: 'already reparing', reason });
-      await new Promise<void>((resolve) =>
-        this.waitingForRepairResolvers.push(resolve),
-      );
-      return;
-    }
-    this.repairing = true;
-    this.log({ msg: 'start repairing', reason });
-    await this.disconnect();
-    try {
-      await this.connect(reason);
-      this.log({ msg: 'repaired', reason });
-    } catch (error) {
-      this.log({ msg: 'Cannot restart browser', reason });
-    }
-    this.running = 0;
-    this.repairing = false;
-    this.waitingForRepairResolvers.forEach((resolve) => resolve());
-    this.waitingForRepairResolvers = [];
-  }
-
-  idle() {
-    return {
-      pages: this.queue.length,
-      idle: this.queue.length > 0,
-    };
-  }
-
-  connected() {
-    return this.browser?.connected;
-  }
-
   public workload() {
     return this.queue.length;
   }
-
-  async browserHealth() {
-    const pages = await this.browser?.pages().catch((e) => {});
-    let urls: string[] = [];
-    let numberOfPages = 0;
-    if (pages) {
-      urls = pages.map((page) => {
-        try {
-          const url = page.url();
-          return url;
-        } catch (error) {
-          this.log(`error  ${error}`);
-          closePage(page).then();
-          return 'failed';
-        }
-      });
-      numberOfPages = urls.filter((url) => url !== 'failed').length;
-    }
-    return {
-      urls,
-      connected: this.connected(),
-      numberOfPages,
-    };
-  }
-
-  linkExists(newLink: string) {
-    return this.uniqueLinks.some((link) => link === newLink);
-  }
-
-  private async wrapperFunction(
-    task: Task,
-    request: QueryRequest,
-  ): Promise<Page | undefined> {
+  async wrapperFunction(task: Task, request: T): Promise<Page | undefined> {
     if (request.retries >= maxRetries) return;
 
-    const { pageInfo, shop } = request;
+    let { pageInfo, shop } = request;
+    pageInfo.link = prefixLink(pageInfo.link, shop.d);
+
     const { waitUntil, resourceTypes } = shop;
 
     this.uniqueLinks.push(pageInfo.link);
@@ -247,12 +207,11 @@ export class QueryQueue {
     try {
       const page = await getPage(
         this.browser!,
-        this.proxyAuth,
         resourceTypes?.query,
         shop.exceptions,
         shop.rules,
       );
-      const navigationPromise = page.waitForNavigation();
+      const waitNavigation = page.waitForNavigation({timeout: 60000})
       const response = await page
         .goto(pageInfo.link, {
           waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
@@ -260,15 +219,16 @@ export class QueryQueue {
         })
         .catch(async (e) => {
           if (!this.taskFinished) {
-            this.log({
-              location: 'Page.goTo',
-              msg: e?.message,
-              stack: e?.stack,
-              repairing: this.repairing,
-              pause: this.pause,
-              connected: this.browser?.connected,
-              link: pageInfo.link,
-            });
+            !this.repairing &&
+              this.log({
+                location: 'Page.goTo',
+                msg: e?.message,
+                stack: e?.stack,
+                repairing: this.repairing,
+                pause: this.pause,
+                connected: this.browser?.connected,
+                link: pageInfo.link,
+              });
 
             if (e.message.includes('Navigating frame was detached')) {
               let errorType = 'Navigating frame was detached';
@@ -298,11 +258,7 @@ export class QueryQueue {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue(
-                  'error',
-                  'net::ERR_TUNNEL_CONNECTION_FAILED',
-                  pageInfo.link,
-                );
+                this.pauseQueue('error', errorType, pageInfo.link);
               }
             }
 
@@ -312,7 +268,7 @@ export class QueryQueue {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', 'net::ERR_TIMED_OUT', pageInfo.link);
+                this.pauseQueue('error', errorType, pageInfo.link);
               }
             }
 
@@ -323,13 +279,14 @@ export class QueryQueue {
             await closePage(page);
           }
         });
-      await navigationPromise;
+      await waitNavigation
 
       if (response) {
         const status = response.status();
         if (status === 404) {
           await closePage(page);
-          if (request?.onNotFound) request.onNotFound();
+          if ('onNotFound' in request && request?.onNotFound)
+            request.onNotFound();
           return;
         }
         if (status === 429 && !this.taskFinished) {
@@ -420,16 +377,6 @@ export class QueryQueue {
             stack: error?.stack,
             link: pageInfo.link,
           });
-
-          // if (error.message.includes('Requesting main frame too early!')) {
-          //   let errorType = 'Requesting main frame too early!';
-          //   this.errorLog[errorType].count += 1;
-          //   this.errorLog[errorType].lastOccurred = Date.now();
-
-          //   if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-          //     this.pauseQueue('error');
-          //   }
-          // }
         }
 
         if (!this.browser?.connected && !this.repairing)
@@ -447,35 +394,13 @@ export class QueryQueue {
     }
   }
 
-  // Push a new task to the queue
-  pushTask(task: Task, request: QueryRequest) {
-    this.queue.push({ task, request });
-    this.next();
-  }
+  abstract next(): void;
 
-  // Process the next task
-  private next() {
-    if (
-      this.pause ||
-      this.repairing ||
-      this.running >= this.concurrency ||
-      this.queue.length === 0
-    ) {
-      return;
-    }
-    this.running++;
-    const nextRequest = this.queue.shift();
-    this.queue = shuffle(this.queue);
-    if (nextRequest) {
-      const timeoutTime =
-        Math.random() * (randomTimeoutmax - randomTimeoutmin) +
-        randomTimeoutmin;
-      this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-        (page) => {
-          this.running--;
-          this.next();
-        },
-      );
+  resumeQueue() {
+    this.pause = false;
+    const concurrent = this.concurrency - this.running;
+    for (let index = 0; index <= concurrent; index++) {
+      this.next();
     }
   }
 }

@@ -164,8 +164,8 @@ export const queryShopClean = async (page: Page, request: QueryRequest) => {
         await closePage(page);
       }
     } else {
+      isFinished && isFinished();
       await closePage(page);
     }
   }
-  isFinished && !extendedLookUp && isFinished();
 };

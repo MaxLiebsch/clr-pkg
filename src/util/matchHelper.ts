@@ -2,7 +2,8 @@ import { ShopObject, TargetShop } from '../types';
 import { QueueTask } from '../types/QueueTask';
 import { DbProduct, Product, ProductRecord } from '../types/product';
 import { Query } from '../types/query';
-import { ProdInfo, QueryQueue } from './QueryQueue';
+import { QueryRequest } from '../types/query-request';
+import { ProdInfo, QueryQueue } from './queue/QueryQueue';
 import {
   Arbitrage,
   addBestMatchToProduct,

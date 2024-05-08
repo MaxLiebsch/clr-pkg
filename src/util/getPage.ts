@@ -1,6 +1,5 @@
 import { Browser, Page, ResourceType } from 'puppeteer';
-import { ProxyAuth } from '../types/proxyAuth';
-import { screenResolutions, userAgentList, uuidRegex } from '../constants';
+import { screenResolutions, userAgentList} from '../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
@@ -43,7 +42,6 @@ const setPageProperties = async (
   if (agent.includes('Macintosh')) {
     platform = 'macOS';
   }
-
   await page.setExtraHTTPHeaders({
     accept:
       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -57,8 +55,7 @@ const setPageProperties = async (
     'sec-fetch-user': '?1',
     'sec-gpc': '1',
     'sec-ch-ua-platform': platform,
-  });
-  page.setDefaultNavigationTimeout(180000);
+  }); 
   await page.setViewport(
     sample(screenResolutions) ?? { height: 1920, width: 1080 },
   );
@@ -67,7 +64,6 @@ const setPageProperties = async (
 
 export async function getPage(
   browser: Browser,
-  proxyAuth: ProxyAuth,
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
   rules?: Rule[]

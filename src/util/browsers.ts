@@ -8,6 +8,7 @@ import { QueueTask } from '../types/QueueTask';
 import { hostname } from 'os';
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
 
 let _browsers: BrowserGroup = {};
 
@@ -168,6 +169,7 @@ export const mainBrowser = async (
   }
   try {
     puppeteer.use(StealthPlugin());
+    // puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
   } catch (error) {
     if (error instanceof Error)
       LoggerService.getSingleton().logger.info({
@@ -189,14 +191,22 @@ export const mainBrowser = async (
         shopDomain: task.shopDomain,
       });
   }
-  const browser = await puppeteer.launch({
+
+  const options = {
     headless: process.env.NODE_ENV === 'production' ? true : false,
     devtools: process.env.NODE_ENV !== 'production',
     args,
     defaultViewport: null,
     timeout: 600000,
     protocolTimeout: 60000,
-  });
+  };
+  if (process.env.NODE_ENV === 'production') {
+    //@ts-ignore
+    options['executablePath'] = '/usr/bin/google-chrome';
+  }
+
+  const browser = await puppeteer.launch(options);
+
   console.log('Browser Version: ', await browser.version());
   return browser;
 };

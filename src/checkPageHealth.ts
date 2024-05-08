@@ -37,7 +37,7 @@ export async function checkForBlockingSignals(
             type: 'png',
             path: join(
               process.cwd(),
-              `/data/shop/debug/blocked.${slug(page.url())}.png`,
+              `/data/shop/debug/blocked.${task?.shopDomain??slug(page.url())}.png`,
             ),
             fullPage: true,
           })

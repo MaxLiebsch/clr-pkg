@@ -8,7 +8,7 @@ import {
   ShopObject,
 } from '../../types';
 import * as _ from 'underscore';
-import { platformStrs, proxies, userAgentList } from '../../constants';
+import { proxies, userAgentList } from '../../constants';
 import fetch from 'node-fetch';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import url, { URL } from 'url';
@@ -23,7 +23,7 @@ import { deliveryTime } from '../deliveryTImeCleansing';
 import { get } from 'lodash';
 import { jsonrepair } from 'jsonrepair';
 import mime from 'mime-types';
-import { Browser, Page, ResourceType, TimeoutError } from 'puppeteer';
+import { TimeoutError } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { closePage } from '../closePage';
 import { getPage } from '../getPage';
@@ -488,9 +488,8 @@ export const getProductInfoWithBrowser = async (
 
   const page = await getPage(
     browserInfo.brs,
-    proxyAuth,
     shopObject.resourceTypes['query'],
-    shopObject.exceptions
+    shopObject.exceptions,
   );
 
   try {
@@ -498,6 +497,7 @@ export const getProductInfoWithBrowser = async (
       waitUntil: shopObject?.waitUntil
         ? shopObject.waitUntil.entryPoint
         : 'networkidle2',
+      timeout: 60000,
     });
 
     if (shopObject?.actions) {
