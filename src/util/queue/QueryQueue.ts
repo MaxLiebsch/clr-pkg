@@ -3,10 +3,8 @@ import { ProxyAuth } from '../../types/proxyAuth';
 import { DbProduct, ProductRecord } from '../../types/product';
 import { shuffle } from 'underscore';
 import { QueueTask } from '../../types/QueueTask';
-import {  QueryRequest } from '../../types/query-request';
+import { QueryRequest } from '../../types/query-request';
 import { BaseQueue } from './BaseQueue';
-import { ErrorLog } from '../isErrorFrequent';
-import { errorTypes } from './ErrorTypes';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -65,14 +63,22 @@ export class QueryQueue {
   ): Promise<Page | undefined> {
     return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
   }
+  private pauseQueue(
+    reason: 'error' | 'rate-limit' | 'blocked',
+    error: string,
+    link: string,
+  ) {
+    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link);
+  }
+
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }
   public idle() {
-    return BaseQueue.prototype.idle.call(this); 
+    return BaseQueue.prototype.idle.call(this);
   }
   public workload() {
-    return BaseQueue.prototype.workload.call(this); 
+    return BaseQueue.prototype.workload.call(this);
   }
 
   // Push a new task to the queue
@@ -108,4 +114,3 @@ export class QueryQueue {
 }
 
 Object.assign(QueryQueue.prototype, BaseQueue<QueryRequest>);
-

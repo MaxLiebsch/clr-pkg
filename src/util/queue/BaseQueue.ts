@@ -144,7 +144,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     };
   }
   /*  QUEUE RELATED FUNCTIONS  */
-  private pauseQueue(
+  pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,

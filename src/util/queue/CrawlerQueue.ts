@@ -29,7 +29,6 @@ export class CrawlerQueue {
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
@@ -63,6 +62,15 @@ export class CrawlerQueue {
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }
+
+  private pauseQueue(
+    reason: 'error' | 'rate-limit' | 'blocked',
+    error: string,
+    link: string,
+  ) {
+    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link);
+  }
+
   public idle() {
     return BaseQueue.prototype.idle.call(this);
   }
