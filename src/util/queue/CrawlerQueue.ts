@@ -18,22 +18,30 @@ export class CrawlerQueue {
     task: Task;
     request: CrawlerRequest;
   }>;
-  private running: number;
-  private concurrency: number;
+  
+  /*
+   
+  Placeholder variables for interoperability with BaseQueue class
+
+  */
   private browser: Browser | null = null;
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
+  private waitingForRepairResolvers: (() => void)[] = [];
+  private errorLog: ErrorLog;
+
+  
+  private running: number;
+  private concurrency: number;
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
-  private waitingForRepairResolvers: (() => void)[] = [];
   private uniqueCategoryLinks: string[] = [];
   private pause: boolean = false;
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
-  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-    this.errorLog = errorTypes
+    this.errorLog = errorTypes;
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
@@ -64,8 +72,8 @@ export class CrawlerQueue {
     );
   }
   async repair(reason?: string): Promise<void> {
-    return BaseQueue.prototype.repair.call(this,reason)
- }
+    return BaseQueue.prototype.repair.call(this, reason);
+  }
   /*  QUEUE RELATED FUNCTIONS  */
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);

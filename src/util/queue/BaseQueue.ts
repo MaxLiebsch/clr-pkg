@@ -33,14 +33,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
-  private uniqueCategoryLinks: string[] = [];
   private pause: boolean = false;
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-    this.errorLog = errorTypes
+    this.errorLog = errorTypes;
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
@@ -150,8 +149,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     link: string,
   ) {
     if (this.pause) return;
-    this.log({ location: 'pauseQueue', reason, link, error });
     this.pause = true;
+
+    this.log({ location: 'pauseQueue', reason, link, error });
     if (reason === 'rate-limit' || reason === 'blocked') {
       this.repair(reason).then(() => {
         setTimeout(() => {
@@ -159,24 +159,22 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.running = 0;
           this.resumeQueue();
-        }, 5000);
+        }, 60000);
       });
     }
     if (reason === 'error') {
       this.repair(reason).then(() => {
         setTimeout(() => {
+          this.running = 0;
           this.resumeQueue();
         }, 5000);
       });
     }
-    this.errorLog['Navigating frame was detached'].count = 0;
-    this.errorLog['Navigating frame was detached'].lastOccurred = null;
-    this.errorLog['Requesting main frame too early!'].count = 0;
-    this.errorLog['Requesting main frame too early!'].lastOccurred = null;
-    this.errorLog['net::ERR_TIMED_OUT'].count = 0;
-    this.errorLog['net::ERR_TIMED_OUT'].lastOccurred = null;
-    this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].count = 0;
-    this.errorLog['net::ERR_TUNNEL_CONNECTION_FAILED'].lastOccurred = null;
+    //Reset errors
+    Object.keys(this.errorLog).forEach((key) => {
+      this.errorLog[key].count = 0;
+      this.errorLog[key].lastOccurred = null;
+    });
   }
   public async clearQueue() {
     await this.disconnect(true);
@@ -187,9 +185,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.waitingForRepairResolvers = [];
     this.repairing = false;
   }
-  
+
   public idle() {
-     return this.taskFinished
+    return this.taskFinished;
   }
   public workload() {
     return this.queue.length;
@@ -211,75 +209,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         shop.exceptions,
         shop.rules,
       );
-      const waitNavigation = page.waitForNavigation({timeout: 60000})
-      const response = await page
-        .goto(pageInfo.link, {
-          waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-          timeout: 60000,
-        })
-        .catch(async (e) => {
-          if (!this.taskFinished) {
-            !this.repairing &&
-              this.log({
-                location: 'Page.goTo',
-                msg: e?.message,
-                stack: e?.stack,
-                repairing: this.repairing,
-                pause: this.pause,
-                connected: this.browser?.connected,
-                link: pageInfo.link,
-              });
-
-            if (e.message.includes('Navigating frame was detached')) {
-              let errorType = 'Navigating frame was detached';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
-
-              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue(
-                  'error',
-                  'Navigating frame was detached',
-                  pageInfo.link,
-                );
-              }
-            }
-
-            if (e.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
-              this.pauseQueue(
-                'blocked',
-                'net::ERR_HTTP2_PROTOCOL_ERROR',
-                pageInfo.link,
-              );
-            }
-
-            if (e.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
-              let errorType = 'net::ERR_TUNNEL_CONNECTION_FAILED';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
-
-              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link);
-              }
-            }
-
-            if (e.message.includes('net::ERR_TIMED_OUT')) {
-              let errorType = 'net::ERR_TIMED_OUT';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
-
-              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link);
-              }
-            }
-
-            this.queue.push({
-              task,
-              request: { ...request, retries: request.retries + 1 },
-            });
-            await closePage(page);
-          }
-        });
-      await waitNavigation
+      const waitNavigation = page.waitForNavigation({ timeout: 60000 });
+      const response = await page.goto(pageInfo.link, {
+        waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+        timeout: 60000,
+      });
+      await waitNavigation;
 
       if (response) {
         const status = response.status();
@@ -321,17 +256,19 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
 
       const blocked = await checkForBlockingSignals(
         page,
+        false,
         shop.mimic,
         pageInfo.link,
         this.queueTask,
       );
 
       if (blocked) {
-        this.pauseQueue(
-          'blocked',
-          'after page load:mimic,access denied',
-          pageInfo.link,
-        );
+        if (!this.repairing)
+          this.pauseQueue(
+            'blocked',
+            'after page load:mimic,access denied',
+            pageInfo.link,
+          );
         await closePage(page);
         this.queue.push({
           task,
@@ -341,6 +278,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       const monitoringInterval = setInterval(async () => {
         const blocked = await checkForBlockingSignals(
           page,
+          false,
           request.shop.mimic,
           pageInfo.link,
           this.queueTask,
@@ -362,30 +300,71 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         }
       }, 10000);
 
-      await task(page, request);
       clearInterval(monitoringInterval);
+      await task(page, request);
       return page;
     } catch (error) {
       if (!this.taskFinished) {
-        if (error instanceof Error) {
-          this.log({
-            location: 'PageloadCatchBlock',
-            msg: error?.message,
-            pause: this.pause,
-            repairing: this.repairing,
-            connected: this.browser?.connected,
-            stack: error?.stack,
-            link: pageInfo.link,
-          });
+        if (!this.repairing) {
+          //restart browser
+          if (error instanceof Error) {
+            this.log({
+              location: 'PageloadCatchBlock',
+              msg: error?.message,
+              pause: this.pause,
+              repairing: this.repairing,
+              connected: this.browser?.connected,
+              stack: error?.stack,
+              link: pageInfo.link,
+            });
+
+            if (error.message.includes('Navigating frame was detached')) {
+              let errorType = 'Navigating frame was detached';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error', errorType, pageInfo.link);
+              }
+            }
+
+            if (error.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
+              let errorType = 'net::ERR_HTTP2_PROTOCOL_ERROR';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('blocked', errorType, pageInfo.link);
+              }
+            }
+
+            if (error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
+              let errorType = 'net::ERR_TUNNEL_CONNECTION_FAILED';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error', errorType, pageInfo.link);
+              }
+            }
+
+            if (error.message.includes('net::ERR_TIMED_OUT')) {
+              let errorType = 'net::ERR_TIMED_OUT';
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
+
+              if (isErrorFrequent(errorType, 1000, this.errorLog)) {
+                this.pauseQueue('error', errorType, pageInfo.link);
+              }
+            }
+          } else {
+            this.pauseQueue(
+              'error',
+              error instanceof Error ? error?.message : 'No Instance of Error',
+              pageInfo.link,
+            );
+          }
         }
-
-        if (!this.browser?.connected && !this.repairing)
-          this.pauseQueue(
-            'error',
-            error instanceof Error ? error?.message : 'No Instance of Error',
-            pageInfo.link,
-          );
-
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },

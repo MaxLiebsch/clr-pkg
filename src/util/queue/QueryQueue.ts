@@ -25,18 +25,25 @@ export class QueryQueue {
     task: Task;
     request: QueryRequest;
   }>;
-  private running: number;
-  private concurrency: number;
-  private browser: Browser | null = null;
+  /*
+   Placeholder variables for interoperability with BaseQueue class
+
+  */ 
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
-  private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
+  private errorLog: ErrorLog;
+  /*
+    if the timeouts need to be applied later
+  */
+  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+  private running: number;
+  private concurrency: number;
+  private browser: Browser | null = null;
+  private repairing: Boolean = false;
   private pause: boolean = false;
   public taskFinished: boolean = false;
-  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
-  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = errorTypes

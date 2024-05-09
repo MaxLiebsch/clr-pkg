@@ -141,6 +141,7 @@ export async function browseProductpages(
             ]);
             const blocked = await checkForBlockingSignals(
               page,
+              true,
               shop.mimic,
               pageInfo.link,
             );
