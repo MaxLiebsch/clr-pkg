@@ -28,7 +28,7 @@ export class QueryQueue {
   /*
    Placeholder variables for interoperability with BaseQueue class
 
-  */ 
+  */
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
@@ -46,7 +46,7 @@ export class QueryQueue {
   public taskFinished: boolean = false;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-    this.errorLog = errorTypes
+    this.errorLog = errorTypes;
     this.queueTask = task;
     this.concurrency = concurrency;
     this.queue = [];
@@ -68,7 +68,7 @@ export class QueryQueue {
     return await BaseQueue.prototype.browserHealth.call(this);
   }
   async repair(reason?: string): Promise<void> {
-     return BaseQueue.prototype.repair.call(this,reason)
+    return BaseQueue.prototype.repair.call(this, reason);
   }
   connected() {
     return this.browser?.connected;
@@ -80,14 +80,26 @@ export class QueryQueue {
   ): Promise<Page | undefined> {
     return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
   }
+  /*
+   
+      Placeholder  function for interoperability with BaseQueue class
+
+  */
   private pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,
+    location: string,
   ) {
-    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link);
+    return BaseQueue.prototype.pauseQueue.call(
+      this,
+      reason,
+      error,
+      link,
+      location,
+    );
   }
-  
+
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }

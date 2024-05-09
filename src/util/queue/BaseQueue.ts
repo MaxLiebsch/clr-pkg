@@ -147,11 +147,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,
+    location: string
   ) {
     if (this.pause) return;
     this.pause = true;
 
-    this.log({ location: 'pauseQueue', reason, link, error });
+    this.log({ location, reason, link, error });
+    
     if (reason === 'rate-limit' || reason === 'blocked') {
       this.repair(reason).then(() => {
         setTimeout(() => {
@@ -225,7 +227,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           return;
         }
         if (status === 429 && !this.taskFinished) {
-          this.pauseQueue('rate-limit', 'status:429', pageInfo.link);
+          this.pauseQueue('rate-limit', 'status:429', pageInfo.link, 'page-response');
           await closePage(page);
           this.queue.push({
             task,
@@ -233,7 +235,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           });
         }
         if (status >= 500 && !this.taskFinished) {
-          this.pauseQueue('error', 'status:500', pageInfo.link);
+          this.pauseQueue('error', 'status:500', pageInfo.link, 'page-response');
           await closePage(page);
           this.queue.push({
             task,
@@ -266,8 +268,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         if (!this.repairing)
           this.pauseQueue(
             'blocked',
-            'after page load:mimic,access denied',
+            'mimic missing,access denied',
             pageInfo.link,
+            'load-page'
           );
         await closePage(page);
         this.queue.push({
@@ -286,8 +289,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         if (blocked) {
           this.pauseQueue(
             'blocked',
-            'in Interval: mimic,access denied',
+            'mimic missing,access denied',
             pageInfo.link,
+            'monitoring-interval'
           );
           clearInterval(monitoringInterval);
           await closePage(page);
@@ -308,23 +312,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         if (!this.repairing) {
           //restart browser
           if (error instanceof Error) {
-            this.log({
-              location: 'PageloadCatchBlock',
-              msg: error?.message,
-              pause: this.pause,
-              repairing: this.repairing,
-              connected: this.browser?.connected,
-              stack: error?.stack,
-              link: pageInfo.link,
-            });
-
             if (error.message.includes('Navigating frame was detached')) {
               let errorType = 'Navigating frame was detached';
               this.errorLog[errorType].count += 1;
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link);
+                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
               }
             }
 
@@ -334,7 +328,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('blocked', errorType, pageInfo.link);
+                this.pauseQueue('blocked', errorType, pageInfo.link, 'catch-block');
               }
             }
 
@@ -344,7 +338,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link);
+                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
               }
             }
 
@@ -354,7 +348,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link);
+                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
               }
             }
           } else {
@@ -362,6 +356,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               'error',
               error instanceof Error ? error?.message : 'No Instance of Error',
               pageInfo.link,
+              'catch-block'
             );
           }
         }

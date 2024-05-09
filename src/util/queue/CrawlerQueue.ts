@@ -18,7 +18,7 @@ export class CrawlerQueue {
     task: Task;
     request: CrawlerRequest;
   }>;
-  
+
   /*
    
   Placeholder variables for interoperability with BaseQueue class
@@ -78,12 +78,19 @@ export class CrawlerQueue {
   public async clearQueue() {
     return await BaseQueue.prototype.clearQueue.call(this);
   }
+
+  /*
+   
+      Placeholder  function for interoperability with BaseQueue class
+
+  */
   private pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,
+    location: string
   ) {
-    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link);
+    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link, location);
   }
 
   public idle() {
