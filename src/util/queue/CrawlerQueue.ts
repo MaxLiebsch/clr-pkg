@@ -20,15 +20,20 @@ export class CrawlerQueue {
   }>;
   private running: number;
   private concurrency: number;
+  private browser: Browser | null = null;
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
+  private waitingForRepairResolvers: (() => void)[] = [];
   private uniqueCategoryLinks: string[] = [];
   private pause: boolean = false;
+  public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.errorLog = errorTypes
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];

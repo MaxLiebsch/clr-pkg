@@ -27,8 +27,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }>;
   private running: number;
   private concurrency: number;
-  private queueTask: QueueTask;
   private browser: Browser | null = null;
+  private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;

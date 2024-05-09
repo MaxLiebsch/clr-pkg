@@ -5,6 +5,8 @@ import { shuffle } from 'underscore';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue } from './BaseQueue';
+import { ErrorLog } from '../isErrorFrequent';
+import { errorTypes } from './ErrorTypes';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -26,13 +28,18 @@ export class QueryQueue {
   private running: number;
   private concurrency: number;
   private browser: Browser | null = null;
-  private uniqueLinks: string[] = [];
-  private repairing: Boolean = false;
-  private pause: boolean = false;
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
+  private uniqueLinks: string[] = [];
+  private repairing: Boolean = false;
+  private waitingForRepairResolvers: (() => void)[] = [];
+  private pause: boolean = false;
+  public taskFinished: boolean = false;
+  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+  private errorLog: ErrorLog;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.errorLog = errorTypes
     this.queueTask = task;
     this.concurrency = concurrency;
     this.queue = [];
