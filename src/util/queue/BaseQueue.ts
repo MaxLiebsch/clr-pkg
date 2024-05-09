@@ -46,6 +46,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.running = 0;
     this.proxyAuth = proxyAuth;
   }
+  /* LOGGING */
   async log(msg: string | { [key: string]: any }) {
     let message = {
       shopDomain: this.queueTask.shopDomain,
@@ -61,6 +62,15 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     LoggerService.getSingleton().logger.info(message);
   }
   /*  BROWSER RELATED FUNCTIONS  */
+  async connect(reason?: string): Promise<void> {
+    try {
+      this.log({ msg: 'connecting', reason });
+      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
+    } catch (error) {
+      this.log(`Browser crashed big time  ${error}`);
+      await this.repair(`Browser crashed big time  ${error}`);
+    }
+  }
   async disconnect(taskFinished = false): Promise<void> {
     this.log({ msg: 'disconnecting', taskFinished });
     this.taskFinished = taskFinished;
@@ -85,38 +95,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     } catch (error) {
       this.log({ msg: 'Could not restart browser', taskFinished });
     }
-  }
-  async repair(reason?: string): Promise<void> {
-    if (this.repairing) {
-      await new Promise<void>((resolve) =>
-        this.waitingForRepairResolvers.push(resolve),
-      );
-      return;
-    }
-    this.repairing = true;
-    this.log({ msg: 'start repairing', reason });
-    await this.disconnect();
-    try {
-      await this.connect(reason);
-      this.log({ msg: 'repaired', reason });
-    } catch (error) {
-      this.log({ msg: 'Cannot restart browser', reason });
-    }
-    this.running = 0;
-    this.repairing = false;
-    this.waitingForRepairResolvers.forEach((resolve) => resolve());
-    this.waitingForRepairResolvers = [];
-  }
-  async connect(reason?: string): Promise<void> {
-    try {
-      this.log({ msg: 'connecting', reason });
-      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
-    } catch (error) {
-      this.log(`Browser crashed big time  ${error}`);
-      await this.repair(`Browser crashed big time  ${error}`);
-    }
-  }
-  private connected() {
+  } 
+  connected() {
     return this.browser?.connected;
   }
   async browserHealth() {
@@ -142,18 +122,55 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       numberOfPages,
     };
   }
+ async repair(reason?: string): Promise<void> {
+    if (this.repairing) {
+      await new Promise<void>((resolve) =>
+        this.waitingForRepairResolvers.push(resolve),
+      );
+      return;
+    }
+    this.repairing = true;
+    this.log({ msg: 'start repairing', reason });
+    await this.disconnect();
+    try {
+      await this.connect(reason);
+      this.log({ msg: 'repaired', reason });
+    } catch (error) {
+      this.log({ msg: 'Cannot restart browser', reason });
+    }
+    this.running = 0;
+    this.repairing = false;
+    this.waitingForRepairResolvers.forEach((resolve) => resolve());
+    this.waitingForRepairResolvers = [];
+  }
   /*  QUEUE RELATED FUNCTIONS  */
+  async clearQueue() {
+    await this.disconnect(true);
+    this.queue = [];
+    this.timeouts = [];
+    this.browser = null;
+    this.running = 0;
+    this.waitingForRepairResolvers = [];
+    this.repairing = false;
+  }
+  resumeQueue() {
+    this.pause = false;
+    const concurrent = this.concurrency - this.running;
+    for (let index = 0; index <= concurrent; index++) {
+      this.next();
+    }
+  }
   pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
     link: string,
-    location: string
+    location: string,
   ) {
     if (this.pause) return;
     this.pause = true;
 
     this.log({ location, reason, link, error });
-    
+
     if (reason === 'rate-limit' || reason === 'blocked') {
       this.repair(reason).then(() => {
         setTimeout(() => {
@@ -178,16 +195,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       this.errorLog[key].lastOccurred = null;
     });
   }
-  public async clearQueue() {
-    await this.disconnect(true);
-    this.queue = [];
-    this.timeouts = [];
-    this.browser = null;
-    this.running = 0;
-    this.waitingForRepairResolvers = [];
-    this.repairing = false;
-  }
-
   public idle() {
     return this.taskFinished;
   }
@@ -227,7 +234,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           return;
         }
         if (status === 429 && !this.taskFinished) {
-          this.pauseQueue('rate-limit', 'status:429', pageInfo.link, 'page-response');
+          this.pauseQueue(
+            'rate-limit',
+            'status:429',
+            pageInfo.link,
+            'page-response',
+          );
           await closePage(page);
           this.queue.push({
             task,
@@ -235,7 +247,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           });
         }
         if (status >= 500 && !this.taskFinished) {
-          this.pauseQueue('error', 'status:500', pageInfo.link, 'page-response');
+          this.pauseQueue(
+            'error',
+            'status:500',
+            pageInfo.link,
+            'page-response',
+          );
           await closePage(page);
           this.queue.push({
             task,
@@ -270,7 +287,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             'blocked',
             'mimic missing,access denied',
             pageInfo.link,
-            'load-page'
+            'load-page',
           );
         await closePage(page);
         this.queue.push({
@@ -291,7 +308,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             'blocked',
             'mimic missing,access denied',
             pageInfo.link,
-            'monitoring-interval'
+            'monitoring-interval',
           );
           clearInterval(monitoringInterval);
           await closePage(page);
@@ -318,7 +335,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
+                this.pauseQueue(
+                  'error',
+                  errorType,
+                  pageInfo.link,
+                  'catch-block',
+                );
               }
             }
 
@@ -328,7 +350,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('blocked', errorType, pageInfo.link, 'catch-block');
+                this.pauseQueue(
+                  'blocked',
+                  errorType,
+                  pageInfo.link,
+                  'catch-block',
+                );
               }
             }
 
@@ -338,7 +365,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
+                this.pauseQueue(
+                  'error',
+                  errorType,
+                  pageInfo.link,
+                  'catch-block',
+                );
               }
             }
 
@@ -348,7 +380,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
-                this.pauseQueue('error', errorType, pageInfo.link, 'catch-block');
+                this.pauseQueue(
+                  'error',
+                  errorType,
+                  pageInfo.link,
+                  'catch-block',
+                );
               }
             }
           } else {
@@ -356,7 +393,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               'error',
               error instanceof Error ? error?.message : 'No Instance of Error',
               pageInfo.link,
-              'catch-block'
+              'catch-block',
             );
           }
         }
@@ -369,12 +406,4 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }
 
   abstract next(): void;
-
-  resumeQueue() {
-    this.pause = false;
-    const concurrent = this.concurrency - this.running;
-    for (let index = 0; index <= concurrent; index++) {
-      this.next();
-    }
-  }
 }

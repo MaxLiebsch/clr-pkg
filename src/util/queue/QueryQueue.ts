@@ -64,27 +64,23 @@ export class QueryQueue {
   async disconnect(taskFinished = false): Promise<void> {
     return await BaseQueue.prototype.disconnect.call(this, taskFinished);
   }
+  connected() {
+    return this.browser?.connected;
+  }
   async browserHealth() {
     return await BaseQueue.prototype.browserHealth.call(this);
   }
   async repair(reason?: string): Promise<void> {
     return BaseQueue.prototype.repair.call(this, reason);
   }
-  connected() {
-    return this.browser?.connected;
-  }
   /*  QUEUE RELATED FUNCTIONS  */
-  private async wrapperFunction(
-    task: Task,
-    request: QueryRequest,
-  ): Promise<Page | undefined> {
-    return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
+  /*  Placeholder  function for interoperability with BaseQueue class */
+  public async clearQueue() {
+    return await BaseQueue.prototype.clearQueue.call(this);
   }
-  /*
-   
-      Placeholder  function for interoperability with BaseQueue class
-
-  */
+  private resumeQueue() {
+    return BaseQueue.prototype.resumeQueue.call(this);
+  }
   private pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
@@ -99,15 +95,17 @@ export class QueryQueue {
       location,
     );
   }
-
-  public async clearQueue() {
-    return await BaseQueue.prototype.clearQueue.call(this);
-  }
   public idle() {
     return BaseQueue.prototype.idle.call(this);
   }
   public workload() {
     return BaseQueue.prototype.workload.call(this);
+  }
+  private async wrapperFunction(
+    task: Task,
+    request: QueryRequest,
+  ): Promise<Page | undefined> {
+    return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
   }
 
   // Push a new task to the queue

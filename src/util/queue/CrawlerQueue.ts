@@ -30,7 +30,6 @@ export class CrawlerQueue {
   private waitingForRepairResolvers: (() => void)[] = [];
   private errorLog: ErrorLog;
 
-  
   private running: number;
   private concurrency: number;
   private uniqueLinks: string[] = [];
@@ -59,8 +58,52 @@ export class CrawlerQueue {
   async disconnect(taskFinished = false): Promise<void> {
     return await BaseQueue.prototype.disconnect.call(this, taskFinished);
   }
+  /* Placeholder  function for interoperability with BaseQueue class  */
+  private connected() {
+    return BaseQueue.prototype.connected.call(this);
+  }
   async browserHealth() {
     return await BaseQueue.prototype.browserHealth.call(this);
+  }
+  async repair(reason?: string): Promise<void> {
+    return BaseQueue.prototype.repair.call(this, reason);
+  }
+  /*  QUEUE RELATED FUNCTIONS  */
+  /* Placeholder  function for interoperability with BaseQueue class  */
+  public async clearQueue() {
+    return await BaseQueue.prototype.clearQueue.call(this);
+  }
+  private resumeQueue() {
+    return BaseQueue.prototype.resumeQueue.call(this);
+  }
+  private pauseQueue(
+    reason: 'error' | 'rate-limit' | 'blocked',
+    error: string,
+    link: string,
+    location: string,
+  ) {
+    return BaseQueue.prototype.pauseQueue.call(
+      this,
+      reason,
+      error,
+      link,
+      location,
+    );
+  }
+  public idle() {
+    return BaseQueue.prototype.idle.call(this);
+  }
+  public workload() {
+    return BaseQueue.prototype.workload.call(this);
+  }
+  linkExists(newLink: string) {
+    return this.uniqueLinks.some((link) => link === newLink);
+  }
+  private async wrapperFunction(
+    task: Task,
+    request: CrawlerRequest,
+  ): Promise<Page | undefined> {
+    return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
   }
   /*  CRAWLR QUEUE RELATED FUNCTIONS  */
   public addCategoryLink(categoryLink: string) {
@@ -71,46 +114,6 @@ export class CrawlerQueue {
       (category) => category === categoryLink,
     );
   }
-  async repair(reason?: string): Promise<void> {
-    return BaseQueue.prototype.repair.call(this, reason);
-  }
-  /*  QUEUE RELATED FUNCTIONS  */
-  public async clearQueue() {
-    return await BaseQueue.prototype.clearQueue.call(this);
-  }
-
-  /*
-   
-      Placeholder  function for interoperability with BaseQueue class
-
-  */
-  private pauseQueue(
-    reason: 'error' | 'rate-limit' | 'blocked',
-    error: string,
-    link: string,
-    location: string
-  ) {
-    return BaseQueue.prototype.pauseQueue.call(this, reason, error, link, location);
-  }
-
-  public idle() {
-    return BaseQueue.prototype.idle.call(this);
-  }
-  public workload() {
-    return BaseQueue.prototype.workload.call(this);
-  }
-
-  linkExists(newLink: string) {
-    return this.uniqueLinks.some((link) => link === newLink);
-  }
-
-  private async wrapperFunction(
-    task: Task,
-    request: CrawlerRequest,
-  ): Promise<Page | undefined> {
-    return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
-  }
-
   // Push a new task to the queue
   pushTask(task: Task, request: CrawlerRequest) {
     this.queue.push({ task, request });
