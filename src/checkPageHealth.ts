@@ -7,6 +7,7 @@ import { hostname } from 'os';
 
 export async function checkForBlockingSignals(
   page: Page,
+  log: boolean = false,
   mimic?: string,
   link?: string,
   task?: QueueTask,
@@ -14,22 +15,25 @@ export async function checkForBlockingSignals(
   if (mimic) {
     const isMissing = await contentMissing(page, mimic);
     if (isMissing) {
-      if (task)
-        LoggerService.getSingleton().logger.info({
-          location: `Check for Mimic`,
-          msg: 'isBlocked',
-          hostname: hostname(),
-          type: task.type,
-          link,
-          typeId: task.id,
-          shopDomain: task.shopDomain,
-        });
-      else
-        LoggerService.getSingleton().logger.info({
-          location: `Check for Mimic`,
-          msg: 'isBlocked',
-          hostname: hostname(),
-        });
+      if (log) {
+        if (task) {
+          LoggerService.getSingleton().logger.info({
+            location: `Check for Mimic`,
+            msg: 'isBlocked',
+            hostname: hostname(),
+            type: task.type,
+            link,
+            typeId: task.id,
+            shopDomain: task.shopDomain,
+          });
+        } else {
+          LoggerService.getSingleton().logger.info({
+            location: `Check for Mimic`,
+            msg: 'isBlocked',
+            hostname: hostname(),
+          });
+        }
+      }
 
       if (process.env.DEBUG) {
         await page
@@ -37,7 +41,7 @@ export async function checkForBlockingSignals(
             type: 'png',
             path: join(
               process.cwd(),
-              `/data/shop/debug/blocked.${task?.shopDomain??slug(page.url())}.png`,
+              `/data/shop/debug/blocked.${task?.shopDomain ?? slug(page.url())}.png`,
             ),
             fullPage: true,
           })
