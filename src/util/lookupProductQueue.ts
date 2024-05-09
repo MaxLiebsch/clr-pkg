@@ -14,12 +14,12 @@ const de_bsrRegex =
   /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
 const en_bsrRegex =
   /(\d{1,3}(?:,\d{3})*(?:\.\d{2,4})?|\d+) in ([A-Za-z&\s]+(?:|$))/g;
-const replaceBrackets = /\([^)]+\)/g
+const replaceBrackets = /\([^)]+\)/g;
 
 export function splitNumberAndCategory(input: string, lng: 'de' | 'en') {
   let str = input;
-  if(lng === 'en'){
-    str = input.replaceAll(replaceBrackets, '')
+  if (lng === 'en') {
+    str = input.replaceAll(replaceBrackets, '');
   }
   const matches = str.matchAll(lng === 'de' ? de_bsrRegex : en_bsrRegex);
   const results = [];
@@ -73,6 +73,11 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     },
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
+
+
+  // slow done
+  const pause = Math.floor(Math.random() * 1500) + 1000;
+  await new Promise((r) => setTimeout(r, pause));
 
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
@@ -160,10 +165,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   if (rawProductInfos.length) {
     const cleanedProductInfo = rawProductInfos.map((rawInfo) => {
       const { key, value } = rawInfo;
-      if (
-        key.includes('Rang') ||
-        key.includes('Bestseller')
-      ) {
+      if (key.includes('Rang') || key.includes('Bestseller')) {
         return { key: 'bsr', value: splitNumberAndCategory(value, 'de') };
       }
       if (key.includes('Rank') || key.includes('BestSeller')) {
