@@ -65,7 +65,7 @@ export class QueryQueue {
     return await BaseQueue.prototype.disconnect.call(this, taskFinished);
   }
   connected() {
-    return this.browser?.connected;
+    return BaseQueue.prototype.connected.call(this);
   }
   async browserHealth() {
     return await BaseQueue.prototype.browserHealth.call(this);

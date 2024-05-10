@@ -52,8 +52,8 @@ export class CrawlerQueue {
     return BaseQueue.prototype.log.call(this, msg);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  async connect(): Promise<void> {
-    return await BaseQueue.prototype.connect.call(this);
+  async connect(reason?: string): Promise<void> {
+    return await BaseQueue.prototype.connect.call(this, reason);
   }
   async disconnect(taskFinished = false): Promise<void> {
     return await BaseQueue.prototype.disconnect.call(this, taskFinished);

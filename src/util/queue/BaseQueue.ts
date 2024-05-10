@@ -37,14 +37,16 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog;
-
-  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+  private restartDelay: number = 5;
+  
+  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) { 
     this.errorLog = errorTypes;
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
     this.queue = [];
     this.running = 0;
     this.proxyAuth = proxyAuth;
+    this.resetStartDelay();
   }
   /* LOGGING */
   async log(msg: string | { [key: string]: any }) {
@@ -95,7 +97,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     } catch (error) {
       this.log({ msg: 'Could not restart browser', taskFinished });
     }
-  } 
+  }
   connected() {
     return this.browser?.connected;
   }
@@ -122,7 +124,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       numberOfPages,
     };
   }
- async repair(reason?: string): Promise<void> {
+  async repair(reason?: string): Promise<void> {
     if (this.repairing) {
       await new Promise<void>((resolve) =>
         this.waitingForRepairResolvers.push(resolve),
@@ -134,7 +136,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     await this.disconnect();
     try {
       await this.connect(reason);
-      this.log({ msg: 'repaired', reason });
     } catch (error) {
       this.log({ msg: 'Cannot restart browser', reason });
     }
@@ -155,11 +156,26 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }
   resumeQueue() {
     this.pause = false;
-    const concurrent = this.concurrency - this.running;
-    for (let index = 0; index <= concurrent; index++) {
-      this.next();
+    this.running = 0;
+    for (let index = 0; index <= this.concurrency; index++) {
+      setTimeout(() => this.next(), index * 1000);
     }
   }
+
+  resetStartDelay() {
+    setInterval(() => {
+      const errorType = 'AccessDenied';
+      if (
+        this.errorLog[errorType].count > 1 &&
+        !isErrorFrequent(errorType, 15 * 60000, this.errorLog)
+      ) {
+        this.restartDelay = 5;
+        this.errorLog[errorType].count = 0;
+        this.errorLog[errorType].lastOccurred = null;
+      }
+    }, 60000);
+  }
+
   pauseQueue(
     reason: 'error' | 'rate-limit' | 'blocked',
     error: string,
@@ -172,27 +188,44 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.log({ location, reason, link, error });
 
     if (reason === 'rate-limit' || reason === 'blocked') {
+      const errorType = 'AccessDenied';
+      if (
+        //If AccessDenied error is frequent check if currentTime - lastOccurred < this.restartDelay + 1 minute
+        isErrorFrequent(
+          errorType,
+          this.restartDelay * 60000 + 60000,
+          this.errorLog,
+        )
+      ) {
+        if (this.restartDelay < 30) {
+          this.restartDelay = this.restartDelay * 2;
+        }
+      } else {
+        this.errorLog[errorType].count += 1;
+        this.errorLog[errorType].lastOccurred = Date.now();
+      }
+
       this.repair(reason).then(() => {
         setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
-          this.running = 0;
           this.resumeQueue();
-        }, 60000);
+        }, this.restartDelay * 60000);
       });
     }
     if (reason === 'error') {
       this.repair(reason).then(() => {
         setTimeout(() => {
-          this.running = 0;
           this.resumeQueue();
         }, 5000);
       });
     }
     //Reset errors
     Object.keys(this.errorLog).forEach((key) => {
-      this.errorLog[key].count = 0;
-      this.errorLog[key].lastOccurred = null;
+      if (key !== 'AccessDenied') {
+        this.errorLog[key].count = 0;
+        this.errorLog[key].lastOccurred = null;
+      }
     });
   }
   public idle() {
@@ -331,8 +364,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           if (error instanceof Error) {
             if (error.message.includes('Navigating frame was detached')) {
               let errorType = 'Navigating frame was detached';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
                 this.pauseQueue(
@@ -341,13 +372,16 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   pageInfo.link,
                   'catch-block',
                 );
+                this.errorLog[errorType].count += 1;
+                this.errorLog[errorType].lastOccurred = Date.now();
+              } else {
+                this.errorLog[errorType].count += 1;
+                this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
 
             if (error.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
               let errorType = 'net::ERR_HTTP2_PROTOCOL_ERROR';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
                 this.pauseQueue(
@@ -356,14 +390,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   pageInfo.link,
                   'catch-block',
                 );
+              } else {
+                this.errorLog[errorType].count += 1;
+                this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
 
             if (error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
               let errorType = 'net::ERR_TUNNEL_CONNECTION_FAILED';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
-
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
                 this.pauseQueue(
                   'error',
@@ -371,13 +405,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   pageInfo.link,
                   'catch-block',
                 );
+              } else {
+                this.errorLog[errorType].count += 1;
+                this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
 
             if (error.message.includes('net::ERR_TIMED_OUT')) {
               let errorType = 'net::ERR_TIMED_OUT';
-              this.errorLog[errorType].count += 1;
-              this.errorLog[errorType].lastOccurred = Date.now();
 
               if (isErrorFrequent(errorType, 1000, this.errorLog)) {
                 this.pauseQueue(
@@ -386,6 +421,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   pageInfo.link,
                   'catch-block',
                 );
+              } else {
+                this.errorLog[errorType].count += 1;
+                this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
           } else {
