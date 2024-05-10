@@ -185,8 +185,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     if (this.pause) return;
     this.pause = true;
 
-    this.log({ location, reason, link, error });
-
+    
     if (reason === 'rate-limit' || reason === 'blocked') {
       const errorType = 'AccessDenied';
       if (
@@ -204,11 +203,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         this.errorLog[errorType].count += 1;
         this.errorLog[errorType].lastOccurred = Date.now();
       }
-
+      
       this.repair(reason).then(() => {
         setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
+          this.log({ location, reason, link, error, restarted: true, restartDelay: this.restartDelay });
           this.resumeQueue();
         }, this.restartDelay * 60000);
       });
@@ -220,6 +220,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         }, 5000);
       });
     }
+    this.log({ location, reason, link, error, restartDelay: this.restartDelay });
     //Reset errors
     Object.keys(this.errorLog).forEach((key) => {
       if (key !== 'AccessDenied') {
