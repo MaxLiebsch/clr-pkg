@@ -35,7 +35,7 @@ export async function checkForBlockingSignals(
         }
       }
 
-      if (process.env.DEBUG) {
+      if (process.env.DEBUG === 'true') {
         await page
           .screenshot({
             type: 'png',
@@ -85,7 +85,7 @@ export async function checkForBlockingSignals(
         spamdetection,
         hostname: hostname(),
       });
-    if (process.env.DEBUG) {
+    if (process.env.DEBUG == 'true') {
       await page
         .screenshot({
           type: 'png',
