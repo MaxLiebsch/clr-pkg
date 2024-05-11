@@ -3,7 +3,6 @@ import { screenResolutions, userAgentList } from '../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
-import { secure } from 'secure-puppeteer';
 
 const setPageProperties = async (
   page: Page,
@@ -11,6 +10,18 @@ const setPageProperties = async (
   disAllowedResourceTypes?: ResourceType[],
   rules?: Rule[],
 ) => {
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'language', {
+      get: function () {
+        return 'de-DE';
+      },
+    });
+    Object.defineProperty(navigator, 'languages', {
+      get: function () {
+        return ['de-DE', 'de'];
+      },
+    });
+  });
   await page.setRequestInterception(true);
   page.on('request', (request) => {
     const resourceType = request.resourceType();
@@ -47,7 +58,7 @@ const setPageProperties = async (
     accept:
       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-encoding': 'gzip, deflate, br, zstd',
-    'accept-language': 'en,de-DE;q=0.9,de;q=0.8,en-US;q=0.7',
+    'accept-language': 'de-DE,de;q=0.9',
     'cache-control': 'max-age=0',
     'upgrade-insecure-requests': '1',
     'sec-fetch-dest': 'document',
@@ -69,7 +80,7 @@ export async function getPage(
   exceptions?: string[],
   rules?: Rule[],
 ) {
-  const page = await browser.newPage()
+  const page = await browser.newPage();
 
   await setPageProperties(page, exceptions, disAllowedResourceTypes, rules);
 
