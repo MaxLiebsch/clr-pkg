@@ -1,5 +1,5 @@
-
-export const uuidRegex = /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/
+export const uuidRegex =
+  /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/;
 
 export const antiKeywords = [
   'about',
@@ -128,14 +128,45 @@ export const userAgentList = [
 ];
 
 export const screenResolutions = [
-  {height: 1920, width: 1080},
-  {height: 1440, width: 900},
-  {height: 1280, width: 720},
-  {height: 1536, width: 864},
-  {height: 1366, width: 768},
-  {height: 1600, width: 900},
-  {height: 810, width: 1080},
-]
+  { height: 2880, width: 1800 },
+  { height: 2560, width: 1664 },
+  { height: 1920, width: 1080 },
+  { height: 1440, width: 900 },
+  { height: 1280, width: 720 },
+  { height: 1536, width: 864 },
+  { height: 1366, width: 768 },
+  { height: 1600, width: 900 },
+  { height: 810, width: 1080 },
+];
+
+export const screenResolutionsByPlatform = {
+  macOS: [
+    { height: 2304, width: 1440 },
+    { height: 2880, width: 1800 },
+    { height: 2560, width: 1664 },
+    { height: 3024, width: 1964 },
+  ],
+  Windows: [
+    { height: 2560, width: 1440 },
+    { height: 2160, width: 1440 },
+    { height: 1920, width: 1080 },
+    { height: 1280, width: 1024 },
+    { height: 1600, width: 1200 },
+    { height: 1440, width: 900 },
+    { height: 1280, width: 720 },
+    { height: 1536, width: 864 },
+    { height: 1366, width: 768 },
+    { height: 1600, width: 900 },
+  ],
+  Linux: [
+    { height: 1920, width: 1080 },
+    { height: 1600, width: 1200 },
+    { height: 1280, width: 720 },
+    { height: 1366, width: 768 },
+    { height: 1600, width: 900 },
+    { height: 810, width: 1080 },
+  ],
+};
 
 export const headers_list = [
   {
@@ -196,17 +227,17 @@ export const headers_list = [
 export const htmlTemplate = `<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Document</title></head><body></body></html>`;
 
 export const proxies = [
-  "atlas.p.shifter.io:10005",
-  "atlas.p.shifter.io:10006",
-  "atlas.p.shifter.io:10007",
-  "atlas.p.shifter.io:10008",
-  "atlas.p.shifter.io:10009",
-  "atlas.p.shifter.io:10010",
-  "atlas.p.shifter.io:10011",
-  "atlas.p.shifter.io:10012",
-  "atlas.p.shifter.io:10013",
-  "atlas.p.shifter.io:10014"
-  ];
+  'atlas.p.shifter.io:10005',
+  'atlas.p.shifter.io:10006',
+  'atlas.p.shifter.io:10007',
+  'atlas.p.shifter.io:10008',
+  'atlas.p.shifter.io:10009',
+  'atlas.p.shifter.io:10010',
+  'atlas.p.shifter.io:10011',
+  'atlas.p.shifter.io:10012',
+  'atlas.p.shifter.io:10013',
+  'atlas.p.shifter.io:10014',
+];
 
 export const availability = [
   '2 Tagen',

@@ -1,5 +1,9 @@
 import { Browser, Page, ResourceType } from 'puppeteer';
-import { screenResolutions, userAgentList } from '../constants';
+import {
+  screenResolutions,
+  screenResolutionsByPlatform,
+  userAgentList,
+} from '../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
@@ -9,6 +13,9 @@ import { Rule } from '../types/rules';
 //Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
 export const averageNumberOfPagesPerSession = 11;
 const UserAgentCnt = userAgentList.length;
+const windowsResCnt = screenResolutionsByPlatform['Windows'].length;
+const linuxResCnt = screenResolutionsByPlatform['Linux'].length;
+const macResCnt = screenResolutionsByPlatform['macOS'].length;
 const lng_set1 = 'de';
 const lng = 'de-DE';
 
@@ -23,6 +30,38 @@ const rotateUserAgent = (requestCount: number) => {
   }
 };
 
+let currWinRes = 0;
+let currLinuxRes = 0;
+let currMacRes = 0;
+
+const rotateScreenResolution = (
+  platform: 'Windows' | 'macOS' | 'Linux',
+  requestCount: number,
+) => {
+  const screenResolutions = screenResolutionsByPlatform[platform];
+  let currRes =
+    platform === 'Windows'
+      ? currWinRes
+      : platform === 'Linux'
+        ? currLinuxRes
+        : currMacRes;
+  if (
+    requestCount < averageNumberOfPagesPerSession &&
+    currRes < screenResolutions.length
+  ) {
+    return screenResolutions[currRes];
+  } else {
+    if (platform === 'Windows') {
+      currRes = (currWinRes + 1) % windowsResCnt;
+    } else if (platform === 'Linux') {
+      currRes = (currLinuxRes + 1) % linuxResCnt;
+    } else if (platform === 'macOS') {
+      currRes = (currMacRes + 1) % macResCnt;
+    }
+    return screenResolutions[currRes];
+  }
+};
+
 const setPageProperties = async (
   page: Page,
   exceptions: string[] = [],
@@ -31,6 +70,9 @@ const setPageProperties = async (
   rules?: Rule[],
 ) => {
   await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => false,
+    });
     Object.defineProperty(navigator, 'language', {
       get: function () {
         return lng;
@@ -68,17 +110,14 @@ const setPageProperties = async (
     : sample(userAgentList) ?? userAgentList[0];
   await page.setUserAgent(agent);
 
-  let platform = '';
-  if (agent.includes('Windows')) {
-    platform = 'Windows';
-  }
+  let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
   if (agent.includes('Linux')) {
     platform = 'Linux';
   }
   if (agent.includes('Macintosh')) {
     platform = 'macOS';
   }
-  
+
   await page.setExtraHTTPHeaders({
     accept:
       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -93,9 +132,12 @@ const setPageProperties = async (
     'sec-gpc': '1',
     'sec-ch-ua-platform': platform,
   });
-  await page.setViewport(
-    sample(screenResolutions) ?? { height: 1920, width: 1080 },
-  );
+
+  const viewPort = requestCount
+    ? rotateScreenResolution(platform, requestCount)
+    : sample(screenResolutions) ?? screenResolutions[0];
+
+  await page.setViewport(viewPort);
   await page.setBypassCSP(true);
 };
 

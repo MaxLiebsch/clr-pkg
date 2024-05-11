@@ -284,12 +284,20 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           return;
         }
         if (status === 429 && !this.taskFinished) {
-          this.pauseQueue(
-            'rate-limit',
-            'status:429',
-            pageInfo.link,
-            'page-response',
-          );
+          const errorType = 'AccessDenied';
+          if (
+            isErrorFrequent(errorType, 30000, this.errorLog)
+          ) {
+            this.pauseQueue(
+              'rate-limit',
+              'status:429',
+              pageInfo.link,
+              'page-response',
+            );
+          } else {
+            this.errorLog[errorType].count += 1;
+            this.errorLog[errorType].lastOccurred = Date.now();
+          }
           await closePage(page);
           this.queue.push({
             task,
@@ -344,46 +352,29 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       );
 
       if (blocked) {
-        if (!this.repairing)
-          this.pauseQueue(
-            'blocked',
-            'mimic missing,access denied',
-            pageInfo.link,
-            'load-page',
-          );
+        if (!this.repairing) {
+          const errorType = 'AccessDenied';
+          if (
+            isErrorFrequent(errorType, 30000, this.errorLog)
+          ) {
+            this.pauseQueue(
+              'blocked',
+              'mimic missing,access denied',
+              pageInfo.link,
+              'load-page',
+            );
+          } else {
+            this.errorLog[errorType].count += 1;
+            this.errorLog[errorType].lastOccurred = Date.now();
+          }
+        }
         await closePage(page);
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },
         });
       }
-      const monitoringInterval = setInterval(async () => {
-        const blocked = await checkForBlockingSignals(
-          page,
-          false,
-          request.shop.mimic,
-          pageInfo.link,
-          this.queueTask,
-        );
-        if (blocked) {
-          this.pauseQueue(
-            'blocked',
-            'mimic missing,access denied',
-            pageInfo.link,
-            'monitoring-interval',
-          );
-          clearInterval(monitoringInterval);
-          await closePage(page);
-          if (request.retries < maxRetries) {
-            this.queue.push({
-              task,
-              request: { ...request, retries: request.retries + 1 },
-            });
-          }
-        }
-      }, 10000);
 
-      clearInterval(monitoringInterval);
       await task(page, request);
       return page;
     } catch (error) {
