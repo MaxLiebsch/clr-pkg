@@ -1,14 +1,15 @@
 import { Browser, Page, ResourceType } from 'puppeteer';
-import { screenResolutions, userAgentList} from '../constants';
+import { screenResolutions, userAgentList } from '../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
+import { secure } from 'secure-puppeteer';
 
 const setPageProperties = async (
   page: Page,
   exceptions: string[] = [],
   disAllowedResourceTypes?: ResourceType[],
-  rules?: Rule[]
+  rules?: Rule[],
 ) => {
   await page.setRequestInterception(true);
   page.on('request', (request) => {
@@ -55,7 +56,7 @@ const setPageProperties = async (
     'sec-fetch-user': '?1',
     'sec-gpc': '1',
     'sec-ch-ua-platform': platform,
-  }); 
+  });
   await page.setViewport(
     sample(screenResolutions) ?? { height: 1920, width: 1080 },
   );
@@ -66,9 +67,9 @@ export async function getPage(
   browser: Browser,
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
-  rules?: Rule[]
+  rules?: Rule[],
 ) {
-  const page = await browser.newPage();
+  const page = await browser.newPage()
 
   await setPageProperties(page, exceptions, disAllowedResourceTypes, rules);
 

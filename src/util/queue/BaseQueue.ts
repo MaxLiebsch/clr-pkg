@@ -20,6 +20,11 @@ let randomTimeoutDefaultmax = 500;
 let randomTimeoutmin = 100;
 let randomTimeoutmax = 500;
 
+//Amazon has 9,5 pages per session, Instagram 11,6
+//Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
+//Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
+let averageNumberOfPagesPerSession = 20;
+
 export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private queue: Array<{
     task: Task;
@@ -38,8 +43,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog;
   private restartDelay: number = 5;
-  
-  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) { 
+  private requestCount: number = 0;
+
+  constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = errorTypes;
     this.queueTask = task;
     this.concurrency = concurrency + 1; //new page
@@ -185,7 +191,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     if (this.pause) return;
     this.pause = true;
 
-    
     if (reason === 'rate-limit' || reason === 'blocked') {
       const errorType = 'AccessDenied';
       if (
@@ -203,12 +208,19 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         this.errorLog[errorType].count += 1;
         this.errorLog[errorType].lastOccurred = Date.now();
       }
-      
+
       this.repair(reason).then(() => {
         setTimeout(() => {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
-          this.log({ location, reason, link, error, restarted: true, restartDelay: this.restartDelay });
+          this.log({
+            location,
+            reason,
+            link,
+            error,
+            restarted: true,
+            restartDelay: this.restartDelay,
+          });
           this.resumeQueue();
         }, this.restartDelay * 60000);
       });
@@ -220,7 +232,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         }, 5000);
       });
     }
-    this.log({ location, reason, link, error, restartDelay: this.restartDelay });
+    this.log({
+      location,
+      reason,
+      link,
+      error,
+      restartDelay: this.restartDelay,
+    });
     //Reset errors
     Object.keys(this.errorLog).forEach((key) => {
       if (key !== 'AccessDenied') {
@@ -295,17 +313,29 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         }
       }
 
-      // Clear cookies
-      const cookies = await page.cookies().catch((e) => {});
-      if (cookies) await page.deleteCookie(...cookies).catch((e) => {});
+      if (this.requestCount < averageNumberOfPagesPerSession) {
+        this.requestCount += 1;
+      } else {
+        this.requestCount = 0;
+        // Clear cookies
+        const cookies = await page.cookies().catch((e) => {
+          console.error('Failed to get cookies:', e);
+        });
+        if (cookies)
+          await page.deleteCookie(...cookies).catch((e) => {
+            console.error('Failed to delete cookies:', e);
+          });
 
-      // Clear localStorage and sessionStorage
-      await page
-        .evaluate(() => {
-          localStorage.clear();
-          sessionStorage.clear();
-        })
-        .catch((e) => {});
+        // Clear localStorage and sessionStorage
+        await page
+          .evaluate(() => {
+            localStorage.clear();
+            sessionStorage.clear();
+          })
+          .catch((e) => {
+            console.error('Failed to clear storage:', e);
+          });
+      }
 
       const blocked = await checkForBlockingSignals(
         page,
@@ -373,8 +403,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   pageInfo.link,
                   'catch-block',
                 );
-                this.errorLog[errorType].count += 1;
-                this.errorLog[errorType].lastOccurred = Date.now();
               } else {
                 this.errorLog[errorType].count += 1;
                 this.errorLog[errorType].lastOccurred = Date.now();

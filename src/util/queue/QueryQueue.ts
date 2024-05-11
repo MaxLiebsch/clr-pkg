@@ -7,6 +7,7 @@ import { QueryRequest } from '../../types/query-request';
 import { BaseQueue } from './BaseQueue';
 import { ErrorLog } from '../isErrorFrequent';
 import { errorTypes } from './ErrorTypes';
+import { createLabeledTimeout } from '../createLabeledTimeout';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -130,12 +131,17 @@ export class QueryQueue {
       const timeoutTime =
         Math.random() * (randomTimeoutmax - randomTimeoutmin) +
         randomTimeoutmin;
-      this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-        (page) => {
-          this.running--;
-          this.next();
-        },
+      const timeout = createLabeledTimeout(
+        () =>
+          this.wrapperFunction(nextRequest.task, nextRequest.request).then(
+            (page) => {
+              this.running--;
+              this.next();
+            },
+          ),
+        timeoutTime,
       );
+      this.timeouts.push(timeout);
     }
   }
 }
