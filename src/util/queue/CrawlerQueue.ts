@@ -7,11 +7,12 @@ import { ErrorLog } from '../isErrorFrequent';
 import { CrawlerRequest } from '../../types/query-request';
 import { BaseQueue } from '../queue/BaseQueue';
 import { errorTypes } from './ErrorTypes';
+import { RESTART_DELAY } from '../../constants';
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
-let randomTimeoutmin = 150;
-let randomTimeoutmax = 500;
+let randomTimeoutmin = 2500;
+let randomTimeoutmax = 5000;
 
 export class CrawlerQueue {
   private queue: Array<{
@@ -38,6 +39,8 @@ export class CrawlerQueue {
   private pause: boolean = false;
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
+    private restartDelay: number = RESTART_DELAY
+  private requestCount: number = 0;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = errorTypes;

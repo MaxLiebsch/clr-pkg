@@ -10,6 +10,7 @@ import { prefixLink } from '../compare_helper';
 import { averageNumberOfPagesPerSession, getPage } from '../getPage';
 import { checkForBlockingSignals } from '../../checkPageHealth';
 import { errorTypes } from './ErrorTypes';
+import { RESTART_DELAY } from '../../constants';
 
 type Task = (page: Page, request: any) => Promise<void>;
 const maxRetries = 10;
@@ -19,6 +20,8 @@ let randomTimeoutDefaultmax = 500;
 
 let randomTimeoutmin = 100;
 let randomTimeoutmax = 500;
+
+const accessDeniedError = 'AccessDenied';
 
 export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private queue: Array<{
@@ -37,7 +40,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog;
-  private restartDelay: number = 5;
+  private restartDelay: number = RESTART_DELAY
   private requestCount: number = 0;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
@@ -56,6 +59,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       taskid: this.queueTask.id ?? '',
       type: this.queueTask.type,
       msg: '',
+      restartDelay: this.resetStartDelay,
     };
     if (typeof msg === 'string') {
       message['msg'] = msg;
@@ -137,13 +141,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     await this.disconnect();
     try {
       await this.connect(reason);
+      this.running = 0;
+      this.repairing = false;
+      this.waitingForRepairResolvers.forEach((resolve) => resolve());
+      this.waitingForRepairResolvers = [];
     } catch (error) {
       this.log({ msg: 'Cannot restart browser', reason });
     }
-    this.running = 0;
-    this.repairing = false;
-    this.waitingForRepairResolvers.forEach((resolve) => resolve());
-    this.waitingForRepairResolvers = [];
   }
   /*  QUEUE RELATED FUNCTIONS  */
   async clearQueue() {
@@ -165,14 +169,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
 
   resetStartDelay() {
     setInterval(() => {
-      const errorType = 'AccessDenied';
       if (
-        this.errorLog[errorType].count > 1 &&
-        !isErrorFrequent(errorType, 15 * 60000, this.errorLog)
+        this.errorLog[accessDeniedError].count > 1 &&
+        !isErrorFrequent(accessDeniedError, 2 * 60000, this.errorLog)
       ) {
-        this.restartDelay = 5;
-        this.errorLog[errorType].count = 0;
-        this.errorLog[errorType].lastOccurred = null;
+        this.restartDelay = RESTART_DELAY
+        this.errorLog[accessDeniedError].count = 0;
+        this.errorLog[accessDeniedError].lastOccurred = null;
       }
     }, 60000);
   }
@@ -187,11 +190,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.pause = true;
 
     if (reason === 'rate-limit' || reason === 'blocked') {
-      const errorType = 'AccessDenied';
       if (
         //If AccessDenied error is frequent check if currentTime - lastOccurred < this.restartDelay + 1 minute
         isErrorFrequent(
-          errorType,
+          accessDeniedError,
           this.restartDelay * 60000 + 60000,
           this.errorLog,
         )
@@ -200,8 +202,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           this.restartDelay = this.restartDelay * 2;
         }
       } else {
-        this.errorLog[errorType].count += 1;
-        this.errorLog[errorType].lastOccurred = Date.now();
+        this.errorLog[accessDeniedError].count += 1;
+        this.errorLog[accessDeniedError].lastOccurred = Date.now();
       }
 
       this.repair(reason).then(() => {
@@ -209,7 +211,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.log({
-            restartDelay: this.restartDelay,
             location,
             reason,
             link,
@@ -232,13 +233,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       reason,
       link,
       error,
-      restartDelay: this.restartDelay,
     });
     // next user agent;
     this.requestCount = this.requestCount + 1;
     //Reset errors
     Object.keys(this.errorLog).forEach((key) => {
-      if (key !== 'AccessDenied') {
+      if (key !== accessDeniedError) {
         this.errorLog[key].count = 0;
         this.errorLog[key].lastOccurred = null;
       }
@@ -284,10 +284,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           return;
         }
         if (status === 429 && !this.taskFinished) {
-          const errorType = 'AccessDenied';
-          if (
-            isErrorFrequent(errorType, 30000, this.errorLog)
-          ) {
+          if (isErrorFrequent(accessDeniedError, 30000, this.errorLog)) {
             this.pauseQueue(
               'rate-limit',
               'status:429',
@@ -295,8 +292,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               'page-response',
             );
           } else {
-            this.errorLog[errorType].count += 1;
-            this.errorLog[errorType].lastOccurred = Date.now();
+            this.errorLog[accessDeniedError].count += 1;
+            this.errorLog[accessDeniedError].lastOccurred = Date.now();
           }
           await closePage(page);
           this.queue.push({
@@ -354,9 +351,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       if (blocked) {
         if (!this.repairing) {
           const errorType = 'AccessDenied';
-          if (
-            isErrorFrequent(errorType, 30000, this.errorLog)
-          ) {
+          if (isErrorFrequent(errorType, 30000, this.errorLog)) {
             this.pauseQueue(
               'blocked',
               'mimic missing,access denied',

@@ -45,9 +45,7 @@ export async function checkForBlockingSignals(
             ),
             fullPage: true,
           })
-          .catch((e) => {
-            console.log('e:', e);
-          });
+          .catch((e) => {});
       }
       return true;
     }
@@ -95,9 +93,7 @@ export async function checkForBlockingSignals(
           ),
           fullPage: true,
         })
-        .catch((e) => {
-          console.log('e:', e);
-        });
+        .catch((e) => {});
     }
     return true;
   }

@@ -8,6 +8,7 @@ import { BaseQueue } from './BaseQueue';
 import { ErrorLog } from '../isErrorFrequent';
 import { errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from '../createLabeledTimeout';
+import { RESTART_DELAY } from '../../constants';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -18,8 +19,8 @@ export interface ProdInfo {
 
 type Task = (page: Page, request: QueryRequest) => Promise<void>;
 
-let randomTimeoutmin = 100;
-let randomTimeoutmax = 500;
+let randomTimeoutmin = 1500;
+let randomTimeoutmax = 3000;
 
 export class QueryQueue {
   private queue: Array<{
@@ -44,7 +45,9 @@ export class QueryQueue {
   private browser: Browser | null = null;
   private repairing: Boolean = false;
   private pause: boolean = false;
-  public taskFinished: boolean = false;
+  public taskFinished: boolean = false
+  private restartDelay: number = RESTART_DELAY;
+  private requestCount: number = 0;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.errorLog = errorTypes;

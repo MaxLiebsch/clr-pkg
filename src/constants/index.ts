@@ -1,3 +1,5 @@
+export const RESTART_DELAY = 1;
+
 export const uuidRegex =
   /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/;
 
@@ -223,6 +225,7 @@ export const headers_list = [
     'Accept-Language': 'en-US,en;q=0.9',
   },
 ];
+
 
 export const htmlTemplate = `<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Document</title></head><body></body></html>`;
 
