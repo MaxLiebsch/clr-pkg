@@ -313,9 +313,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         }
       }
 
-      if (this.requestCount < averageNumberOfPagesPerSession) {
+      if (this.requestCount <= averageNumberOfPagesPerSession) {
         this.requestCount += 1;
       } else {
+        this.log('Session ended')
         this.requestCount = 0;
         // Clear cookies
         const cookies = await page.cookies().catch((e) => {
