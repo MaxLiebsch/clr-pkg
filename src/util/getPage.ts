@@ -4,21 +4,41 @@ import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
 
+//Amazon has 9,5 pages per session, Instagram 11,6
+//Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
+//Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
+export const averageNumberOfPagesPerSession = 11;
+const UserAgentCnt = userAgentList.length;
+const lng_set1 = 'de';
+const lng = 'de-DE';
+
+let currentUserAgent = 0;
+
+const rotateUserAgent = (requestCount: number) => {
+  if (requestCount < averageNumberOfPagesPerSession) {
+    return userAgentList[currentUserAgent];
+  } else {
+    currentUserAgent = (currentUserAgent + 1) % UserAgentCnt;
+    return userAgentList[currentUserAgent];
+  }
+};
+
 const setPageProperties = async (
   page: Page,
   exceptions: string[] = [],
+  requestCount: number | null,
   disAllowedResourceTypes?: ResourceType[],
   rules?: Rule[],
 ) => {
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(navigator, 'language', {
       get: function () {
-        return 'de-DE';
+        return lng;
       },
     });
     Object.defineProperty(navigator, 'languages', {
       get: function () {
-        return ['de-DE', 'de'];
+        return [lng, lng_set1];
       },
     });
   });
@@ -43,7 +63,11 @@ const setPageProperties = async (
       return request.continue();
     }
   });
-  const agent = sample(userAgentList) || userAgentList[0];
+  const agent = requestCount
+    ? rotateUserAgent(requestCount)
+    : sample(userAgentList) ?? userAgentList[0];
+  await page.setUserAgent(agent);
+
   let platform = '';
   if (agent.includes('Windows')) {
     platform = 'Windows';
@@ -54,11 +78,12 @@ const setPageProperties = async (
   if (agent.includes('Macintosh')) {
     platform = 'macOS';
   }
+  
   await page.setExtraHTTPHeaders({
     accept:
       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-encoding': 'gzip, deflate, br, zstd',
-    'accept-language': 'de-DE,de;q=0.9',
+    'accept-language': `${lng},${lng_set1};q=0.9`,
     'cache-control': 'max-age=0',
     'upgrade-insecure-requests': '1',
     'sec-fetch-dest': 'document',
@@ -76,13 +101,20 @@ const setPageProperties = async (
 
 export async function getPage(
   browser: Browser,
+  requestCount: number | null,
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
   rules?: Rule[],
 ) {
   const page = await browser.newPage();
 
-  await setPageProperties(page, exceptions, disAllowedResourceTypes, rules);
+  await setPageProperties(
+    page,
+    exceptions,
+    requestCount,
+    disAllowedResourceTypes,
+    rules,
+  );
 
   return page;
 }

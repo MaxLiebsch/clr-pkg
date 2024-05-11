@@ -157,7 +157,7 @@ export const mainBrowser = async (
   const args = [
     '--no-sandbox',
     '--disable-setuid-sandbox',
-    '--lang=de_DE,de',
+    '--lang=de',
     '--disable-gpu',
     '--disable-web-security',
     '--start-maximized',

@@ -7,7 +7,7 @@ import { mainBrowser } from '../browsers';
 import { closePage } from '../closePage';
 import { CrawlerRequest, QueryRequest } from '../../types/query-request';
 import { prefixLink } from '../compare_helper';
-import { getPage } from '../getPage';
+import { averageNumberOfPagesPerSession, getPage } from '../getPage';
 import { checkForBlockingSignals } from '../../checkPageHealth';
 import { errorTypes } from './ErrorTypes';
 
@@ -19,11 +19,6 @@ let randomTimeoutDefaultmax = 500;
 
 let randomTimeoutmin = 100;
 let randomTimeoutmax = 500;
-
-//Amazon has 9,5 pages per session, Instagram 11,6
-//Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
-//Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
-let averageNumberOfPagesPerSession = 20;
 
 export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private queue: Array<{
@@ -214,12 +209,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           randomTimeoutmin = randomTimeoutDefaultmin;
           randomTimeoutmax = randomTimeoutDefaultmax;
           this.log({
+            restartDelay: this.restartDelay,
             location,
             reason,
             link,
             error,
             restarted: true,
-            restartDelay: this.restartDelay,
           });
           this.resumeQueue();
         }, this.restartDelay * 60000);
@@ -239,6 +234,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       error,
       restartDelay: this.restartDelay,
     });
+    // next user agent;
+    this.requestCount = this.requestCount + 1;
     //Reset errors
     Object.keys(this.errorLog).forEach((key) => {
       if (key !== 'AccessDenied') {
@@ -266,6 +263,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     try {
       const page = await getPage(
         this.browser!,
+        this.requestCount,
         resourceTypes?.query,
         shop.exceptions,
         shop.rules,
@@ -316,7 +314,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       if (this.requestCount <= averageNumberOfPagesPerSession) {
         this.requestCount += 1;
       } else {
-        this.log('Session ended')
         this.requestCount = 0;
         // Clear cookies
         const cookies = await page.cookies().catch((e) => {
