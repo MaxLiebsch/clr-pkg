@@ -40,7 +40,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   public taskFinished: boolean = false;
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog;
-  private restartDelay: number = RESTART_DELAY
+  private restartDelay: number = RESTART_DELAY;
   private requestCount: number = 0;
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
@@ -59,7 +59,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       taskid: this.queueTask.id ?? '',
       type: this.queueTask.type,
       msg: '',
-      restartDelay: this.resetStartDelay,
+      restartDelay: this.restartDelay,
     };
     if (typeof msg === 'string') {
       message['msg'] = msg;
@@ -173,7 +173,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         this.errorLog[accessDeniedError].count > 1 &&
         !isErrorFrequent(accessDeniedError, 2 * 60000, this.errorLog)
       ) {
-        this.restartDelay = RESTART_DELAY
+        this.restartDelay = RESTART_DELAY;
         this.errorLog[accessDeniedError].count = 0;
         this.errorLog[accessDeniedError].lastOccurred = null;
       }
