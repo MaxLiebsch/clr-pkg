@@ -7,6 +7,7 @@ import {
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../types/rules';
+import { secure } from 'secure-puppeteer';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
@@ -69,21 +70,6 @@ const setPageProperties = async (
   disAllowedResourceTypes?: ResourceType[],
   rules?: Rule[],
 ) => {
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'webdriver', {
-      get: () => false,
-    });
-    Object.defineProperty(navigator, 'language', {
-      get: function () {
-        return lng;
-      },
-    });
-    Object.defineProperty(navigator, 'languages', {
-      get: function () {
-        return [lng, lng_set1];
-      },
-    });
-  });
   await page.setRequestInterception(true);
   page.on('request', (request) => {
     const resourceType = request.resourceType();
@@ -108,29 +94,50 @@ const setPageProperties = async (
   const agent = requestCount
     ? rotateUserAgent(requestCount)
     : sample(userAgentList) ?? userAgentList[0];
-  await page.setUserAgent(agent);
 
   let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
+  let navigatorPlatform: "MacIntel" | "Win32" | "Linux x86_64" = "Win32";
   if (agent.includes('Linux')) {
     platform = 'Linux';
+    navigatorPlatform = "Linux x86_64";
   }
   if (agent.includes('Macintosh')) {
     platform = 'macOS';
+    navigatorPlatform = "MacIntel";
   }
 
+  const agentMeta = {
+    architecture:
+      platform === 'Windows' || platform === 'Linux' ? 'x86' : 'arm',
+    mobile: false,
+    brands: [
+      { brand: 'Chromium', version: '122' },
+      { brand: 'Google Chrome', version: '122' },
+      { brand: 'Not-A.Brand', version: '99' },
+    ],
+    model: '',
+    platform: platform,
+    platformVersion: '3.1',
+  };
+
+  await page.setUserAgent(agent, agentMeta);
+  await page.setExtraHTTPHeaders({
+    'cache-control': 'max-age=0',
+    'sec-ch-ua-platform': platform,
+    'sec-ch-ua-form-factors': 'Desktop',
+    'upgrade-insecure-requests': '1',
+  });
   await page.setExtraHTTPHeaders({
     accept:
       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Sec-Fetch-Site': 'none',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-user': '?1',
+    'sec-fetch-dest': 'document',
+    "Referer": 'https://www.google.com',
     'accept-encoding': 'gzip, deflate, br, zstd',
     'accept-language': `${lng},${lng_set1};q=0.9`,
-    'cache-control': 'max-age=0',
-    'upgrade-insecure-requests': '1',
-    'sec-fetch-dest': 'document',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-site': 'same-origin',
-    'sec-fetch-user': '?1',
     'sec-gpc': '1',
-    'sec-ch-ua-platform': platform,
   });
 
   const viewPort = requestCount
@@ -139,6 +146,30 @@ const setPageProperties = async (
 
   await page.setViewport(viewPort);
   await page.setBypassCSP(true);
+  await page.emulateTimezone('Europe/Berlin');
+  await page.evaluateOnNewDocument(
+    (lng, lng_set1, navigatorPlatform) => {
+      Object.defineProperty(navigator, 'language', {
+        get: function () {
+          return lng;
+        },
+      });
+      Object.defineProperty(navigator, 'platform', {
+        get: function () {
+          return navigatorPlatform;
+        },
+        set: function (a) {},
+      });
+      Object.defineProperty(navigator, 'languages', {
+        get: function () {
+          return [lng, lng_set1];
+        },
+      });
+    },
+    lng,
+    lng_set1,
+    navigatorPlatform,
+  );
 };
 
 export async function getPage(
@@ -148,7 +179,7 @@ export async function getPage(
   exceptions?: string[],
   rules?: Rule[],
 ) {
-  const page = await browser.newPage();
+  const page = secure(await browser.newPage());
 
   await setPageProperties(
     page,

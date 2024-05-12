@@ -170,7 +170,7 @@ export const mainBrowser = async (
   }
   try {
     puppeteer.use(StealthPlugin());
-    // puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
+    puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
   } catch (error) {
     if (error instanceof Error)
       LoggerService.getSingleton().logger.info({
@@ -195,7 +195,7 @@ export const mainBrowser = async (
 
   const options = {
     headless: process.env.NODE_ENV === 'production' ? true : false,
-    devtools: process.env.NODE_ENV !== 'production',
+    devtools: process.env.NODE_ENV === 'development' ? true : false,
     args,
     defaultViewport: null,
     timeout: 600000,

@@ -10,7 +10,7 @@ import { prefixLink } from '../compare_helper';
 import { averageNumberOfPagesPerSession, getPage } from '../getPage';
 import { checkForBlockingSignals } from '../../checkPageHealth';
 import { errorTypes } from './ErrorTypes';
-import { RESTART_DELAY } from '../../constants';
+import { MAX_RESTART_DELAY, RESTART_DELAY } from '../../constants';
 
 type Task = (page: Page, request: any) => Promise<void>;
 const maxRetries = 10;
@@ -198,8 +198,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           this.errorLog,
         )
       ) {
-        if (this.restartDelay < 30) {
-          this.restartDelay = this.restartDelay * 2;
+        if (this.restartDelay <= MAX_RESTART_DELAY) {
+          this.restartDelay = this.restartDelay +1;
         }
       } else {
         this.errorLog[accessDeniedError].count += 1;
