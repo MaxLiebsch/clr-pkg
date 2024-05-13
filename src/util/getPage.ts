@@ -1,5 +1,6 @@
 import { Browser, Page, ResourceType } from 'puppeteer';
 import {
+  CHROME_VERSION,
   screenResolutions,
   screenResolutionsByPlatform,
   userAgentList,
@@ -91,19 +92,21 @@ const setPageProperties = async (
       return request.continue();
     }
   });
-  const agent = requestCount
+  const userAgentMeta = requestCount
     ? rotateUserAgent(requestCount)
     : sample(userAgentList) ?? userAgentList[0];
 
+  const { agent, platformVersion } = userAgentMeta;
+
   let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
-  let navigatorPlatform: "MacIntel" | "Win32" | "Linux x86_64" = "Win32";
-  if (agent.includes('Linux')) {
+  let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64' = 'Win32';
+  if (agent.includes('X11')) {
     platform = 'Linux';
-    navigatorPlatform = "Linux x86_64";
+    navigatorPlatform = 'Linux x86_64';
   }
   if (agent.includes('Macintosh')) {
     platform = 'macOS';
-    navigatorPlatform = "MacIntel";
+    navigatorPlatform = 'MacIntel';
   }
 
   const agentMeta = {
@@ -111,13 +114,13 @@ const setPageProperties = async (
       platform === 'Windows' || platform === 'Linux' ? 'x86' : 'arm',
     mobile: false,
     brands: [
-      { brand: 'Chromium', version: '122' },
-      { brand: 'Google Chrome', version: '122' },
+      { brand: 'Chromium', version: CHROME_VERSION.split('.')[0] },
+      { brand: 'Google Chrome', version: CHROME_VERSION.split('.')[0] },
       { brand: 'Not-A.Brand', version: '99' },
     ],
     model: '',
     platform: platform,
-    platformVersion: '3.1',
+    platformVersion,
   };
 
   await page.setUserAgent(agent, agentMeta);
@@ -134,7 +137,7 @@ const setPageProperties = async (
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '?1',
     'sec-fetch-dest': 'document',
-    "Referer": 'https://www.google.com',
+    Referer: 'https://www.google.com',
     'accept-encoding': 'gzip, deflate, br, zstd',
     'accept-language': `${lng},${lng_set1};q=0.9`,
     'sec-gpc': '1',
@@ -146,7 +149,8 @@ const setPageProperties = async (
 
   await page.setViewport(viewPort);
   await page.setBypassCSP(true);
-  await page.emulateTimezone('Europe/Berlin');
+  const timezones = ['Europe/Kiev', 'Europe/Moscow', 'America/New_York'];
+  await page.emulateTimezone(sample(timezones) ?? 'Europe/Kiev');
   await page.evaluateOnNewDocument(
     (lng, lng_set1, navigatorPlatform) => {
       Object.defineProperty(navigator, 'language', {

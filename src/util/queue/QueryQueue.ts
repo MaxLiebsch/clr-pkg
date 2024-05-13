@@ -1,14 +1,9 @@
-import { Browser, Page } from 'puppeteer';
+import { Page } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { DbProduct, ProductRecord } from '../../types/product';
-import { shuffle } from 'underscore';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue } from './BaseQueue';
-import { ErrorLog } from '../isErrorFrequent';
-import { errorTypes } from './ErrorTypes';
-import { createLabeledTimeout } from '../createLabeledTimeout';
-import { RESTART_DELAY } from '../../constants';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -19,134 +14,64 @@ export interface ProdInfo {
 
 type Task = (page: Page, request: QueryRequest) => Promise<void>;
 
-let randomTimeoutmin = 1500;
-let randomTimeoutmax = 3000;
-
-export class QueryQueue {
-  private queue: Array<{
-    task: Task;
-    request: QueryRequest;
-  }>;
+export class QueryQueue extends BaseQueue<QueryRequest> {
   /*
    Placeholder variables for interoperability with BaseQueue class
 
   */
-  private queueTask: QueueTask;
-  private proxyAuth: ProxyAuth;
-  private uniqueLinks: string[] = [];
-  private waitingForRepairResolvers: (() => void)[] = [];
-  private errorLog: ErrorLog;
-  /*
-    if the timeouts need to be applied later
-  */
-  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
-  private running: number;
-  private concurrency: number;
-  private browser: Browser | null = null;
-  private repairing: Boolean = false;
-  private pause: boolean = false;
-  public taskFinished: boolean = false
-  private restartDelay: number = RESTART_DELAY;
-  private requestCount: number = 0;
-
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
-    this.errorLog = errorTypes;
-    this.queueTask = task;
-    this.concurrency = concurrency;
-    this.queue = [];
-    this.running = 0;
-    this.proxyAuth = proxyAuth;
+    super(concurrency, proxyAuth, task);
   }
   /* LOGGING */
-  async log(msg: string | { [key: string]: any }) {
-    return BaseQueue.prototype.log.call(this, msg);
+  log(msg: string | { [key: string]: any }): Promise<void> {
+    return super.log(msg);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  async connect(reason?: string): Promise<void> {
-    return await BaseQueue.prototype.connect.call(this, reason);
+  connect(): Promise<void> {
+    return super.connect();
   }
-  async disconnect(taskFinished = false): Promise<void> {
-    return await BaseQueue.prototype.disconnect.call(this, taskFinished);
+  disconnect(taskFinished = false): Promise<void> {
+    return super.disconnect(taskFinished);
   }
   connected() {
-    return BaseQueue.prototype.connected.call(this);
+    return super.connected();
   }
-  async browserHealth() {
-    return await BaseQueue.prototype.browserHealth.call(this);
+  browserHealth() {
+    return super.browserHealth();
   }
-  async repair(reason?: string): Promise<void> {
-    return BaseQueue.prototype.repair.call(this, reason);
+  repair(reason?: string): Promise<void> {
+    return super.repair(reason);
   }
   /*  QUEUE RELATED FUNCTIONS  */
   /*  Placeholder  function for interoperability with BaseQueue class */
-  public async clearQueue() {
-    return await BaseQueue.prototype.clearQueue.call(this);
+  public async clearQueue(event: string) {
+    return await super.clearQueue(event);
   }
-  private resumeQueue() {
-    return BaseQueue.prototype.resumeQueue.call(this);
+  resumeQueue() {
+    return super.resumeQueue();
   }
-  private pauseQueue(
-    reason: 'error' | 'rate-limit' | 'blocked',
-    error: string,
-    link: string,
-    location: string,
-  ) {
-    return BaseQueue.prototype.pauseQueue.call(
-      this,
-      reason,
-      error,
-      link,
-      location,
-    );
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
+    return super.pauseQueue(reason);
   }
   public idle() {
-    return BaseQueue.prototype.idle.call(this);
+    return super.idle();
   }
   public workload() {
-    return BaseQueue.prototype.workload.call(this);
+    return super.workload();
   }
-  private async wrapperFunction(
+  wrapperFunction(
     task: Task,
     request: QueryRequest,
   ): Promise<Page | undefined> {
-    return await BaseQueue.prototype.wrapperFunction.call(this, task, request);
+    return super.wrapperFunction(task, request);
   }
 
   // Push a new task to the queue
   public pushTask(task: Task, request: QueryRequest) {
-    this.queue.push({ task, request });
-    this.next();
+    return super.pushTask(task, request);
   }
   // Process the next task
-  private next() {
-    if (
-      this.pause ||
-      this.repairing ||
-      this.running >= this.concurrency ||
-      this.queue.length === 0
-    ) {
-      return;
-    }
-    this.running++;
-    const nextRequest = this.queue.shift();
-    this.queue = shuffle(this.queue);
-    if (nextRequest) {
-      const timeoutTime =
-        Math.random() * (randomTimeoutmax - randomTimeoutmin) +
-        randomTimeoutmin;
-      const timeout = createLabeledTimeout(
-        () =>
-          this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-            (page) => {
-              this.running--;
-              this.next();
-            },
-          ),
-        timeoutTime,
-      );
-      this.timeouts.push(timeout);
-    }
+  next() {
+    return super.next();
   }
 }
-
-Object.assign(QueryQueue.prototype, BaseQueue<QueryRequest>);

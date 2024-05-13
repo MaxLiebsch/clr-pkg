@@ -387,13 +387,14 @@ export const searchProductWithPZN = async (
   passwordAuth: boolean = false,
 ): Promise<SearchProductWithPZNResponse> => {
   const proxy = _.sample(proxies);
-  const userAgent = _.sample(userAgentList);
   const _proxy = passwordAuth ? 'resi.proxyscrape.com:8000' : proxy!;
   try {
     const timeout = 20000;
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
+    const userAgent = _.sample(userAgentList);
     if (proxy && userAgent) {
+
       const myURL = new URL('http://' + _proxy);
       const options = url.urlToHttpOptions(myURL);
       if (passwordAuth) options.auth = '23oj7wi7uj:89x51dmfs0-country-DE';
@@ -401,7 +402,7 @@ export const searchProductWithPZN = async (
       const res = await fetch(_url, {
         agent: proxyAgent,
         method: 'HEAD',
-        headers: { 'User-Agent': userAgent },
+        headers: { 'User-Agent': userAgent.agent },
         //@ts-ignore
         signal: controller.signal,
       });
@@ -432,7 +433,7 @@ export const getProductInfoWithFetch = async (
       const proxyAgent = new HttpsProxyAgent(options as string);
       const res = await fetch(_url, {
         agent: proxyAgent,
-        headers: { 'User-Agent': userAgent },
+        headers: { 'User-Agent': userAgent.agent },
       });
       const body = await res.text();
       const newCandidate = findProductInfo(load(body), shopObject, _url);
@@ -456,7 +457,7 @@ export const getImageWithFetch = async (_url: string, proxyAuth: ProxyAuth) => {
   const proxyAgent = new HttpsProxyAgent(options);
   const res = await fetch(_url, {
     agent: proxyAgent,
-    headers: { 'User-Agent': userAgent },
+    headers: { 'User-Agent': userAgent.agent },
   });
   if (res.ok) {
     return { buffer: await res.arrayBuffer(), type: mime.lookup(_url) };
