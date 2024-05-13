@@ -252,14 +252,15 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.uniqueLinks.push(pageInfo.link);
     this.queueTask.statistics.openedPages += 1;
 
+    const page = await getPage(
+      this.browser!,
+      this.requestCount,
+      resourceTypes?.query,
+      shop.exceptions,
+      shop.rules,
+    );
+
     try {
-      const page = await getPage(
-        this.browser!,
-        this.requestCount,
-        resourceTypes?.query,
-        shop.exceptions,
-        shop.rules,
-      );
       const waitNavigation = page.waitForNavigation({ timeout: 60000 });
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
@@ -298,7 +299,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         if (status >= 500 && !this.taskFinished) {
           const errorType = ErrorType.ServerError;
           this.queueTask.statistics.errorTypeCount[errorType] += 1;
-          if (isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)) {
+          if (
+            isErrorFrequent(errorType, ACCESS_DENIED_FREQUENCE, this.errorLog)
+          ) {
             this.requestCount += 1;
             await this.resetCookies(page);
           } else {
@@ -407,6 +410,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.errorLog[errorType].lastOccurred = Date.now();
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
+          await closePage(page);
         }
         this.queue.push({
           task,

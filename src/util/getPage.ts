@@ -111,7 +111,7 @@ const setPageProperties = async (
 
   const agentMeta = {
     architecture:
-      platform === 'Windows' || platform === 'Linux' ? 'x86' : 'arm',
+      platform === 'Windows' || platform === 'Linux' ? 'x86_64' : 'arm',
     mobile: false,
     brands: [
       { brand: 'Chromium', version: CHROME_VERSION.split('.')[0] },
@@ -166,7 +166,7 @@ const setPageProperties = async (
       });
       Object.defineProperty(navigator, 'languages', {
         get: function () {
-          return [lng, lng_set1];
+          return [lng];
         },
       });
     },
