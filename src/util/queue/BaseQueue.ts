@@ -411,13 +411,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.errorLog[errorType].lastOccurred = Date.now();
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
-          page && await closePage(page);
         }
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },
         });
       }
+    } finally {
+      if (page) await closePage(page);
     }
   }
 
