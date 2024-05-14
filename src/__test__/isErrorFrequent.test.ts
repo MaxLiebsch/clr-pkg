@@ -30,7 +30,6 @@ describe('isErrorFrequent', () => {
         const date = new Date();
         date.setSeconds(date.getSeconds() - 29); 
         const lastOccurred = Math.floor(date.getTime());
-        console.log('lastOccurred:', lastOccurred)
         errorTypes.AccessDenied.count += 1;
         errorTypes.AccessDenied.lastOccurred = lastOccurred
         expect(isErrorFrequent('AccessDenied', duration, errorTypes)).toBe(true);

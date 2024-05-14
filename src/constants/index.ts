@@ -1,6 +1,6 @@
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
-export const MAX_RETRIES = 250;
+export const MAX_RETRIES = 500;
 export const RANDOM_TIMEOUT_MIN = 2500;
 export const RANDOM_TIMEOUT_MAX = 5000;
 

@@ -57,17 +57,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     };
     this.concurrency = concurrency; //new page
     this.proxyAuth = proxyAuth;
-    setInterval(async () => {
-      const browersHealth = await this.browserHealth();
-      this.logError({
-        event: 'queue status',
-        queueLength: this.queue.length,
-        resetedSession: this.queueTask.statistics.resetedSession,
-        requestCount: this.requestCount,
-        running: this.running,
-        ...browersHealth,
-      });
-    }, 60000);
   }
   /* LOGGING */
   async log(msg: string | { [key: string]: any }) {

@@ -22,7 +22,7 @@ const lng = 'de-DE';
 
 let currentUserAgent = 0;
 
-const rotateUserAgent = (requestCount: number) => {
+export const rotateUserAgent = (requestCount: number) => {
   if (requestCount < averageNumberOfPagesPerSession) {
     return userAgentList[currentUserAgent];
   } else {
@@ -35,7 +35,7 @@ let currWinRes = 0;
 let currLinuxRes = 0;
 let currMacRes = 0;
 
-const rotateScreenResolution = (
+export const rotateScreenResolution = (
   platform: 'Windows' | 'macOS' | 'Linux',
   requestCount: number,
 ) => {
@@ -54,10 +54,13 @@ const rotateScreenResolution = (
   } else {
     if (platform === 'Windows') {
       currRes = (currWinRes + 1) % windowsResCnt;
+      currWinRes = currRes;
     } else if (platform === 'Linux') {
       currRes = (currLinuxRes + 1) % linuxResCnt;
+      currLinuxRes = currRes;
     } else if (platform === 'macOS') {
       currRes = (currMacRes + 1) % macResCnt;
+      currMacRes = currRes;
     }
     return screenResolutions[currRes];
   }
@@ -99,6 +102,7 @@ const setPageProperties = async (
 
   let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
   let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64' = 'Win32';
+
   if (agent.includes('X11')) {
     platform = 'Linux';
     navigatorPlatform = 'Linux x86_64';
@@ -118,7 +122,7 @@ const setPageProperties = async (
       { brand: 'Not-A.Brand', version: '99' },
     ],
     model: '',
-    platform: platform,
+    platform,
     platformVersion,
   };
 
