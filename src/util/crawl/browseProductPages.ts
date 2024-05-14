@@ -7,7 +7,7 @@ import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
 import { Query } from '../../types/query';
 import { ICategory } from '../crawl/getCategories';
 import { StatService, SubCategory } from '../fs/stats';
-import { checkForBlockingSignals } from '../queue/checkPageHealth';
+import { checkForBlockingSignals } from '../../util.services/queue/checkPageHealth';
 import { closePage } from '../browser/closePage';
 import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
@@ -62,10 +62,14 @@ export async function browseProductpages(
   const { paginationEl: paginationEls, waitUntil } = shop;
 
   let pages: number[] = [];
-  let { pagination, paginationEl } = await findPagination(page, paginationEls, limit);
+  let { pagination, paginationEl } = await findPagination(
+    page,
+    paginationEls,
+    limit,
+  );
   const limitPages = limit?.pages ? limit?.pages : 0;
 
-  if (pagination !== 'missing' && pagination  && limitPages > 0) {
+  if (pagination !== 'missing' && pagination && limitPages > 0) {
     const { calculation, type } = paginationEl;
 
     if (type === 'pagination') {
@@ -82,10 +86,10 @@ export async function browseProductpages(
         }
 
         const noOfPages = limitPages
-        ? limitPages > noOfFoundPages
-        ? noOfFoundPages
-        : limitPages
-        : noOfFoundPages;
+          ? limitPages > noOfFoundPages
+            ? noOfFoundPages
+            : limitPages
+          : noOfFoundPages;
 
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
@@ -167,7 +171,7 @@ export async function browseProductpages(
             await closePage(page);
           }
         }
-        return 'crawled'
+        return 'crawled';
       }
     } else {
       // type === 'infinite_scroll'

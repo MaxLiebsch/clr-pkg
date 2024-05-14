@@ -2,12 +2,12 @@ import { Browser, Page } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
-import { LoggerService } from '../logger';
-import { mainBrowser } from '../browser/browsers';
-import { closePage } from '../browser/closePage';
+import { LoggerService } from '../../util/logger';
+import { mainBrowser } from '../../util/browser/browsers';
+import { closePage } from '../../util/browser/closePage';
 import { CrawlerRequest, QueryRequest } from '../../types/query-request';
-import { prefixLink } from '../matching/compare_helper';
-import { getPage } from '../browser/getPage';
+import { prefixLink } from '../../util/matching/compare_helper';
+import { getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from '../queue/checkPageHealth';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
@@ -274,12 +274,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         shop.exceptions,
         shop.rules,
       );
-      const waitNavigation = page.waitForNavigation({ timeout: 60000 });
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
         timeout: 60000,
       });
-      await waitNavigation;
 
       if (response) {
         const status = response.status();

@@ -1,8 +1,8 @@
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
 export const MAX_RETRIES = 150;
-export const RANDOM_TIMEOUT_MIN = 1000;
-export const RANDOM_TIMEOUT_MAX = 2000;
+export const RANDOM_TIMEOUT_MIN = 2500;
+export const RANDOM_TIMEOUT_MAX = 5000;
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;

@@ -1,6 +1,6 @@
 import { TargetShop } from '../../types';
 import { DbProduct, Product, } from '../../types/product';
-import { ProdInfo } from '../queue/QueryQueue';
+import { ProdInfo } from '../../util.services/queue/QueryQueue';
 import { 
   addBestMatchToProduct,
   getPrice,

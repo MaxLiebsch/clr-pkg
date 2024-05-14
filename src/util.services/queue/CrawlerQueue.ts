@@ -2,7 +2,7 @@ import { Page } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { QueueTask } from '../../types/QueueTask';
 import { CrawlerRequest } from '../../types/query-request';
-import { BaseQueue } from '../queue/BaseQueue';
+import { BaseQueue } from './BaseQueue';
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 

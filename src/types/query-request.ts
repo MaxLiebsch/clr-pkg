@@ -1,8 +1,8 @@
 import { Limit, ShopObject, TargetShop } from ".";
-import { ProdInfo, QueryQueue } from "../util/queue/QueryQueue";
+import { ProdInfo, QueryQueue } from "../util.services/queue/QueryQueue";
 import { ICategory } from "../util/crawl/getCategories";
 import { IntermediateProdInfo } from "../util/query/matchTargetShopProdsWithRawProd";
-import { CrawlerQueue } from "../util/queue/CrawlerQueue";
+import { CrawlerQueue } from "../util.services/queue/CrawlerQueue";
 import { ProductRecord } from "./product";
 import { Query } from "./query";
 

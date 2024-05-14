@@ -37,8 +37,8 @@ export * from './util/query/lookupProductQueue';
 export * from './util/query/matchTargetShopProdsWithRawProd';
 
 //QUEUE
-export * from './util/queue/CrawlerQueue';
-export * from './util/queue/QueryQueue';
+export * from './util.services/queue/CrawlerQueue';
+export * from './util.services/queue/QueryQueue';
 
 // CRAWL
 export * from './util.services/crawl/crawlShop';

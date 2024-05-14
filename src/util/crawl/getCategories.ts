@@ -13,7 +13,7 @@ import {
   linkPassedURLShopCriteria,
   removeRandomKeywordInURL,
 } from '../sanitize';
-import { CrawlerQueue } from '../queue/CrawlerQueue';
+import { CrawlerQueue } from '../../util.services/queue/CrawlerQueue';
 import { prefixLink } from '../matching/compare_helper';
 
 export interface ICategory {

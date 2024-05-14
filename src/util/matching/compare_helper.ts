@@ -3,7 +3,7 @@ import {
   CandidateProduct,
   Product,
 } from '../../types/product';
-import { ProdInfo } from '../queue/QueryQueue';
+import { ProdInfo } from '../../util.services/queue/QueryQueue';
 import {
   buildRegexForSiUnits,
   classifyMeasurements,
