@@ -57,6 +57,15 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     };
     this.concurrency = concurrency; //new page
     this.proxyAuth = proxyAuth;
+    setInterval(async () => {
+      const browersHealth = await this.browserHealth();
+      this.logError({
+        event: 'queue status',
+        queueLength: this.queue.length,
+        running: this.running,
+        ...browersHealth,
+      });
+    }, 60000);
   }
   /* LOGGING */
   async log(msg: string | { [key: string]: any }) {
@@ -134,8 +143,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           const url = page.url();
           return url;
         } catch (error) {
-          this.logError(`error  ${error}`);
-          closePage(page).then();
           return 'failed';
         }
       });
@@ -274,6 +281,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         shop.exceptions,
         shop.rules,
       );
+
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
         timeout: 60000,
@@ -312,8 +320,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     } catch (error) {
       if (!this.taskFinished) {
         if (!this.repairing) {
+          console.log('Page defined ', page !== undefined);
           if (error instanceof Error) {
-            if (error.message === ErrorType.RateLimit || error.message === ErrorType.AccessDenied || error.message === ErrorType.ServerError) {
+            if (
+              error.message === ErrorType.RateLimit ||
+              error.message === ErrorType.AccessDenied ||
+              error.message === ErrorType.ServerError
+            ) {
               const errorType = error.message as ErrorType;
               this.queueTask.statistics.errorTypeCount[errorType] += 1;
               if (
@@ -331,7 +344,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               }
             }
             const errorType = this.parseError(error);
-            if(errorType){
+            if (errorType) {
               this.queueTask.statistics.errorTypeCount[errorType] += 1;
               if (
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
@@ -350,14 +363,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
-        if(page) await closePage(page);
+        if (page) await closePage(page);
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },
         });
       }
     } finally {
-      if(page) await closePage(page);
+      if (page) await closePage(page);
       this.clearTimeout(id);
     }
   }
