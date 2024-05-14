@@ -319,6 +319,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       console.log('Page after task:', page);
       return page;
     } catch (error) {
+      console.log('Error in wrapperFunction:', error);
       console.log('Page in catch block:', page);
       if (!this.taskFinished) {
         if (!this.repairing) {
