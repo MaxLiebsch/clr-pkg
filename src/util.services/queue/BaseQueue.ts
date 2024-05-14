@@ -316,11 +316,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         throw new Error(ErrorType.AccessDenied);
       }
       await task(page, request);
+      console.log('Page after task:', page);
       return page;
     } catch (error) {
+      console.log('Page in catch block:', page);
       if (!this.taskFinished) {
         if (!this.repairing) {
-          console.log('Page defined ', page !== undefined);
           if (error instanceof Error) {
             if (
               error.message === ErrorType.RateLimit ||
@@ -370,7 +371,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         });
       }
     } finally {
-      if (page) await closePage(page);
+      if (page) {
+        await closePage(page);
+      }
       this.clearTimeout(id);
     }
   }
