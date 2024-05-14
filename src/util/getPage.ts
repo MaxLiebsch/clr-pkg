@@ -183,7 +183,7 @@ export async function getPage(
   exceptions?: string[],
   rules?: Rule[],
 ) {
-  const page = secure(await browser.newPage());
+  const page = await browser.newPage()
 
   await setPageProperties(
     page,
