@@ -62,6 +62,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       this.logError({
         event: 'queue status',
         queueLength: this.queue.length,
+        resetedSession: this.queueTask.statistics.resetedSession,
+        requestCount: this.requestCount,
         running: this.running,
         ...browersHealth,
       });
@@ -320,7 +322,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       return page;
     } catch (error) {
       console.log('Error in wrapperFunction:', error);
-      console.log('Page in catch block:', page);
+      console.log(
+        'Page in catch block:',
+        page,
+        'Curr Request Cnt:',
+        this.requestCount,
+        "Reseted Session: ",
+        this.queueTask.statistics.resetedSession
+      );
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {
@@ -338,12 +347,19 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                   this.errorLog,
                 )
               ) {
+                console.log('reseting session');
                 this.requestCount += 1;
                 page && (await this.resetCookies(page));
               } else {
                 this.errorLog[errorType].count += 1;
                 this.errorLog[errorType].lastOccurred = Date.now();
               }
+            }
+            if (`${error}`.includes('Protocol error')) {
+              console.log('Restart browser because of protocol error');
+              const errorType = ErrorType.ProtocolError;
+              this.queueTask.statistics.errorTypeCount[errorType] += 1;
+              this.pauseQueue('error');
             }
             const errorType = this.parseError(error);
             if (errorType) {

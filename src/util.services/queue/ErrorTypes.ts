@@ -1,3 +1,6 @@
+import { Protocol } from "puppeteer";
+
+
 export const errorTypes = {
   NavigatingFrameDetached: { count: 0, lastOccurred: null },
   RequestingMainFramTooEarly: { count: 0, lastOccurred: null },
@@ -8,7 +11,8 @@ export const errorTypes = {
   ServerError: { count: 0, lastOccurred: null },
   UnknowError: { count: 0, lastOccurred: null },
   RateLimit: { count: 0, lastOccurred: null },
-  NotFound: { count: 0, lastOccurred: null }
+  NotFound: { count: 0, lastOccurred: null },
+  ProtocolError: { count: 0, lastOccurred: null }
 };
 
 export const errorTypeCount = {
@@ -22,6 +26,7 @@ export const errorTypeCount = {
   UnknowError: 0,
   RateLimit: 0,
   NotFound: 0,
+  ProtocolError: 0,
 };
 
 export enum ErrorType {
@@ -35,4 +40,5 @@ export enum ErrorType {
   'UnknowError' = 'UnknowError',
   'RateLimit' = 'RateLimit',
   'NotFound' = 'NotFound',
+  'ProtocolError' = 'ProtocolError',
 }
