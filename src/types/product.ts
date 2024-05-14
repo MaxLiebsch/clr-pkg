@@ -37,7 +37,7 @@ export interface DbProduct {
   ean: string;
   asin: string;
   lckd: boolean;
-  a_props: boolean;
+  a_props: 'missing' | 'incomplete' | 'complete';
   taskId: string;
   bsr: [
     {

@@ -2,9 +2,9 @@ import { Page, TimeoutError } from 'puppeteer';
 import findPagination from './findPagination';
 import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { paginationUrlBuilder } from './paginationURLBuilder';
-import { closePage } from './closePage';
-import { crawlProducts } from './crawlProducts';
-import { CrawlerRequest } from '../types/query-request';
+import { closePage } from '../browser/closePage';
+import { crawlProducts } from '../crawl/crawlProducts';
+import { CrawlerRequest } from '../../types/query-request';
 
 export const crawlProductsQueue = async (
   page: Page,

@@ -1,12 +1,12 @@
 import { Page } from 'puppeteer';
-import { ICategory, getCategories } from './getCategories';
-import { ICategoryStats, StatService } from './fs/stats';
+import { ICategory, getCategories } from '../../util/crawl/getCategories';
+import { ICategoryStats, StatService } from '../../util/fs/stats';
 import { subPageLoop } from './crawlSubPageLoop';
-import { performCrawlAction } from './performCrawlaction';
-import { transformCategories } from './transformCategories';
-import { closePage } from './closePage';
-import { LoggerService } from './logger';
-import { CrawlerRequest } from '../types/query-request';
+import { performCrawlAction } from '../../util/crawl/performCrawlaction';
+import { transformCategories } from '../../util/crawl/transformCategories';
+import { closePage } from '../../util/browser/closePage';
+import { LoggerService } from '../../util/logger';
+import { CrawlerRequest } from '../../types/query-request';
 
 export const crawlShop = async (page: Page, request: CrawlerRequest) => {
   const { pageInfo, shop, queue, onlyCrawlCategories, limit } = request;

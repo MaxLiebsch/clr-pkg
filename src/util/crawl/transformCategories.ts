@@ -1,4 +1,4 @@
-import { SubCategories } from './fs/stats';
+import { SubCategories } from '../fs/stats';
 import { ICategory } from './getCategories';
 
 export const transformCategories = (subCategLnks: ICategory[]) =>

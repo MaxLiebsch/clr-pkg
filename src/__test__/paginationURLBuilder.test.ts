@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { paginationUrlBuilder } from '../util/paginationURLBuilder';
+import { paginationUrlBuilder } from '../util/crawl/paginationURLBuilder';
 
 describe('sum module', () => {
   test('reichelt.de generate page 3', () => {

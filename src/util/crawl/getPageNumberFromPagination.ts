@@ -1,11 +1,11 @@
 import { Page, TimeoutError } from 'puppeteer';
-import { PaginationEl } from '../types';
+import { PaginationEl } from '../../types';
 import {
   getElementHandleInnerText,
   getInnerText,
   myQuerySelectorAll,
-} from './helpers';
-import { getNumber, getNumbers } from './compare_helper';
+} from '../helpers';
+import { getNumber, getNumbers } from '../matching/compare_helper';
 
 export const getPageNumberFromPagination = async (
   page: Page,

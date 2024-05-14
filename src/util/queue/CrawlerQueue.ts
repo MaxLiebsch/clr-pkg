@@ -59,8 +59,9 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   wrapperFunction(
     task: Task,
     request: CrawlerRequest,
+    id: string
   ): Promise<Page | undefined> {
-    return super.wrapperFunction(task, request);
+    return super.wrapperFunction(task, request,id);
   }
 
   /*  CRAWLR QUEUE RELATED FUNCTIONS  */

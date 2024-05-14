@@ -1,17 +1,17 @@
 import { Page, TimeoutError } from 'puppeteer';
-import { ShopObject } from '../types';
+import { ShopObject } from '../../types';
 import {
   cleanUpHTML,
   extractPart,
   nestedProductName,
   slug,
   waitForSelector,
-} from './helpers';
-import { ProductRecord } from '../types/product';
+} from '../helpers';
+import { ProductRecord } from '../../types/product';
 import { ICategory } from './getCategories';
-import { ProductPage, StatService } from './fs/stats';
-import { prefixLink } from './compare_helper';
-import { removeRandomKeywordInURL } from './sanitize';
+import { ProductPage, StatService } from '../fs/stats';
+import { prefixLink } from '../matching/compare_helper';
+import { removeRandomKeywordInURL } from '../sanitize';
 
 export const crawlProducts = async (
   page: Page,

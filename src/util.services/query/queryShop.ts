@@ -1,10 +1,10 @@
 import { Page } from 'puppeteer';
-import { ProductRecord } from '../types/product';
-import { ShopObject } from '../types';
-import { Query } from '../types/query';
-import { browseProductpages } from './browseProductPages';
+import { ProductRecord } from '../../types/product';
+import { ShopObject } from '../../types';
+import { Query } from '../../types/query';
+import { browseProductpages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
-import { closePage } from './closePage';
+import { closePage } from '../../util/browser/closePage';
 
 export const queryShop = async (
   page: Page,

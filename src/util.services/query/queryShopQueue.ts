@@ -1,24 +1,24 @@
 import { Page } from 'puppeteer';
-import { browseProductpages } from './browseProductPages';
+import { browseProductpages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
-import { Product, ProductRecord } from '../types/product';
-import { closePage } from './closePage';
+import { Product, ProductRecord } from '../../types/product';
+import { closePage } from '../../util/browser/closePage';
 import {
   addBestMatchToProduct,
   calculateArbitrage,
   segmentFoundProds,
-} from './compare_helper';
-import { crawlProducts } from './crawlProducts';
-import { runActions } from './runActions';
-import { TargetShop } from '../types';
-import { QueryRequest } from '../types/query-request';
+} from '../../util/matching/compare_helper';
+import { crawlProducts } from '../../util/crawl/crawlProducts';
+import { runActions } from '../../util/query/runActions';
+import { TargetShop } from '../../types';
+import { QueryRequest } from '../../types/query-request';
 
 export const targetRetailerList = [
   { d: 'amazon.de', prefix: 'a_', name: 'amazon' },
   { d: 'ebay.de', prefix: 'e_', name: 'ebay' },
 ];
 
-export const queryShopClean = async (page: Page, request: QueryRequest) => {
+export const queryShopQueue = async (page: Page, request: QueryRequest) => {
   const {
     shop,
     query,

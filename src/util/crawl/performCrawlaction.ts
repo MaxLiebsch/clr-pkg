@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer';
-import { clickBtn, clickShadowBtn, waitForSelector } from './helpers';
-import { CrawlAction, WaitUntil } from '../types';
+import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
+import { CrawlAction, WaitUntil } from '../../types';
 
 export async function performCrawlAction(
   page: Page,

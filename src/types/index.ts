@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import mongoose, { Query, Schema } from 'mongoose';
 import { Browser, PuppeteerLifeCycleEvent } from 'puppeteer';
 import { QueryKeys } from './query';
-import { ICategory } from '../util/getCategories';
+import { ICategory } from '../util/crawl/getCategories';
 import { Rule } from './rules';
 
 export interface ImgMeta {
@@ -17,7 +17,7 @@ export interface WaitUntil {
   entryPoint: PuppeteerLifeCycleEvent;
 }
 
-export type ActionType = 'button' | 'input' | 'select' | 'shadowroot-button';
+export type ActionType = 'button' | 'input' | 'select' | 'shadowroot-button' | 'recursive-button';
 
 export interface BaseAction {
   type: ActionType;
@@ -26,6 +26,14 @@ export interface BaseAction {
 }
 
 export interface ButtonAction extends BaseAction {
+  action: string;
+  wait: boolean;
+  waitDuration?: number;
+  target?: string;
+  btn_sel?: string;
+}
+
+export interface recursiveButtonAction extends BaseAction {
   action: string;
   wait: boolean;
   waitDuration?: number;
@@ -42,7 +50,7 @@ export interface InputAction extends BaseAction {
   wait: boolean;
 }
 
-export type QueryAction = ButtonAction | SelectAction | InputAction;
+export type QueryAction = ButtonAction | SelectAction | InputAction | recursiveButtonAction;
 
 export type CrawlAction = QueryAction;
 
@@ -106,14 +114,15 @@ export interface Calculation {
 export interface ProductInfos {
   timeout?: number;
   sel: string;
-  product:[
-    type: string,
-    
-  ]
+  product: [type: string];
   productDetails: ProductDetailSelector[];
 }
 
-export interface ProductDetailSelector  { content: string; type: string; sel: string };
+export interface ProductDetailSelector {
+  content: string;
+  type: string;
+  sel: string;
+}
 
 export interface ProductList {
   sel: string;
@@ -233,51 +242,60 @@ export interface TargetShop {
 
 export interface ShopObject {
   _id: string;
-  exceptions?: string[];
-  pauseOnProductPage?: { pause: boolean; max: number; min: number };
-  d: string;
-  p: string[];
-  rules?: Rule[];
-  manualCategories: ICategory[];
-  a: string;
-  n: string;
-  queryUrlSchema: QueryURLSchema[];
-  category: string[];
   mimic?: string;
+  d: string; // domain
+  l: string; // link to shop
+  ne: string; // name
+  purlschema: string;
+  fetch: boolean; // fetch with get
   resourceTypes: {
     query: ResourceTypes[];
     crawl: ResourceTypes[];
   };
-  ne: string;
-  waitUntil: WaitUntil;
-  queryActions: QueryAction[];
-  crawlActions: CrawlAction[];
-  actions: QueryAction[];
   entryPoints: EntryPoint[];
-  categories: Categories;
-  paginationEl: PaginationEl[];
-  productList: ProductList[];
-  img: string[];
-  f?: string;
-  imgMeta: ImgMeta;
-  l: string;
-  active: boolean;
-  ean: string;
-  m: string; //manufactuerer name
-  ps: string; //package size
-  pzn: string;
-  kws: string[];
-  ap: string[];
-  ece: string[];
+  waitUntil: WaitUntil;
+  kws: string[]; // keywords
+  ap: string[]; // anti pattern
+  ece: string[]; // escape characters
+  active: boolean; // shop is active
   lastCrawlAt: string;
   lastSelectorTestAt: string;
-  fetch: boolean;
-  purlschema: string;
+
+  /*                      QUERY                            */
+
+  actions: QueryAction[];
+  queryActions: QueryAction[];
+  queryUrlSchema: QueryURLSchema[];
+
+  /*                      CRAWL                            */
+
+  productList: ProductList[];
+  categories: Categories;
+  crawlActions: CrawlAction[];
+  exceptions?: string[];
+  manualCategories: ICategory[];
+  rules?: Rule[];
+  category: string[];
+  pauseOnProductPage?: { pause: boolean; max: number; min: number };
+  paginationEl: PaginationEl[];
+  imgMeta: ImgMeta;
+
+  /*                  PRODUCT DETAILS                       */
+
+  f?: string;
+  n: string; // product name
+  p: string[]; // price
+  a: string; // availability
+  ean: string; //  EAN
+  img: string[]; // image
   s: {
-    gp: number;
-    fs: number;
-    wr: number;
+    gp: number; // Grundpreis Versand
+    fs: number; // Minimum Order Free shipping
+    wr: number; // Prescription free shipping if wr = 0
   };
+  pzn: string; // PZN
+  ps: string; //package size
+  m: string; //manufactuerer name
 }
 export interface BrowserGroup {
   [key: string]: BrowserInfo;

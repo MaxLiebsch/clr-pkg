@@ -1,4 +1,4 @@
-import { Rule } from '../types/rules';
+import { Rule } from '../../types/rules';
 
 export function shouldAbortRequest(requestUrl: string, rules: Rule[] | undefined) {
   if(!rules) return false;

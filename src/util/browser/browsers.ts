@@ -1,10 +1,10 @@
-import { proxies } from '../constants';
-import { BrowserGroup, BrowserInfo } from '../types';
-import { browserLoadChecker } from './helpers';
+import { proxies } from '../../constants';
+import { BrowserGroup, BrowserInfo } from '../../types';
+import { browserLoadChecker } from '../helpers';
 import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
-import { LoggerService } from './logger';
-import { QueueTask } from '../types/QueueTask';
+import { LoggerService } from '../logger';
+import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');

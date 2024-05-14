@@ -1,4 +1,4 @@
-import { PaginationEl, PaginationUrlSchema } from '../types';
+import { PaginationEl, PaginationUrlSchema } from '../../types';
 
 export const paginationUrlBuilder = (
   url: string,

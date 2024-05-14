@@ -1,17 +1,17 @@
 import { Page } from 'puppeteer';
-import { Limit, ShopObject } from '../types';
-import { scrollToBottom } from './helpers';
-import { crawlProducts } from './crawlProducts';
-import { ProductRecord } from '../types/product';
-import { paginationUrlBuilder } from './paginationURLBuilder';
-import { Query } from '../types/query';
-import { ICategory } from './getCategories';
-import { StatService, SubCategory } from './fs/stats';
-import { checkForBlockingSignals } from '../checkPageHealth';
-import { closePage } from './closePage';
-import findPagination from './findPagination';
-import { getPageNumberFromPagination } from './getPageNumberFromPagination';
-import { LoggerService } from './logger';
+import { Limit, ShopObject } from '../../types';
+import { scrollToBottom } from '../helpers';
+import { crawlProducts } from '../crawl/crawlProducts';
+import { ProductRecord } from '../../types/product';
+import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
+import { Query } from '../../types/query';
+import { ICategory } from '../crawl/getCategories';
+import { StatService, SubCategory } from '../fs/stats';
+import { checkForBlockingSignals } from '../queue/checkPageHealth';
+import { closePage } from '../browser/closePage';
+import findPagination from '../crawl/findPagination';
+import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
+import { LoggerService } from '../logger';
 
 const addPageCountAndPushSubPages = (
   category: SubCategory | null,

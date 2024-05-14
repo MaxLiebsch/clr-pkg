@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { isErrorFrequent } from '../util/isErrorFrequent';
+import { isErrorFrequent } from '../util/queue/isErrorFrequent';
 
 
 

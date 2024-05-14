@@ -1,4 +1,4 @@
-import { prefixLink } from "../util/compare_helper";
+import { prefixLink } from "../util/matching/compare_helper";
 import { describe, expect, test } from '@jest/globals';
 
 describe('prefixLink.ts', () => {

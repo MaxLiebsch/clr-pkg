@@ -3,12 +3,12 @@ import {
   getElementHandleInnerText,
   getInnerText,
   waitForSelector,
-} from './helpers';
-import { closePage } from './closePage';
-import { getPrice } from './compare_helper';
+} from '../helpers';
+import { closePage } from '../browser/closePage';
+import { getPrice } from '../matching/compare_helper';
 import parsePrice from 'parse-price';
-import { QueryRequest } from '../types/query-request';
-import { PageParser } from './extract/productDetailPageParser.gateway';
+import { QueryRequest } from '../../types/query-request';
+import { PageParser } from '../extract/productDetailPageParser.gateway';
 
 const de_bsrRegex =
   /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
@@ -58,14 +58,14 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     {
       sel: '#detailBulletsWrapper_feature_div',
       type: 'list',
-      timeout: 1000,
+      timeout: 1500,
       listItem: '#detailBulletsWrapper_feature_div li span.a-list-item',
       seperator: ':',
       productDetails,
     },
     {
       sel: '#productDetails_db_sections',
-      timeout: 1000,
+      timeout: 1500,
       type: 'table',
       th: '#productDetails_db_sections tbody th.prodDetSectionEntry',
       td: '#productDetails_db_sections tbody td',
@@ -76,7 +76,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
 
 
   // slow done
-  const pause = Math.floor(Math.random() * 1500) + 1000;
+  const pause = Math.floor(Math.random() * 3000) + 1500;
   await new Promise((r) => setTimeout(r, pause));
 
   for (let index = 0; index < productInfos.length; index++) {

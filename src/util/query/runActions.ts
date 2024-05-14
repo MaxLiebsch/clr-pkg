@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer';
-import { ShopObject } from '../types';
-import { clickBtn, clickShadowBtn, waitForSelector } from './helpers';
+import { ShopObject } from '../../types';
+import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 
 export async function runActions(page: Page, shop: ShopObject) {
   const { actions, waitUntil } = shop;
@@ -33,6 +33,28 @@ export async function runActions(page: Page, shop: ShopObject) {
           action.wait ?? false,
           waitUntil,
         );
+      }
+      if (type === 'recursive-button' && 'waitDuration' in action) {
+        let exists = true;
+        while (exists) {
+          const btn = await waitForSelector(
+            page,
+            action.sel,
+            action.waitDuration,
+            true,
+          );
+          if (btn !== 'missing' && !btn) {
+            await clickBtn(
+              page,
+              action.sel,
+              action.wait ?? false,
+              waitUntil,
+              undefined,
+            );
+          } else {
+            exists = false;
+          }
+        }
       }
     }
   }

@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer';
-import { Categories } from '../types';
+import { Categories } from '../../types';
 import {
   extractCategoryNameAndCapitalize,
   getElementHandleAttribute2,
@@ -7,14 +7,14 @@ import {
   makeSuitableObjectKey,
   myQuerySelectorAll,
   waitForSelector,
-} from './helpers';
+} from '../helpers';
 import {
   linkPassedCategoryNameShopCriteria,
   linkPassedURLShopCriteria,
   removeRandomKeywordInURL,
-} from './sanitize';
-import { CrawlerQueue } from './queue/CrawlerQueue';
-import { prefixLink } from './compare_helper';
+} from '../sanitize';
+import { CrawlerQueue } from '../queue/CrawlerQueue';
+import { prefixLink } from '../matching/compare_helper';
 
 export interface ICategory {
   name: string;

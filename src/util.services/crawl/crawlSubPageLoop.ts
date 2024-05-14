@@ -1,7 +1,7 @@
-import { Categories } from '../types';
-import { CrawlerRequest } from '../types/query-request';
+import { Categories } from '../../types';
+import { CrawlerRequest } from '../../types/query-request';
 import { crawlSubpage } from './crawlSubpage';
-import { ICategory } from './getCategories';
+import { ICategory } from '../../util/crawl/getCategories';
 
 export const subPageLoop = async (options: {
   parentPath: string;

@@ -7,7 +7,7 @@ import {
   ProductList,
   WaitUntil,
 } from '../types/index';
-import { getNumber } from './compare_helper';
+import { getNumber } from '../util/matching/compare_helper';
 import { load } from 'cheerio';
 import { unescape } from 'underscore';
 import { NestedNameDetail } from '../types/productInfoDetails';

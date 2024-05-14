@@ -1,14 +1,14 @@
 import { Page } from 'puppeteer';
-import { scrollToBottom } from './helpers';
-import { paginationUrlBuilder } from './paginationURLBuilder';
-import { ICategory } from './getCategories';
-import { StatService, SubCategory } from './fs/stats';
-import { closePage } from './closePage';
-import { crawlProductsQueue } from './crawlProductsQueue';
-import findPagination from './findPagination';
-import { getPageNumberFromPagination } from './getPageNumberFromPagination';
-import { crawlProducts } from './crawlProducts';
-import { CrawlerRequest } from '../types/query-request';
+import { scrollToBottom } from '../helpers';
+import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
+import { ICategory } from '../crawl/getCategories';
+import { StatService, SubCategory } from '../fs/stats';
+import { closePage } from '../browser/closePage';
+import { crawlProductsQueue } from '../crawl/crawlProductsQueue';
+import findPagination from '../crawl/findPagination';
+import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
+import { crawlProducts } from '../crawl/crawlProducts';
+import { CrawlerRequest } from '../../types/query-request';
 
 const addPageCountAndPushSubPages = (
   category: SubCategory | null,

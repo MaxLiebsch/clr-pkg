@@ -1,15 +1,15 @@
-import { TargetShop } from '../types';
+import { TargetShop } from '../../types';
 import {
   CandidateProduct,
   Product,
-} from '../types/product';
-import { ProdInfo } from './queue/QueryQueue';
+} from '../../types/product';
+import { ProdInfo } from '../queue/QueryQueue';
 import {
   buildRegexForSiUnits,
   classifyMeasurements,
   levelNormalizedMeasurements,
   numberRegExp,
-} from './normalizeSIUnits';
+} from '../normalizeSIUnits';
 import parsePrice from 'parse-price';
 
 const regexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
@@ -56,7 +56,7 @@ export const segmentString = (name: string) => {
 
   const normalizedMeasurements = levelNormalizedMeasurements(
     classifyMeasurements(siUnits),
-  ).map((measure) => measure.str);
+  ).map((measure: {str: string}) => measure.str);
 
   segments.push(
     ...normalizedMeasurements,
@@ -206,7 +206,7 @@ export const findBestMatch = (
         break;
     }
 
-    dscrptnSegments.forEach((giveWord) => {
+    dscrptnSegments.forEach((giveWord: string) => {
       if (product.nameSegments.includes(giveWord)) {
         score++;
       }
@@ -268,7 +268,7 @@ export function calculateArbitrage(
         if (key === 'link') {
           //TODO: remove legacy, since it is now usually prefixed on the fly
           arbitrageInfo[`${prefix}` + key.replace(/[aeiou]/gi, '')] =
-            prefixLink(value, domain);
+            prefixLink(value as string, domain);
         } else if (key === 'image') {
           arbitrageInfo[`${prefix}` + key.replace(/[aeou]/gi, '')] = value;
         } else {

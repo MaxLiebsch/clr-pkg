@@ -25,8 +25,8 @@ import { jsonrepair } from 'jsonrepair';
 import mime from 'mime-types';
 import { TimeoutError } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
-import { closePage } from '../closePage';
-import { getPage } from '../getPage';
+import { closePage } from '../browser/closePage';
+import { getPage } from '../browser/getPage';
 
 const collectInternalLinks = (
   $: CheerioAPI,

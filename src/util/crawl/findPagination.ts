@@ -1,6 +1,6 @@
 import { ElementHandle, Page } from 'puppeteer';
-import { Limit, PaginationEl } from '../types';
-import { waitForSelector } from './helpers';
+import { Limit, PaginationEl } from '../../types';
+import { waitForSelector } from '../helpers';
 
 const findPagination = async (page: Page, paginationEls: PaginationEl[], limit?: Limit ) => {
   if (!paginationEls.length || limit?.pages === 0)

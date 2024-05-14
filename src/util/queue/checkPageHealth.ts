@@ -1,8 +1,8 @@
 import { Page } from 'puppeteer';
-import { contentMissing, slug } from './util/helpers';
+import { contentMissing, slug } from '../../util/helpers';
 import { join } from 'path';
-import { LoggerService } from './util/logger';
-import { QueueTask } from './types/QueueTask';
+import { LoggerService } from '../../util/logger';
+import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
 
 export async function checkForBlockingSignals(

@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { getManufacturer } from '../util/compare_helper';
+import { getManufacturer } from '../util/matching/compare_helper';
 
 describe('Compare_helper.ts', () => {
 

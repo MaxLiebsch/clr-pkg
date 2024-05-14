@@ -1,7 +1,7 @@
 import { Page } from 'puppeteer';
-import { clickBtn, clickShadowBtn, waitForSelector } from './helpers';
-import { QueryAction, WaitUntil } from '../types';
-import { Brand, Model, Product, Query } from '../types/query';
+import { clickBtn, clickShadowBtn, waitForSelector } from '../../util/helpers';
+import { QueryAction, WaitUntil } from '../../types';
+import { Brand, Model, Product, Query } from '../../types/query';
 import { get } from 'underscore';
 
 export async function submitQuery(
@@ -10,6 +10,8 @@ export async function submitQuery(
   waitUntil: WaitUntil,
   query: Query,
 ) {
+  if(! queryActions.length) return;
+  
   for (const action of queryActions) {
     const { sel, type } = action;
     const selector = await waitForSelector(
@@ -41,7 +43,7 @@ export async function submitQuery(
         }
       }
     }
-    if ('what' in action && typeof action.what === 'string') {
+    if ('what' in action && typeof action.what === 'string' && action.what.length) {
       if (action.wait) {
         await Promise.all([
           page.waitForNavigation({

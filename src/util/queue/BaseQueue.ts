@@ -1,16 +1,17 @@
 import { Browser, Page } from 'puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
-import { ErrorLog, isErrorFrequent } from '../isErrorFrequent';
+import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
 import { LoggerService } from '../logger';
-import { mainBrowser } from '../browsers';
-import { closePage } from '../closePage';
+import { mainBrowser } from '../browser/browsers';
+import { closePage } from '../browser/closePage';
 import { CrawlerRequest, QueryRequest } from '../../types/query-request';
-import { prefixLink } from '../compare_helper';
-import { getPage } from '../getPage';
-import { checkForBlockingSignals } from '../../checkPageHealth';
+import { prefixLink } from '../matching/compare_helper';
+import { getPage } from '../browser/getPage';
+import { checkForBlockingSignals } from '../queue/checkPageHealth';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
-import { createLabeledTimeout } from '../createLabeledTimeout';
+import { createLabeledTimeout } from './createLabeledTimeout';
+import crypto from 'crypto';
 import {
   ACCESS_DENIED_FREQUENCE,
   MAX_RETRIES,
@@ -18,7 +19,6 @@ import {
   RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
 } from '../../constants';
-import { SecurePage } from 'secure-puppeteer';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
@@ -55,7 +55,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         openedPages: 0,
       },
     };
-    this.concurrency = concurrency + 1; //new page
+    this.concurrency = concurrency; //new page
     this.proxyAuth = proxyAuth;
   }
   /* LOGGING */
@@ -220,6 +220,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     return this.queue.length;
   }
 
+  private clearTimeout = (id: string) => {
+    const timeout = this.timeouts.find((timeout) => timeout.id === id);
+    if (timeout) {
+      clearTimeout(timeout.timeout);
+      this.timeouts = this.timeouts.filter((timeout) => timeout.id !== id);
+    }
+  };
+
   private resetCookies = async (page: Page) => {
     this.queueTask.statistics.resetedSession += 1;
     // Clear cookies
@@ -242,7 +250,11 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       });
   };
 
-  async wrapperFunction(task: Task, request: T): Promise<Page | undefined> {
+  async wrapperFunction(
+    task: Task,
+    request: T,
+    id: string,
+  ): Promise<Page | undefined> {
     if (request.retries >= MAX_RETRIES) return;
 
     let { pageInfo, shop } = request;
@@ -252,7 +264,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
 
     this.uniqueLinks.push(pageInfo.link);
     this.queueTask.statistics.openedPages += 1;
-    let page: SecurePage | undefined = undefined;
+    let page: Page | undefined = undefined;
 
     try {
       page = await getPage(
@@ -277,43 +289,12 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           await closePage(page);
           if ('onNotFound' in request && request?.onNotFound)
             request.onNotFound();
-          return;
         }
         if (status === 429 && !this.taskFinished) {
-          const errorType = ErrorType.RateLimit;
-          this.queueTask.statistics.errorTypeCount[errorType] += 1;
-          if (
-            isErrorFrequent(errorType, ACCESS_DENIED_FREQUENCE, this.errorLog)
-          ) {
-            this.requestCount += 1;
-            await this.resetCookies(page);
-          } else {
-            this.errorLog[errorType].count += 1;
-            this.errorLog[errorType].lastOccurred = Date.now();
-          }
-          await closePage(page);
-          this.queue.push({
-            task,
-            request: { ...request, retries: request.retries + 1 },
-          });
+          throw new Error(ErrorType.RateLimit);
         }
         if (status >= 500 && !this.taskFinished) {
-          const errorType = ErrorType.ServerError;
-          this.queueTask.statistics.errorTypeCount[errorType] += 1;
-          if (
-            isErrorFrequent(errorType, ACCESS_DENIED_FREQUENCE, this.errorLog)
-          ) {
-            this.requestCount += 1;
-            await this.resetCookies(page);
-          } else {
-            this.errorLog[errorType].count += 1;
-            this.errorLog[errorType].lastOccurred = Date.now();
-          }
-          await closePage(page);
-          this.queue.push({
-            task,
-            request: { ...request, retries: request.retries + 1 },
-          });
+          throw new Error(ErrorType.ServerError);
         }
       }
 
@@ -326,74 +307,33 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       );
 
       if (blocked) {
-        const errorType = ErrorType.AccessDenied;
-        this.queueTask.statistics.errorTypeCount[errorType] += 1;
-        if (!this.repairing) {
-          if (
-            isErrorFrequent(errorType, ACCESS_DENIED_FREQUENCE, this.errorLog)
-          ) {
-            this.requestCount += 1;
-            await this.resetCookies(page);
-          } else {
-            this.errorLog[errorType].count += 1;
-            this.errorLog[errorType].lastOccurred = Date.now();
-          }
-        }
-        await closePage(page);
-        this.queue.push({
-          task,
-          request: { ...request, retries: request.retries + 1 },
-        });
+        throw new Error(ErrorType.AccessDenied);
       }
-
       await task(page, request);
       return page;
     } catch (error) {
       if (!this.taskFinished) {
         if (!this.repairing) {
-          //restart browser
           if (error instanceof Error) {
-            if (error.message.includes('Navigating frame was detached')) {
-              let errorType = ErrorType.NavigatingFrameDetached;
+            if (error.message === ErrorType.RateLimit || error.message === ErrorType.AccessDenied || error.message === ErrorType.ServerError) {
+              const errorType = error.message as ErrorType;
               this.queueTask.statistics.errorTypeCount[errorType] += 1;
               if (
-                isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
+                isErrorFrequent(
+                  errorType,
+                  ACCESS_DENIED_FREQUENCE,
+                  this.errorLog,
+                )
               ) {
-                this.pauseQueue('error');
+                this.requestCount += 1;
+                page && (await this.resetCookies(page));
               } else {
                 this.errorLog[errorType].count += 1;
                 this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
-
-            if (error.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR')) {
-              let errorType = ErrorType.RateLimit;
-              this.queueTask.statistics.errorTypeCount[errorType] += 1;
-              if (
-                isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
-              ) {
-                this.pauseQueue('blocked');
-              } else {
-                this.errorLog[errorType].count += 1;
-                this.errorLog[errorType].lastOccurred = Date.now();
-              }
-            }
-
-            if (error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED')) {
-              let errorType = ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
-              this.queueTask.statistics.errorTypeCount[errorType] += 1;
-              if (
-                isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
-              ) {
-                this.pauseQueue('error');
-              } else {
-                this.errorLog[errorType].count += 1;
-                this.errorLog[errorType].lastOccurred = Date.now();
-              }
-            }
-
-            if (error.message.includes('net::ERR_TIMED_OUT')) {
-              let errorType = ErrorType.ERR_TIMED_OUT;
+            const errorType = this.parseError(error);
+            if(errorType){
               this.queueTask.statistics.errorTypeCount[errorType] += 1;
               if (
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
@@ -412,13 +352,30 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
+        if(page) await closePage(page);
         this.queue.push({
           task,
           request: { ...request, retries: request.retries + 1 },
         });
       }
     } finally {
-      if (page) await closePage(page);
+      if(page) await closePage(page);
+      this.clearTimeout(id);
+    }
+  }
+
+  private parseError(error: Error) {
+    switch (true) {
+      case error.message.includes('Navigating frame was detached'):
+        return ErrorType.NavigatingFrameDetached;
+      case error.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR'):
+        return ErrorType.RateLimit;
+      case error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED'):
+        return ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
+      case error.message.includes('net::ERR_TIMED_OUT'):
+        return ErrorType.ERR_TIMED_OUT;
+      default:
+        return false;
     }
   }
 
@@ -443,15 +400,17 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       const timeoutTime =
         Math.random() * (RANDOM_TIMEOUT_MAX - RANDOM_TIMEOUT_MIN) +
         RANDOM_TIMEOUT_MIN;
+      const id = crypto.randomBytes(8).toString('hex');
       const timeout = createLabeledTimeout(
         () =>
-          this.wrapperFunction(nextRequest.task, nextRequest.request).then(
+          this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
             (page) => {
               this.running--;
               this.next();
             },
           ),
         timeoutTime,
+        id,
       );
       this.timeouts.push(timeout);
     }

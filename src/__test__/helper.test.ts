@@ -6,7 +6,7 @@ import {
   slug,
 } from '../util/helpers';
 import { removeRandomKeywordInURL } from '../util/sanitize';
-import { splitNumberAndCategory } from '../util/lookupProductQueue';
+import { splitNumberAndCategory } from '../util/query/lookupProductQueue';
 
 describe('Helper.ts', () => {
   test('clean up html', () => {

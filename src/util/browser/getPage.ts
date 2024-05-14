@@ -4,11 +4,10 @@ import {
   screenResolutions,
   screenResolutionsByPlatform,
   userAgentList,
-} from '../constants';
+} from '../../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
-import { Rule } from '../types/rules';
-import { secure } from 'secure-puppeteer';
+import { Rule } from '../../types/rules';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
