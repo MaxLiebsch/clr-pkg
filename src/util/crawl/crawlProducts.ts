@@ -1,4 +1,4 @@
-import { Page, TimeoutError } from 'puppeteer';
+import { Page, TimeoutError } from 'puppeteer1';
 import { ShopObject } from '../../types';
 import {
   cleanUpHTML,

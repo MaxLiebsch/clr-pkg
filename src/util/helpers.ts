@@ -1,4 +1,4 @@
-import { ElementHandle, Page, TimeoutError } from 'puppeteer';
+import { ElementHandle, Page, TimeoutError } from 'puppeteer1'
 import {
   BrowserGroup,
   BrowserInfo,
@@ -9,7 +9,7 @@ import {
 } from '../types/index';
 import { getNumber } from '../util/matching/compare_helper';
 import { load } from 'cheerio';
-import { unescape } from 'underscore';
+
 import { NestedNameDetail } from '../types/productInfoDetails';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>

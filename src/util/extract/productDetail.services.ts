@@ -1,4 +1,4 @@
-import { ElementHandle } from 'puppeteer';
+import { ElementHandle } from 'puppeteer1';
 import {
   Details,
   ExistDetail,

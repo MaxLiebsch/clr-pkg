@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { QueueTask } from '../../types/QueueTask';
 import { CrawlerRequest } from '../../types/query-request';

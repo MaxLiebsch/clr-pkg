@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { DbProduct, ProductRecord } from '../../types/product';
 import { QueueTask } from '../../types/QueueTask';

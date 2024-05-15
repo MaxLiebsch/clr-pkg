@@ -1,6 +1,3 @@
-import { Protocol } from "puppeteer";
-
-
 export const errorTypes = {
   NavigatingFrameDetached: { count: 0, lastOccurred: null },
   RequestingMainFramTooEarly: { count: 0, lastOccurred: null },

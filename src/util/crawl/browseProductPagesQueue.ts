@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { scrollToBottom } from '../helpers';
 import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
 import { ICategory } from '../crawl/getCategories';

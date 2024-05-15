@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { Limit, ShopObject } from '../../types';
 import { scrollToBottom } from '../helpers';
 import { crawlProducts } from '../crawl/crawlProducts';

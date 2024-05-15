@@ -1,4 +1,4 @@
-import { Page, TimeoutError } from 'puppeteer';
+import { Page, TimeoutError } from 'puppeteer1';
 import { PaginationEl } from '../../types';
 import {
   getElementHandleInnerText,

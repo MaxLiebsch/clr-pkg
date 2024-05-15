@@ -1,4 +1,4 @@
-import { ElementHandle, Page } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer1';
 import { Limit, PaginationEl } from '../../types';
 import { waitForSelector } from '../helpers';
 

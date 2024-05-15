@@ -1,14 +1,13 @@
 import { proxies } from '../../constants';
 import { BrowserGroup, BrowserInfo } from '../../types';
 import { browserLoadChecker } from '../helpers';
-import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import { LoggerService } from '../logger';
 import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
+import { VersionProvider, Versions } from '../versionProvider';
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
 
 let _browsers: BrowserGroup = {};
 
@@ -52,7 +51,7 @@ export const freeUpBrowser = async (
   }
 };
 
-async function hasOpenPages(browser: Browser) {
+async function hasOpenPages(browser: any) {
   if ((await browser.pages()).length === 1) {
     return 'done';
   } else {
@@ -152,7 +151,8 @@ export const mainBrowsers = async (
 
 export const mainBrowser = async (
   task: QueueTask,
-  proxyAuth?: { host: string },
+  proxyAuth: { host: string },
+  version: Versions,
 ) => {
   const args = [
     '--no-sandbox',
@@ -168,9 +168,10 @@ export const mainBrowser = async (
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
   }
+  const provider = VersionProvider.getSingleton();
+  provider.switchVersion(version);
   try {
     puppeteer.use(StealthPlugin());
-    puppeteer.use(AdblockerPlugin({ blockTrackers: true }))
   } catch (error) {
     if (error instanceof Error)
       LoggerService.getSingleton().logger.info({
@@ -201,10 +202,8 @@ export const mainBrowser = async (
     timeout: 600000,
     protocolTimeout: 60000,
   };
-  if (process.env.NODE_ENV === 'production') {
-    //@ts-ignore
-    options['executablePath'] = '/usr/bin/google-chrome';
-  }
+  //@ts-ignore
+  options['executablePath'] = provider.currentPuppeteer.executablePath();
 
   const browser = await puppeteer.launch(options);
 

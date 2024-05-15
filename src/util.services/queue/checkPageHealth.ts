@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { contentMissing, slug } from '../../util/helpers';
 import { join } from 'path';
 import { LoggerService } from '../../util/logger';

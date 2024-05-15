@@ -1,4 +1,4 @@
-import { Page, TimeoutError } from 'puppeteer';
+import { Page, TimeoutError } from 'puppeteer1';
 import findPagination from './findPagination';
 import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { paginationUrlBuilder } from './paginationURLBuilder';

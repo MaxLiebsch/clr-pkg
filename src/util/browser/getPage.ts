@@ -1,13 +1,20 @@
-import { Browser, Page, ResourceType } from 'puppeteer';
+import { Browser, Page, ResourceType } from 'puppeteer1';
 import {
-  CHROME_VERSION,
+  acceptEncodingList,
+  acceptList,
+  languageList,
+  languagesLists,
+  refererList,
   screenResolutions,
   screenResolutionsByPlatform,
+  timezones,
   userAgentList,
 } from '../../constants';
 import { sample } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
+import { shuffleObject } from './shuffleHeader';
+import { VersionProvider } from '../versionProvider';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
@@ -111,14 +118,17 @@ const setPageProperties = async (
     platform = 'macOS';
     navigatorPlatform = 'MacIntel';
   }
+  const versionProvider =
+    VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
 
+  const _agent = agent.replaceAll('<version>', versionProvider);
   const agentMeta = {
     architecture:
-      platform === 'Windows' || platform === 'Linux' ? 'x86_64' : 'arm',
+      platform === 'Windows' ? 'x64' : platform === 'Linux' ? 'x86' : 'arm',
     mobile: false,
     brands: [
-      { brand: 'Chromium', version: CHROME_VERSION.split('.')[0] },
-      { brand: 'Google Chrome', version: CHROME_VERSION.split('.')[0] },
+      { brand: 'Chromium', version: versionProvider },
+      { brand: 'Google Chrome', version: versionProvider },
       { brand: 'Not-A.Brand', version: '99' },
     ],
     model: '',
@@ -126,39 +136,47 @@ const setPageProperties = async (
     platformVersion,
   };
 
-  await page.setUserAgent(agent, agentMeta);
-  await page.setExtraHTTPHeaders({
+  await page.setUserAgent(_agent, agentMeta);
+
+  const referer = sample(refererList) ?? refererList[0];
+  const accpetEncoding = sample(acceptEncodingList) ?? acceptEncodingList[0];
+  const accept = sample(acceptList) ?? acceptList[0];
+
+  const headers = {
+    'upgrade-insecure-requests': '1',
     'cache-control': 'max-age=0',
     'sec-ch-ua-platform': platform,
     'sec-ch-ua-form-factors': 'Desktop',
-    'upgrade-insecure-requests': '1',
-  });
-  await page.setExtraHTTPHeaders({
-    accept:
-      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'Sec-Fetch-Site': 'none',
+    accept,
+    'sec-fetch-site': 'none',
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '?1',
+    Referer: referer,
     'sec-fetch-dest': 'document',
-    Referer: 'https://www.google.com',
-    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-encoding': accpetEncoding,
     'accept-language': `${lng},${lng_set1};q=0.9`,
     'sec-gpc': '1',
-  });
+  };
+  const shuffledHeaders = shuffleObject(headers);
+  await page.setExtraHTTPHeaders(shuffledHeaders);
 
   const viewPort = requestCount
     ? rotateScreenResolution(platform, requestCount)
     : sample(screenResolutions) ?? screenResolutions[0];
-
   await page.setViewport(viewPort);
+
   await page.setBypassCSP(true);
-  const timezones = ['Europe/Kiev', 'Europe/Moscow', 'America/New_York'];
-  await page.emulateTimezone(sample(timezones) ?? 'Europe/Kiev');
+
+  await page.emulateTimezone(sample(timezones) ?? 'America/New_York');
+
+  const languages = sample(languagesLists) ?? languagesLists[0];
+  const language = sample(languageList) ?? languageList[0];
+
   await page.evaluateOnNewDocument(
-    (lng, lng_set1, navigatorPlatform) => {
+    (lng, lng_set1, navigatorPlatform, languages, language) => {
       Object.defineProperty(navigator, 'language', {
         get: function () {
-          return lng;
+          return language;
         },
       });
       Object.defineProperty(navigator, 'platform', {
@@ -169,13 +187,15 @@ const setPageProperties = async (
       });
       Object.defineProperty(navigator, 'languages', {
         get: function () {
-          return [lng];
+          return languages;
         },
       });
     },
     lng,
     lng_set1,
     navigatorPlatform,
+    languages,
+    language,
   );
 };
 
@@ -186,7 +206,7 @@ export async function getPage(
   exceptions?: string[],
   rules?: Rule[],
 ) {
-  const page = await browser.newPage()
+  const page = await browser.newPage();
 
   await setPageProperties(
     page,

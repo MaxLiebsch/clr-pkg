@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { browseProductpages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { Product, ProductRecord } from '../../types/product';

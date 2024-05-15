@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../../util/helpers';
 import { QueryAction, WaitUntil } from '../../types';
 import { Brand, Model, Product, Query } from '../../types/query';

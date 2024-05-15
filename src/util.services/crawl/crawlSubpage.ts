@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { ICategory, getCategories } from '../../util/crawl/getCategories';
 import { getProductCount } from '../../util/helpers';
 import { StatService } from '../../util/fs/stats';

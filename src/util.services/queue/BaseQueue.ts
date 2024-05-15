@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer';
+import { Browser, Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
@@ -14,11 +14,14 @@ import { createLabeledTimeout } from './createLabeledTimeout';
 import crypto from 'crypto';
 import {
   ACCESS_DENIED_FREQUENCE,
+  MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
   RANDOM_TIMEOUT_MAX,
   RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
 } from '../../constants';
+import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
+import { Versions } from '../../util/versionProvider';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
@@ -29,7 +32,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }> = [];
   private running: number = 0;
   private concurrency: number;
-  private browser: Browser | null = null;
+  private browser: any | null = null;
   private queueTask: QueueTask;
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
@@ -42,8 +45,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   */
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog = errorTypes;
-
   private requestCount: number = 0;
+  private criticalErrorCount: number = 0;
+  private versionChooser: Generator<string, void, unknown> =
+    yieldBrowserVersion();
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.queueTask = {
@@ -87,9 +92,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }
   /*  BROWSER RELATED FUNCTIONS  */
   async connect(): Promise<void> {
+    const currentVersion = this.versionChooser.next().value as Versions;
     this.queueTask.statistics.browserStarts += 1;
     try {
-      this.browser = await mainBrowser(this.queueTask, this.proxyAuth);
+      this.browser = await mainBrowser(
+        this.queueTask,
+        this.proxyAuth,
+        currentVersion,
+      );
     } catch (error) {
       this.logError(`Browser crashed big time  ${error}`);
       await this.repair(`Browser crashed big time  ${error}`);
@@ -125,11 +135,11 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     return this.browser?.connected;
   }
   async browserHealth() {
-    const pages = await this.browser?.pages().catch((e) => {});
+    const pages = await this.browser?.pages().catch((e: any) => {});
     let urls: string[] = [];
     let numberOfPages = 0;
     if (pages) {
-      urls = pages.map((page) => {
+      urls = pages.map((page: any) => {
         try {
           const url = page.url();
           return url;
@@ -182,6 +192,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       resetedSession,
       event,
     });
+    this.errorLog = errorTypes;
+    this.requestCount = 0;
+    this.criticalErrorCount = 0;
     return this.queueTask;
   }
   resumeQueue() {
@@ -316,8 +329,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         page,
         'Curr Request Cnt:',
         this.requestCount,
-        "Reseted Session: ",
-        this.queueTask.statistics.resetedSession
+        'Reseted Session: ',
+        this.queueTask.statistics.resetedSession,
       );
       if (!this.taskFinished) {
         if (!this.repairing) {
@@ -327,21 +340,27 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               error.message === ErrorType.AccessDenied ||
               error.message === ErrorType.ServerError
             ) {
-              const errorType = error.message as ErrorType;
-              this.queueTask.statistics.errorTypeCount[errorType] += 1;
-              if (
-                isErrorFrequent(
-                  errorType,
-                  ACCESS_DENIED_FREQUENCE,
-                  this.errorLog,
-                )
-              ) {
-                console.log('reseting session');
-                this.requestCount += 1;
-                page && (await this.resetCookies(page));
+              if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
+                this.criticalErrorCount = 0;
+                this.pauseQueue('error');
               } else {
-                this.errorLog[errorType].count += 1;
-                this.errorLog[errorType].lastOccurred = Date.now();
+                const errorType = error.message as ErrorType;
+                this.queueTask.statistics.errorTypeCount[errorType] += 1;
+                if (
+                  isErrorFrequent(
+                    errorType,
+                    ACCESS_DENIED_FREQUENCE,
+                    this.errorLog,
+                  )
+                ) {
+                  console.log('reseting session');
+                  this.criticalErrorCount += 1;
+                  this.requestCount += 1;
+                  page && (await this.resetCookies(page));
+                } else {
+                  this.errorLog[errorType].count += 1;
+                  this.errorLog[errorType].lastOccurred = Date.now();
+                }
               }
             }
             if (`${error}`.includes('Protocol error')) {

@@ -1,6 +1,7 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1'
 
 export const closePage = async (page: Page) => {
+  
   try {
     !page.isClosed() && (await page.close());
   } catch (error) {

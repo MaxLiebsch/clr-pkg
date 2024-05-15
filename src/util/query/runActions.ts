@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer';
+import { Page } from 'puppeteer1';
 import { ShopObject } from '../../types';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 

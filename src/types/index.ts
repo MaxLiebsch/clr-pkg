@@ -1,7 +1,7 @@
 import { ChildProcess } from 'child_process';
 import { ObjectId } from 'mongodb';
 import mongoose, { Query, Schema } from 'mongoose';
-import { Browser, PuppeteerLifeCycleEvent } from 'puppeteer';
+import { Browser, PuppeteerLifeCycleEvent } from 'puppeteer1';
 import { QueryKeys } from './query';
 import { ICategory } from '../util/crawl/getCategories';
 import { Rule } from './rules';

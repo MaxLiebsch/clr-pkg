@@ -1,8 +1,5 @@
-import { prefixLink } from '../util/matching/compare_helper';
 import { describe, expect, test } from '@jest/globals';
 import {
-  CHROME_VERSION,
-  screenResolutions,
   screenResolutionsByPlatform,
   userAgentList,
 } from '../constants';
