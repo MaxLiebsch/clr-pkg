@@ -302,12 +302,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
 
       if (response) {
         const status = response.status();
-        if (status === 404) {
+        if (status === 404 && !this.taskFinished) {
           const errorType = ErrorType.NotFound;
           this.queueTask.statistics.errorTypeCount[errorType] += 1;
           await closePage(page);
           if ('onNotFound' in request && request?.onNotFound)
             request.onNotFound();
+          return;
         }
         if (status === 429 && !this.taskFinished) {
           throw new Error(ErrorType.RateLimit);
