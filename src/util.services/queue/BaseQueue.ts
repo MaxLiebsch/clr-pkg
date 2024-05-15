@@ -19,9 +19,11 @@ import {
   RANDOM_TIMEOUT_MAX,
   RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
+  refererList,
 } from '../../constants';
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
+import { sample } from 'underscore';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
@@ -286,6 +288,13 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         shop.rules,
       );
 
+      if (request.retries === 0) {
+        const referer = sample(refererList) ?? refererList[0];
+        await page.setExtraHTTPHeaders({
+          referer,
+        });
+      }
+
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
         timeout: 60000,
@@ -363,7 +372,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                 }
               }
             }
-            if (`${error}`.includes('Protocol error')) {
+            if (
+              `${error}`.includes('Protocol error') ||
+              `${error}`.includes('ProtocolError')
+            ) {
               console.log('Restart browser because of protocol error');
               const errorType = ErrorType.ProtocolError;
               this.queueTask.statistics.errorTypeCount[errorType] += 1;

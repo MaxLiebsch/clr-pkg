@@ -4,7 +4,6 @@ import {
   acceptList,
   languageList,
   languagesLists,
-  refererList,
   screenResolutions,
   screenResolutionsByPlatform,
   timezones,
@@ -84,7 +83,7 @@ const setPageProperties = async (
   page.on('request', (request) => {
     const resourceType = request.resourceType();
     const requestUrl = request.url();
-    let defaultDisallowedResourcTypes = ['image', 'font', 'media'];
+    let defaultDisallowedResourcTypes: ResourceType[] = ['image', 'font', 'media'];
     if (disAllowedResourceTypes?.length) {
       defaultDisallowedResourcTypes = disAllowedResourceTypes;
     }
@@ -101,6 +100,7 @@ const setPageProperties = async (
       return request.continue();
     }
   });
+
   const userAgentMeta = requestCount
     ? rotateUserAgent(requestCount)
     : sample(userAgentList) ?? userAgentList[0];
@@ -137,8 +137,7 @@ const setPageProperties = async (
   };
 
   await page.setUserAgent(_agent, agentMeta);
-
-  const referer = sample(refererList) ?? refererList[0];
+ 
   const accpetEncoding = sample(acceptEncodingList) ?? acceptEncodingList[0];
   const accept = sample(acceptList) ?? acceptList[0];
 
@@ -151,7 +150,6 @@ const setPageProperties = async (
     'sec-fetch-site': 'none',
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '?1',
-    Referer: referer,
     'sec-fetch-dest': 'document',
     'accept-encoding': accpetEncoding,
     'accept-language': `${lng},${lng_set1};q=0.9`,
