@@ -133,6 +133,7 @@ export const timezones = [
   'America/New_York',
   'Europe/Moscow',
   'America/Phoenix',
+  'Europe/Lisbon',
   'Europe/Kaliningrad',
   'America/Denver',
   'Europe/Moscow',
@@ -140,6 +141,7 @@ export const timezones = [
   'Europe/Kaliningrad',
   'America/Chicago',
   'Europe/Moscow',
+  "Europe/Lisbon",
 ];
 
 export const acceptList = [
@@ -355,6 +357,330 @@ export const userAgentList = [
   },
 ];
 
+export const pluginList = [
+  {
+    '0': {
+      type: 'application/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    '1': {
+      type: 'text/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    name: 'PDF Viewer',
+    description: 'Portable Document Format',
+    filename: 'internal-pdf-viewer',
+    length: 2,
+  },
+  {
+    '0': {
+      type: 'application/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    '1': {
+      type: 'text/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    name: 'Chrome PDF Viewer',
+    description: 'Portable Document Format',
+    filename: 'internal-pdf-viewer',
+    length: 2,
+  },
+  {
+    '0': {
+      type: 'application/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    '1': {
+      type: 'text/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    name: 'Chromium PDF Viewer',
+    description: 'Portable Document Format',
+    filename: 'internal-pdf-viewer',
+    length: 2,
+  },
+  {
+    '0': {
+      type: 'application/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    '1': {
+      type: 'text/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    name: 'Microsoft Edge PDF Viewer',
+    description: 'Portable Document Format',
+    filename: 'internal-pdf-viewer',
+    length: 2,
+  },
+  {
+    '0': {
+      type: 'application/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    '1': {
+      type: 'text/pdf',
+      suffixes: 'pdf',
+      description: 'Portable Document Format',
+      enabledPlugin: {
+        '0': {
+          type: 'application/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+        '1': {
+          type: 'text/pdf',
+          suffixes: 'pdf',
+          description: 'Portable Document Format',
+          enabledPlugin: { '0': {}, '1': {} },
+        },
+      },
+    },
+    name: 'WebKit built-in PDF',
+    description: 'Portable Document Format',
+    filename: 'internal-pdf-viewer',
+    length: 2,
+  },
+];
+
+export const voicesList = [
+  {
+    voiceURI: 'Microsoft George - English (United Kingdom)',
+    name: 'Microsoft George - English (United Kingdom)',
+    lang: 'en-GB',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google português do Brasil',
+    name: 'Google português do Brasil',
+    lang: 'pt-BR',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google русский',
+    name: 'Google русский',
+    lang: 'ru-RU',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Microsoft Hazel - English (United Kingdom)',
+    name: 'Microsoft Hazel - English (United Kingdom)',
+    lang: 'en-GB',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Microsoft George - English (United Kingdom)',
+    name: 'Microsoft George - English (United Kingdom)',
+    lang: 'en-GB',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Microsoft Susan - English (United Kingdom)',
+    name: 'Microsoft Susan - English (United Kingdom)',
+    lang: 'en-GB',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Microsoft David - English (United Kingdom)',
+    name: 'Microsoft David - English (United Kingdom)',
+    lang: 'en-GB',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Microsoft Zira - English (United States)',
+    name: 'Microsoft Zira - English (United States)',
+    lang: 'en-US',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google Deutsch',
+    name: 'Google Deutsch',
+    lang: 'de-DE',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google US English',
+    name: 'Google US English',
+    lang: 'en-US',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google Nederlands',
+    name: 'Google Nederlands',
+    lang: 'nl-NL',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google italiano',
+    name: 'Google italiano',
+    lang: 'it-IT',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google polski',
+    name: 'Google polski',
+    lang: 'nl-NL',
+    localService: true,
+    default: false,
+  },
+  {
+    voiceURI: 'Google français',
+    name: 'Google français',
+    lang: 'fr-FR',
+    localService: true,
+    default: false,
+  },
+];
+
 export const screenResolutions = [
   { height: 2880, width: 1800 },
   { height: 2560, width: 1664 },
@@ -369,30 +695,30 @@ export const screenResolutions = [
 
 export const screenResolutionsByPlatform = {
   macOS: [
-    { height: 2304, width: 1440 },
-    { height: 2880, width: 1800 },
-    { height: 2560, width: 1664 },
-    { height: 3024, width: 1964 },
+    { width: 2304, height: 1440 },
+    { width: 2880, height: 1800 },
+    { width: 2560, height: 1664 },
+    { width: 3024, height: 1964 },
   ],
   Windows: [
-    { height: 2560, width: 1440 },
-    { height: 2160, width: 1440 },
-    { height: 1920, width: 1080 },
-    { height: 1280, width: 1024 },
-    { height: 1600, width: 1200 },
-    { height: 1440, width: 900 },
-    { height: 1280, width: 720 },
-    { height: 1536, width: 864 },
-    { height: 1366, width: 768 },
-    { height: 1600, width: 900 },
+    { width: 1920, height: 1080 },
+    { width: 2560, height: 1440 },
+    { width: 2160, height: 1440 },
+    { width: 1280, height: 1024 },
+    { width: 1600, height: 1200 },
+    { width: 1440, height: 900 },
+    { width: 1280, height: 720 },
+    { width: 1536, height: 864 },
+    { width: 1366, height: 768 },
+    { width: 1600, height: 900 },
   ],
   Linux: [
-    { height: 1920, width: 1080 },
-    { height: 1366, width: 768 },
-    { height: 1600, width: 1200 },
-    { height: 1280, width: 720 },
-    { height: 1600, width: 900 },
-    { height: 810, width: 1080 },
+    { width: 1920, height: 1080 },
+    { width: 1366, height: 768 },
+    { width: 1600, height: 1200 },
+    { width: 1280, height: 720 },
+    { width: 1600, height: 900 },
+    { width: 810, height: 1080 },
   ],
 };
 

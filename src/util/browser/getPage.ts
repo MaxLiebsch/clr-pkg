@@ -4,12 +4,14 @@ import {
   acceptList,
   languageList,
   languagesLists,
+  pluginList,
   screenResolutions,
   screenResolutionsByPlatform,
   timezones,
   userAgentList,
+  voicesList,
 } from '../../constants';
-import { sample } from 'underscore';
+import { sample, shuffle } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
 import { shuffleObject } from './shuffleHeader';
@@ -83,7 +85,11 @@ const setPageProperties = async (
   page.on('request', (request) => {
     const resourceType = request.resourceType();
     const requestUrl = request.url();
-    let defaultDisallowedResourcTypes: ResourceType[] = ['image', 'font', 'media'];
+    let defaultDisallowedResourcTypes: ResourceType[] = [
+      'image',
+      'font',
+      'media',
+    ];
     if (disAllowedResourceTypes?.length) {
       defaultDisallowedResourcTypes = disAllowedResourceTypes;
     }
@@ -137,9 +143,14 @@ const setPageProperties = async (
   };
 
   await page.setUserAgent(_agent, agentMeta);
- 
-  const accpetEncoding = sample(acceptEncodingList) ?? acceptEncodingList[0];
-  const accept = sample(acceptList) ?? acceptList[0];
+
+  const accpetEncoding = requestCount
+    ? acceptEncodingList[requestCount % acceptEncodingList.length]
+    : sample(acceptEncodingList) ?? acceptEncodingList[0];
+
+  const accept = requestCount
+    ? acceptList[requestCount % acceptList.length]
+    : sample(acceptList) ?? acceptList[0];
 
   const headers = {
     'upgrade-insecure-requests': '1',
@@ -161,14 +172,21 @@ const setPageProperties = async (
   const viewPort = requestCount
     ? rotateScreenResolution(platform, requestCount)
     : sample(screenResolutions) ?? screenResolutions[0];
+
   await page.setViewport(viewPort);
 
   await page.setBypassCSP(true);
 
   await page.emulateTimezone(sample(timezones) ?? 'America/New_York');
 
-  const languages = sample(languagesLists) ?? languagesLists[0];
-  const language = sample(languageList) ?? languageList[0];
+  const languages = requestCount
+    ? languagesLists[requestCount % languagesLists.length]
+    : sample(languagesLists) ?? languagesLists[0];
+
+  const language = requestCount
+  ? languageList[requestCount % languageList.length]
+  : sample(languageList) ?? languageList[0];
+
 
   await page.evaluateOnNewDocument(
     (lng, lng_set1, navigatorPlatform, languages, language) => {
@@ -195,6 +213,63 @@ const setPageProperties = async (
     languages,
     language,
   );
+
+  const voices = requestCount
+  ? voicesList.slice(requestCount % voicesList.length, undefined)
+  : shuffle(voicesList).slice(0, 5);
+  
+  if(voices.length < 6 && requestCount){
+    let i = 0
+    while(voices.length < 5){
+      voices.push(voicesList[i])
+      i++
+    }
+  }
+  if (voices.some((voice) => !voice.default)) {
+    voices[0].default = true;
+  }
+
+  await page.evaluateOnNewDocument((voices) => {
+    Object.defineProperty(speechSynthesis, 'getVoices', {
+      get: function () {
+        return () => voices;
+      },
+    });
+  }, voices);
+
+  await page.evaluateOnNewDocument((viewPort) => {
+    Object.defineProperty(window, 'outerHeight', {
+      get: function () {
+        return viewPort.height;
+      },
+    });
+    Object.defineProperty(window, 'outerWidth', {
+      get: function () {
+        return viewPort.width;
+      },
+    });
+    Object.defineProperty(screen, 'availHeight', {
+      get: function () {
+        return viewPort.height;
+      },
+    });
+    Object.defineProperty(screen, 'availWidth', {
+      get: function () {
+        return viewPort.width;
+      },
+    });
+    Object.defineProperty(screen, 'height', {
+      get: function () {
+        return viewPort.height;
+      },
+    });
+    Object.defineProperty(screen, 'width', {
+      get: function () {
+        return viewPort.width;
+      },
+    });
+  }, viewPort);
+
   await page.evaluateOnNewDocument(() => {
     const originalQuery = window.navigator.permissions.query;
     //@ts-ignore
@@ -204,6 +279,7 @@ const setPageProperties = async (
         : originalQuery(parameters);
     });
   });
+
   await page.evaluateOnNewDocument(() => {
     // We can mock this in as much depth as we need for the test.
     //@ts-ignore
@@ -252,16 +328,16 @@ const setPageProperties = async (
         },
       },
     };
-    
   });
-  await page.evaluateOnNewDocument(() => {
+
+  await page.evaluateOnNewDocument((pluginList) => {
     // Overwrite the `plugins` property to use a custom getter.
     Object.defineProperty(navigator, 'plugins', {
       // This just needs to have `length > 0` for the current test,
       // but we could mock the plugins too if necessary.
-      get: () => [1, 2, 3, 4, 5],
+      get: () => pluginList,
     });
-  });
+  }, pluginList);
 };
 
 export async function getPage(
