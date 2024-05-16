@@ -109,6 +109,9 @@ export const mainBrowsers = async (
           '--disable-gpu',
           '--disable-setuid-sandbox',
           '--disable-web-security',
+          '--disable-webrtc',
+          '--webrtc-ip-handling-policy=disable_non_proxied_udp',
+          '--force-webrtc-ip-handling-policy',
           '--start-maximized',
         ];
         if (!proxyPerPage) args.push(proxySetting);
@@ -159,6 +162,9 @@ export const mainBrowser = async (
     '--disable-setuid-sandbox',
     '--lang=de',
     '--disable-gpu',
+    '--disable-webrtc',
+    '--webrtc-ip-handling-policy=disable_non_proxied_udp',
+    '--force-webrtc-ip-handling-policy',
     '--disable-web-security',
     '--start-maximized',
     'javascript:close()',
