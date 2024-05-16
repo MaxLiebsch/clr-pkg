@@ -1,9 +1,18 @@
 export interface QueueTask {
   [key: string]: any;
+  productLimit: number;
   statistics: {
     errorTypeCount: {
       [key: string]: number;
     };
+    expectedProducts: number;
+    statusHeuristic: {
+      "error-handled": number;
+      "page-completed": number;
+      'not-found': number;
+      "limit-reached": number;
+      "total": number; 
+    }
     retriesHeuristic: {
       "0": number;
       '1-9': number;
@@ -14,6 +23,5 @@ export interface QueueTask {
     };
     resetedSession: number;
     browserStarts: number;
-    openedPages: number;
   };
 }

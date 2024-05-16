@@ -3,7 +3,7 @@ import { ProxyAuth } from '../../types/proxyAuth';
 import { DbProduct, ProductRecord } from '../../types/product';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
-import { BaseQueue } from './BaseQueue';
+import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -63,7 +63,7 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
     task: Task,
     request: QueryRequest,
     id: string
-  ): Promise<Page | undefined> {
+  ): Promise<WrapperFunctionResponse> {
     return super.wrapperFunction(task, request,id);
   }
 

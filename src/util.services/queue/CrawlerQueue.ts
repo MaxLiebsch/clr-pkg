@@ -2,7 +2,7 @@ import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { QueueTask } from '../../types/QueueTask';
 import { CrawlerRequest } from '../../types/query-request';
-import { BaseQueue } from './BaseQueue';
+import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
@@ -60,7 +60,7 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
     task: Task,
     request: CrawlerRequest,
     id: string
-  ): Promise<Page | undefined> {
+  ): Promise<WrapperFunctionResponse> {
     return super.wrapperFunction(task, request,id);
   }
 

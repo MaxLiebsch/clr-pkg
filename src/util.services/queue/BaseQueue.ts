@@ -27,6 +27,17 @@ import { sample } from 'underscore';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
+export type WrapperFunctionResponse =
+  | {
+      status:
+        | 'page-completed'
+        | 'error-handled'
+        | 'limit-reached'
+        | 'not-found';
+      retries: number;
+    }
+  | undefined;
+
 export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   private queue: Array<{
     task: Task;
@@ -56,6 +67,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.queueTask = {
       ...task,
       statistics: {
+        expectedProducts: task.productLimit,
+        statusHeuristic: {
+          'error-handled': 0,
+          'not-found': 0,
+          'page-completed': 0,
+          'limit-reached': 0,
+          total: 0,
+        },
         retriesHeuristic: {
           '0': 0,
           '1-9': 0,
@@ -67,7 +86,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         resetedSession: 0,
         errorTypeCount,
         browserStarts: 0,
-        openedPages: 0,
       },
     };
     this.concurrency = concurrency; //new page
@@ -196,15 +214,17 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     const {
       errorTypeCount,
       browserStarts,
-      openedPages,
       resetedSession,
+      expectedProducts,
       retriesHeuristic,
+      statusHeuristic,
     } = this.queueTask.statistics;
     this.log({
-      ...errorTypeCount,
+      errorTypes: errorTypeCount,
       browserStarts,
-      openedPages,
+      expectedProducts,
       resetedSession,
+      statusHeuristic,
       retriesHeuristic,
       event,
     });
@@ -284,10 +304,15 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     task: Task,
     request: T,
     id: string,
-  ): Promise<Page | undefined> {
-    if (request.retries > MAX_RETRIES) {
+  ): Promise<WrapperFunctionResponse> {
+    let response = {
+      status: 'page-completed',
+      retries: 0,
+    };
+    const { retries } = request;
+    if (retries > MAX_RETRIES) {
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
-      return;
+      return { status: 'error-handled', retries };
     }
 
     let { pageInfo, shop } = request;
@@ -296,7 +321,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     const { waitUntil, resourceTypes } = shop;
 
     this.uniqueLinks.push(pageInfo.link);
-    this.queueTask.statistics.openedPages += 1;
+    this.queueTask.statistics.statusHeuristic['total'] += 1;
     let page: Page | undefined = undefined;
 
     try {
@@ -308,7 +333,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         shop.rules,
       );
 
-      if (request.retries === 0) {
+      if (retries === 0) {
         const referer = sample(refererList) ?? refererList[0];
         await page.setExtraHTTPHeaders({
           referer,
@@ -328,7 +353,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           await closePage(page);
           if ('onNotFound' in request && request?.onNotFound)
             request.onNotFound();
-          return;
+          return { status: 'not-found', retries };
         }
         if (status === 429 && !this.taskFinished) {
           throw new Error(ErrorType.RateLimit);
@@ -350,18 +375,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         throw new Error(ErrorType.AccessDenied);
       }
       await task(page, request);
-      console.log('Page after task:', page);
-      return page;
+      return { status: 'page-completed', retries };
     } catch (error) {
-      console.log('Error in wrapperFunction:', error);
-      console.log(
-        'Page in catch block:',
-        page,
-        'Curr Request Cnt:',
-        this.requestCount,
-        'Reseted Session: ',
-        this.queueTask.statistics.resetedSession,
-      );
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {
@@ -421,7 +436,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           }
         }
         if (page) await closePage(page);
-        this.pushTask(task, { ...request, retries: request.retries + 1 });
+        this.pushTask(task, { ...request, retries: retries + 1 });
+        return { status: 'error-handled', retries };
       }
     } finally {
       if (page) await closePage(page);
@@ -465,28 +481,54 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       const timeoutTime =
         Math.random() * (RANDOM_TIMEOUT_MAX - RANDOM_TIMEOUT_MIN) +
         RANDOM_TIMEOUT_MIN;
+
       const id = crypto.randomBytes(8).toString('hex');
       const timeout = createLabeledTimeout(
         () =>
           this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
-            (page) => {
-              const { retries } = nextRequest.request;
-              switch (true) {
-                case retries === 0:
-                  this.queueTask.statistics.retriesHeuristic['0'] += 1;
-                  break;
-                case retries >= 0 && retries < 10:
-                  this.queueTask.statistics.retriesHeuristic['1-9'] += 1;
-                  break;
-                case retries >= 10 && retries < 50:
-                  this.queueTask.statistics.retriesHeuristic['10-49'] += 1;
-                  break;
-                case retries >= 50 && retries < 100:
-                  this.queueTask.statistics.retriesHeuristic['50-99'] += 1;
-                  break;
-                case retries >= 100 && retries < 500:
-                  this.queueTask.statistics.retriesHeuristic['100-499'] += 1;
-                  break;
+            (result: WrapperFunctionResponse) => {
+              console.log(
+                `status: ${result?.status}, retries: ${result?.retries}}`,
+              );
+              if (result) {
+                const { retries, status } = result;
+                switch (true) {
+                  case status === 'not-found':
+                    this.queueTask.statistics.statusHeuristic['not-found'] += 1;
+                    break;
+                  case status === 'error-handled':
+                    this.queueTask.statistics.statusHeuristic[
+                      'error-handled'
+                    ] += 1;
+                    break;
+                  case status === 'page-completed':
+                    this.queueTask.statistics.statusHeuristic[
+                      'page-completed'
+                    ] += 1;
+                    break;
+                  case status === 'limit-reached':
+                    this.queueTask.statistics.statusHeuristic[
+                      'limit-reached'
+                    ] += 1;
+                    break;
+                }
+                switch (true) {
+                  case retries === 0:
+                    this.queueTask.statistics.retriesHeuristic['0'] += 1;
+                    break;
+                  case retries >= 0 && retries < 10:
+                    this.queueTask.statistics.retriesHeuristic['1-9'] += 1;
+                    break;
+                  case retries >= 10 && retries < 50:
+                    this.queueTask.statistics.retriesHeuristic['10-49'] += 1;
+                    break;
+                  case retries >= 50 && retries < 100:
+                    this.queueTask.statistics.retriesHeuristic['50-99'] += 1;
+                    break;
+                  case retries >= 100 && retries < 500:
+                    this.queueTask.statistics.retriesHeuristic['100-499'] += 1;
+                    break;
+                }
               }
               this.running--;
               this.next();
