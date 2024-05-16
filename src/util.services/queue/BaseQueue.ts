@@ -56,6 +56,14 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.queueTask = {
       ...task,
       statistics: {
+        retriesHeuristic: {
+          '0': 0,
+          '1-9': 0,
+          '10-49': 0,
+          '50-99': 0,
+          '100-499': 0,
+          '500+': 0,
+        },
         resetedSession: 0,
         errorTypeCount,
         browserStarts: 0,
@@ -185,13 +193,19 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.running = 0;
     this.waitingForRepairResolvers = [];
     this.repairing = false;
-    const { errorTypeCount, browserStarts, openedPages, resetedSession } =
-      this.queueTask.statistics;
+    const {
+      errorTypeCount,
+      browserStarts,
+      openedPages,
+      resetedSession,
+      retriesHeuristic,
+    } = this.queueTask.statistics;
     this.log({
       ...errorTypeCount,
       browserStarts,
       openedPages,
       resetedSession,
+      retriesHeuristic,
       event,
     });
     this.errorLog = errorTypes;
@@ -216,6 +230,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       }, 5000);
     });
 
+    // reset error count, so browser is not restarted again
+    this.criticalErrorCount = 0;
     // next user agent;
     this.requestCount += 1;
 
@@ -242,6 +258,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   };
 
   private resetCookies = async (page: Page) => {
+    console.log('reseting session');
     this.queueTask.statistics.resetedSession += 1;
     // Clear cookies
     const cookies = await page.cookies().catch((e) => {
@@ -268,7 +285,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     request: T,
     id: string,
   ): Promise<Page | undefined> {
-    if (request.retries >= MAX_RETRIES) return;
+    if (request.retries > MAX_RETRIES) {
+      this.queueTask.statistics.retriesHeuristic['500+'] += 1;
+      return;
+    }
 
     let { pageInfo, shop } = request;
     pageInfo.link = prefixLink(pageInfo.link, shop.d);
@@ -351,7 +371,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               error.message === ErrorType.ServerError
             ) {
               if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
-                this.criticalErrorCount = 0;
                 this.pauseQueue('error');
               } else {
                 const errorType = error.message as ErrorType;
@@ -363,7 +382,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
                     this.errorLog,
                   )
                 ) {
-                  console.log('reseting session');
                   this.criticalErrorCount += 1;
                   this.requestCount += 1;
                   page && (await this.resetCookies(page));
@@ -403,15 +421,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
           }
         }
         if (page) await closePage(page);
-        this.queue.push({
-          task,
-          request: { ...request, retries: request.retries + 1 },
-        });
+        this.pushTask(task, { ...request, retries: request.retries + 1 });
       }
     } finally {
-      if (page) {
-        await closePage(page);
-      }
+      if (page) await closePage(page);
       this.clearTimeout(id);
     }
   }
@@ -457,6 +470,24 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         () =>
           this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
             (page) => {
+              const { retries } = nextRequest.request;
+              switch (true) {
+                case retries === 0:
+                  this.queueTask.statistics.retriesHeuristic['0'] += 1;
+                  break;
+                case retries >= 0 && retries < 10:
+                  this.queueTask.statistics.retriesHeuristic['1-9'] += 1;
+                  break;
+                case retries >= 10 && retries < 50:
+                  this.queueTask.statistics.retriesHeuristic['10-49'] += 1;
+                  break;
+                case retries >= 50 && retries < 100:
+                  this.queueTask.statistics.retriesHeuristic['50-99'] += 1;
+                  break;
+                case retries >= 100 && retries < 500:
+                  this.queueTask.statistics.retriesHeuristic['100-499'] += 1;
+                  break;
+              }
               this.running--;
               this.next();
             },

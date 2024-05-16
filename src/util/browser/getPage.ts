@@ -124,17 +124,17 @@ const setPageProperties = async (
     platform = 'macOS';
     navigatorPlatform = 'MacIntel';
   }
-  const versionProvider =
+  const version =
     VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
 
-  const _agent = agent.replaceAll('<version>', versionProvider);
+  const _agent = agent.replaceAll('<version>', version);
   const agentMeta = {
     architecture:
       platform === 'Windows' ? 'x64' : platform === 'Linux' ? 'x86' : 'arm',
     mobile: false,
     brands: [
-      { brand: 'Chromium', version: versionProvider },
-      { brand: 'Google Chrome', version: versionProvider },
+      { brand: 'Chromium', version },
+      { brand: 'Google Chrome', version },
       { brand: 'Not-A.Brand', version: '99' },
     ],
     model: '',
