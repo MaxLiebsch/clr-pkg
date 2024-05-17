@@ -8,7 +8,6 @@ import { hostname } from 'os';
 import { VersionProvider, Versions } from '../versionProvider';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
-// const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 let _browsers: BrowserGroup = {};
 
@@ -178,6 +177,7 @@ export const mainBrowser = async (
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
   try {
+
     puppeteer.use(
       StealthPlugin({
         enabledEvasions: new Set([
@@ -195,7 +195,7 @@ export const mainBrowser = async (
           'navigator.webdriver',
           'sourceurl',
           'user-agent-override',
-          'webgl.vendor',
+          // 'webgl.vendor', set in the getPage function
           'window.outerdimensions',
         ]),
       }),
@@ -232,7 +232,6 @@ export const mainBrowser = async (
   };
   //@ts-ignore
   options['executablePath'] = provider.currentPuppeteer.executablePath();
-
   const browser = await puppeteer.launch(options);
 
   console.log('Browser Version: ', await browser.version());

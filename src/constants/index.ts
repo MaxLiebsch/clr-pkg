@@ -162,105 +162,105 @@ export const refererList = [
 export const graphicsCardListByPlatform = {
   Windows: [
     { renderer: 'Intel Iris OpenGL Engine', vendor: 'Intel Inc.' },
-    {
-      renderer: 'ANGLE (NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0)',
-      vendor: 'NVIDIA Corporation',
-    },
-    {
-      renderer: 'ANGLE (AMD Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0)',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    {
-      renderer: 'ANGLE (Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
-      vendor: 'Intel Inc.',
-    },
-    {
-      renderer: 'NVIDIA GeForce GTX 1080/PCIe/SSE2',
-      vendor: 'NVIDIA Corporation',
-    },
-    {
-      renderer: 'NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2',
-      vendor: 'NVIDIA Corporation',
-    },
-    { renderer: 'AMD Radeon RX 580', vendor: 'Advanced Micro Devices, Inc.' },
-    {
-      renderer: 'AMD Radeon Vega 8 Graphics',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    { renderer: 'Intel Iris Plus Graphics 640', vendor: 'Intel Inc.' },
-    { renderer: 'Intel HD Graphics 620', vendor: 'Intel Inc.' },
+    // {
+    //   renderer: 'ANGLE (NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0)',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // {
+    //   renderer: 'ANGLE (AMD Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0)',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // {
+    //   renderer: 'ANGLE (Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
+    //   vendor: 'Intel Inc.',
+    // },
+    // {
+    //   renderer: 'NVIDIA GeForce GTX 1080/PCIe/SSE2',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // {
+    //   renderer: 'NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // { renderer: 'AMD Radeon RX 580', vendor: 'Advanced Micro Devices, Inc.' },
+    // {
+    //   renderer: 'AMD Radeon Vega 8 Graphics',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // { renderer: 'Intel Iris Plus Graphics 640', vendor: 'Intel Inc.' },
+    // { renderer: 'Intel HD Graphics 620', vendor: 'Intel Inc.' },
   ],
   Linux: [
-    {
-      renderer: 'Mesa DRI Intel HD Graphics 630 (Kaby Lake GT2)',
-      vendor: 'Intel Open Source Technology Center',
-    },
-    {
-      renderer: 'Mesa DRI Intel Iris Pro Graphics 580 (Skylake GT4e)',
-      vendor: 'Intel Open Source Technology Center',
-    },
-    {
-      renderer: 'Mesa DRI Intel UHD Graphics 620 (Whiskey Lake 3x8 GT2)',
-      vendor: 'Intel Open Source Technology Center',
-    },
-    {
-      renderer: 'NVIDIA GeForce GTX 1080/PCIe/SSE2',
-      vendor: 'NVIDIA Corporation',
-    },
-    {
-      renderer: 'NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2',
-      vendor: 'NVIDIA Corporation',
-    },
-    {
-      renderer:
-        'AMD Radeon RX 580 (POLARIS10, DRM 3.35.0, 5.4.0-42-generic, LLVM 10.0.0)',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    {
-      renderer:
-        'AMD Radeon Vega 8 Graphics (RAVEN, DRM 3.27.0, 4.19.0-6-amd64, LLVM 7.0.1)',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    {
-      renderer:
-        'Radeon RX 560 Series (POLARIS11, DRM 3.40.0, 5.7.8, LLVM 10.0.0)',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    { renderer: 'NVIDIA Quadro P1000/PCIe/SSE2', vendor: 'NVIDIA Corporation' },
+    // {
+    //   renderer: 'Mesa DRI Intel HD Graphics 630 (Kaby Lake GT2)',
+    //   vendor: 'Intel Open Source Technology Center',
+    // },
+    // {
+    //   renderer: 'Mesa DRI Intel Iris Pro Graphics 580 (Skylake GT4e)',
+    //   vendor: 'Intel Open Source Technology Center',
+    // },
+    // {
+    //   renderer: 'Mesa DRI Intel UHD Graphics 620 (Whiskey Lake 3x8 GT2)',
+    //   vendor: 'Intel Open Source Technology Center',
+    // },
+    // {
+    //   renderer: 'NVIDIA GeForce GTX 1080/PCIe/SSE2',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // {
+    //   renderer: 'NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // {
+    //   renderer:
+    //     'AMD Radeon RX 580 (POLARIS10, DRM 3.35.0, 5.4.0-42-generic, LLVM 10.0.0)',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // {
+    //   renderer:
+    //     'AMD Radeon Vega 8 Graphics (RAVEN, DRM 3.27.0, 4.19.0-6-amd64, LLVM 7.0.1)',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // {
+    //   renderer:
+    //     'Radeon RX 560 Series (POLARIS11, DRM 3.40.0, 5.7.8, LLVM 10.0.0)',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // { renderer: 'NVIDIA Quadro P1000/PCIe/SSE2', vendor: 'NVIDIA Corporation' },
     {
       vendor: 'Goolgle Inc. (Intel)',
       renderer:
         'ANGLE (Intel, Mesa Intel(R) HD Graphics 4000 (IVB GT2), OpenGL ES 3.0)',
     },
-    {
-      renderer: 'NVIDIA GeForce GTX 1660 Ti/PCIe/SSE2',
-      vendor: 'NVIDIA Corporation',
-    },
+    // {
+    //   renderer: 'NVIDIA GeForce GTX 1660 Ti/PCIe/SSE2',
+    //   vendor: 'NVIDIA Corporation',
+    // },
   ],
   macOS: [
-    { renderer: 'Intel Iris Plus Graphics 640', vendor: 'Intel Inc.' },
-    { renderer: 'Intel UHD Graphics 617', vendor: 'Intel Inc.' },
-    {
-      renderer: 'AMD Radeon Pro 560X OpenGL Engine',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    {
-      renderer: 'AMD Radeon Pro 555X OpenGL Engine',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    {
-      renderer: 'AMD Radeon RX 580 OpenGL Engine',
-      vendor: 'Advanced Micro Devices, Inc.',
-    },
-    { renderer: 'Intel Iris Plus Graphics 650', vendor: 'Intel Inc.' },
-    { renderer: 'Intel HD Graphics 6000', vendor: 'Intel Inc.' },
-    { renderer: 'Intel Iris Graphics 6100', vendor: 'Intel Inc.' },
-    { renderer: 'Intel Iris Pro Graphics 5200', vendor: 'Intel Inc.' },
-    {
-      renderer: 'NVIDIA GeForce GT 750M OpenGL Engine',
-      vendor: 'NVIDIA Corporation',
-    },
-    { renderer: 'Apple M1', vendor: 'Apple Inc.' },
+    // { renderer: 'Intel Iris Plus Graphics 640', vendor: 'Intel Inc.' },
+    // { renderer: 'Intel UHD Graphics 617', vendor: 'Intel Inc.' },
+    // {
+    //   renderer: 'AMD Radeon Pro 560X OpenGL Engine',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // {
+    //   renderer: 'AMD Radeon Pro 555X OpenGL Engine',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // {
+    //   renderer: 'AMD Radeon RX 580 OpenGL Engine',
+    //   vendor: 'Advanced Micro Devices, Inc.',
+    // },
+    // { renderer: 'Intel Iris Plus Graphics 650', vendor: 'Intel Inc.' },
+    // { renderer: 'Intel HD Graphics 6000', vendor: 'Intel Inc.' },
+    // { renderer: 'Intel Iris Graphics 6100', vendor: 'Intel Inc.' },
+    // { renderer: 'Intel Iris Pro Graphics 5200', vendor: 'Intel Inc.' },
+    // {
+    //   renderer: 'NVIDIA GeForce GT 750M OpenGL Engine',
+    //   vendor: 'NVIDIA Corporation',
+    // },
+    // { renderer: 'Apple M1', vendor: 'Apple Inc.' },
     {
       renderer:
         'ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)',
@@ -811,8 +811,8 @@ export const screenResolutionsByPlatform = {
     { width: 3024, height: 1964 },
   ],
   Windows: [
-    { width: 1920, height: 1080 },
     { width: 2560, height: 1440 },
+    { width: 1920, height: 1080 },
     { width: 2160, height: 1440 },
     { width: 1280, height: 1024 },
     { width: 1600, height: 1200 },
@@ -823,9 +823,9 @@ export const screenResolutionsByPlatform = {
     { width: 1600, height: 900 },
   ],
   Linux: [
+    { width: 1600, height: 1200 },
     { width: 1920, height: 1080 },
     { width: 1366, height: 768 },
-    { width: 1600, height: 1200 },
     { width: 1280, height: 720 },
     { width: 1600, height: 900 },
     { width: 810, height: 1080 },

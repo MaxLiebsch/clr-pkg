@@ -18,6 +18,8 @@ import { Rule } from '../../types/rules';
 import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
 
+const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
+
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
 //Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
@@ -233,7 +235,7 @@ const setPageProperties = async (
     : sample(languageList) ?? languageList[0];
 
   await page.evaluateOnNewDocument(
-    (lng, lng_set1, navigatorPlatform, languages, language) => {
+    (navigatorPlatform, languages, language) => {
       Object.defineProperty(navigator, 'language', {
         get: function () {
           return language;
@@ -251,8 +253,6 @@ const setPageProperties = async (
         },
       });
     },
-    lng,
-    lng_set1,
     navigatorPlatform,
     languages,
     language,
@@ -281,38 +281,30 @@ const setPageProperties = async (
     });
   }, voices);
 
-  await page.evaluateOnNewDocument((viewPort) => {
-    Object.defineProperty(window, 'outerHeight', {
-      get: function () {
-        return viewPort.height;
-      },
-    });
-    Object.defineProperty(window, 'outerWidth', {
-      get: function () {
-        return viewPort.width;
-      },
-    });
-    Object.defineProperty(screen, 'availHeight', {
-      get: function () {
-        return viewPort.height;
-      },
-    });
-    Object.defineProperty(screen, 'availWidth', {
-      get: function () {
-        return viewPort.width;
-      },
-    });
-    Object.defineProperty(screen, 'height', {
-      get: function () {
-        return viewPort.height;
-      },
-    });
-    Object.defineProperty(screen, 'width', {
-      get: function () {
-        return viewPort.width;
-      },
-    });
-  }, viewPort);
+  // await page.evaluateOnNewDocument((viewPort) => {
+  // //   Object.defineProperty(screen, 'availHeight', {
+  // //     get: function () {
+  // //       return viewPort.height;
+  // //     },
+  // //   });
+  // //   Object.defineProperty(screen, 'availWidth', {
+  // //     get: function () {
+  // //       return viewPort.width;
+  // //     },
+  // //   });
+  // //   Object.defineProperty(screen, 'width', {
+  // //     get: function () {
+  // //       return viewPort.width - 384;
+  // //     },
+  // //   });
+  // //   // //@ts-ignore
+  // //   // screen.height = viewPort.height; 
+  // //   // //@ts-ignore
+  // //   // screen.width = viewPort.width;
+  // //   window.outerHeight = viewPort.height - 120;
+  // //   window.outerWidth = viewPort.width - 384;
+   
+  // }, viewPort);
 
   await page.evaluateOnNewDocument(() => {
     const originalQuery = window.navigator.permissions.query;
@@ -367,9 +359,8 @@ const setPageProperties = async (
     // We can mock this in as much depth as we need for the test.
     //@ts-ignore
     window.navigator.chrome = {
-      app: {
-        isInstalled: false,
-      },
+      //@ts-ignore
+      ...window.navigator.chrome,
       webstore: {
         onInstallStageChanged: {},
         onDownloadProgress: {},
@@ -413,41 +404,11 @@ const setPageProperties = async (
     };
   });
 
-  // await page.evaluateOnNewDocument(() => {
-  //   function addDebugflag() {}
-  //   let descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(navigator), 'hardwareConcurrency')
-  //   //@ts-ignore
-  //   let descriptorProp = descriptor.get!
-  //   Object.defineProperty(navigator, 'hardwareConcurrency', {
-  //     get: function (this: Navigator) {
-  //       addDebugflag();
-  //       return Reflect.apply(descriptorProp, this, arguments);
-  //     },
-  //   });
-  // });
+  const graphicCard = requestCount
+    ? rotateGraphicUnit(platform, requestCount)
+    : graphicsCardListByPlatform['Windows'][0];
 
-  // const graphicCard = requestCount
-  //   ? rotateGraphicUnit(platform, requestCount)
-  //   : graphicsCardListByPlatform['Windows'][0];
-
-  // await page.evaluateOnNewDocument((graphicCard) => {
-  //   WebGLRenderingContext.prototype.getParameter = (function (origFn) {
-  //     const paramMap: { [key: string]: string } = {};
-  //     paramMap[0x9245] = graphicCard.vendor;
-  //     paramMap[0x9246] = graphicCard.renderer;
-  //     return function (this: WebGL2RenderingContext, parameter) {
-  //       return paramMap[parameter] || origFn.call(this, parameter);
-  //     };
-  //   })(WebGLRenderingContext.prototype.getParameter);
-  //   WebGL2RenderingContext.prototype.getParameter = (function (origFn) {
-  //     const paramMap: { [key: string]: string } = {};
-  //     paramMap[0x9245] = graphicCard.vendor;
-  //     paramMap[0x9246] = graphicCard.renderer;
-  //     return function (this: WebGL2RenderingContext, parameter) {
-  //       return paramMap[parameter] || origFn.call(this, parameter);
-  //     };
-  //   })(WebGL2RenderingContext.prototype.getParameter);
-  // }, graphicCard);
+  await new WebGlVendor(graphicCard).onPageCreated(page);
 
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(window, 'Worker', {
@@ -475,7 +436,7 @@ const setPageProperties = async (
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(window, 'Websocket', {
       get: function () {
-        throw new Error('Shared Workers are disabled.');
+        throw new Error('Websocket are disabled.');
       },
     });
   });
