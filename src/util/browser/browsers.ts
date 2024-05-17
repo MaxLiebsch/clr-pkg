@@ -6,8 +6,9 @@ import { LoggerService } from '../logger';
 import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
 import { VersionProvider, Versions } from '../versionProvider';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+// const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 let _browsers: BrowserGroup = {};
 
@@ -177,7 +178,28 @@ export const mainBrowser = async (
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
   try {
-    puppeteer.use(StealthPlugin());
+    puppeteer.use(
+      StealthPlugin({
+        enabledEvasions: new Set([
+          'chrome.app',
+          'chrome.csi',
+          'chrome.loadTimes',
+          'chrome.runtime',
+          'defaultArgs',
+          'iframe.contentWindow',
+          'media.codecs',
+          'navigator.hardwareConcurrency',
+          'navigator.languages',
+          'navigator.permissions',
+          'navigator.plugins',
+          'navigator.webdriver',
+          'sourceurl',
+          'user-agent-override',
+          'webgl.vendor',
+          'window.outerdimensions',
+        ]),
+      }),
+    );
   } catch (error) {
     if (error instanceof Error)
       LoggerService.getSingleton().logger.info({
