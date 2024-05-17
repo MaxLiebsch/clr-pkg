@@ -426,28 +426,28 @@ const setPageProperties = async (
   //   });
   // });
 
-  const graphicCard = requestCount
-    ? rotateGraphicUnit(platform, requestCount)
-    : graphicsCardListByPlatform['Windows'][0];
+  // const graphicCard = requestCount
+  //   ? rotateGraphicUnit(platform, requestCount)
+  //   : graphicsCardListByPlatform['Windows'][0];
 
-  await page.evaluateOnNewDocument((graphicCard) => {
-    WebGLRenderingContext.prototype.getParameter = (function (origFn) {
-      const paramMap: { [key: string]: string } = {};
-      paramMap[0x9245] = graphicCard.vendor;
-      paramMap[0x9246] = graphicCard.renderer;
-      return function (this: WebGL2RenderingContext, parameter) {
-        return paramMap[parameter] || origFn.call(this, parameter);
-      };
-    })(WebGLRenderingContext.prototype.getParameter);
-    WebGL2RenderingContext.prototype.getParameter = (function (origFn) {
-      const paramMap: { [key: string]: string } = {};
-      paramMap[0x9245] = graphicCard.vendor;
-      paramMap[0x9246] = graphicCard.renderer;
-      return function (this: WebGL2RenderingContext, parameter) {
-        return paramMap[parameter] || origFn.call(this, parameter);
-      };
-    })(WebGL2RenderingContext.prototype.getParameter);
-  }, graphicCard);
+  // await page.evaluateOnNewDocument((graphicCard) => {
+  //   WebGLRenderingContext.prototype.getParameter = (function (origFn) {
+  //     const paramMap: { [key: string]: string } = {};
+  //     paramMap[0x9245] = graphicCard.vendor;
+  //     paramMap[0x9246] = graphicCard.renderer;
+  //     return function (this: WebGL2RenderingContext, parameter) {
+  //       return paramMap[parameter] || origFn.call(this, parameter);
+  //     };
+  //   })(WebGLRenderingContext.prototype.getParameter);
+  //   WebGL2RenderingContext.prototype.getParameter = (function (origFn) {
+  //     const paramMap: { [key: string]: string } = {};
+  //     paramMap[0x9245] = graphicCard.vendor;
+  //     paramMap[0x9246] = graphicCard.renderer;
+  //     return function (this: WebGL2RenderingContext, parameter) {
+  //       return paramMap[parameter] || origFn.call(this, parameter);
+  //     };
+  //   })(WebGL2RenderingContext.prototype.getParameter);
+  // }, graphicCard);
 
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(window, 'Worker', {
