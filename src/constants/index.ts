@@ -118,15 +118,14 @@ export const acceptEncodingList = [
 ];
 
 export const languagesLists = [
-  ['de-DE', 'de', 'en-US', 'en'],
-  ['en-DE', 'de-DE'],
+  ['de', 'de-AT'],
   ['de-DE'],
   ['de'],
-  ['de', 'de-DE', 'en', 'en-GB', 'en-US'],
-  ['de-CH', 'de-DE', 'de', 'en-US', 'en'],
+  ['de', 'de-DE'],
+  ['de-CH', 'de-DE', 'de'],
 ];
 
-export const languageList = ['de-DE', 'de', 'en-DE', 'de-CH'];
+export const languageList = ['de-DE', 'de', 'de-CH'];
 
 export const timezones = [
   // 'Europe/Kiev',
