@@ -10,12 +10,14 @@ import parsePrice from 'parse-price';
 
 export interface IntermediateProdInfo {
   intermProcProd: DbProduct;
+  candidates: Candidate[] 
   targetShops: TargetShop[];
 }
 
 export interface TargetShopProducts {
   products?: Product[];
   procProd?: DbProduct;
+  candidates?: {[key: string]:Candidate[]} | Candidate[];
   targetShop: TargetShop;
 }
 
@@ -50,8 +52,8 @@ export const matchTargetShopProdsWithRawProd = (
   return { procProd, candidates};
 };
 
-const reduceTargetShopCandidates = (products: Product[]) => {
-  const foundProds = segmentFoundProds(products.filter((p) => p.price !== ''));
+export const reduceTargetShopCandidates = (products: Product[]) => {
+  const foundProds = segmentFoundProds(products.filter((p) => p.price !== '' && p.link !== '' && p.price !== ''));
 
   const candidatesToSave = foundProds.map((candidate) => {
     const { nameSegments: nmSegments, link: lnk, name: nm } = candidate;

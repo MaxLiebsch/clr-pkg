@@ -1,8 +1,5 @@
 import { TargetShop } from '../../types';
-import {
-  CandidateProduct,
-  Product,
-} from '../../types/product';
+import { CandidateProduct, Product } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
 import {
   buildRegexForSiUnits,
@@ -56,7 +53,7 @@ export const segmentString = (name: string) => {
 
   const normalizedMeasurements = levelNormalizedMeasurements(
     classifyMeasurements(siUnits),
-  ).map((measure: {str: string}) => measure.str);
+  ).map((measure: { str: string }) => measure.str);
 
   segments.push(
     ...normalizedMeasurements,
@@ -81,12 +78,11 @@ export function prefixLink(src: string, shopDomain: string) {
   if (!src.startsWith('https://')) {
     return 'https://www.' + shopDomain + src;
   }
-  if(src.startsWith('https://' + shopDomain)){
-    return src.replace(shopDomain, `www.${shopDomain}`)
+  if (src.startsWith('https://' + shopDomain)) {
+    return src.replace(shopDomain, `www.${shopDomain}`);
   }
   return src;
 }
-
 
 export function getManufacturer(src: string) {
   const split = src.split(' ');
@@ -182,35 +178,37 @@ export const findBestMatch = (
   const { procProd, dscrptnSegments, nmSubSegments } = prodInfo;
   const { nm, prc, mnfctr } = procProd;
   const nameSplit = segmentString(nm);
+
   foundProds.forEach((product, index) => {
     const curr_prc = parsePrice(getPrice(product.price ?? 0));
     const mrgn = Number((curr_prc - prc).toFixed(2));
     const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
     let score = 0;
 
-    switch (true) {
-      case curr_mrgn_pct < -50:
-        score += -4;
-        break;
-      case curr_mrgn_pct >= -50 && curr_mrgn_pct < -30:
-        score += -3;
-        break;
-      case curr_mrgn_pct >= -30 && curr_mrgn_pct < 30:
-        score += +2;
-        break;
-      case curr_mrgn_pct >= 30 && curr_mrgn_pct <= 50:
-        score += -3;
-        break;
-      case curr_mrgn_pct > 50:
-        score += -4;
-        break;
-    }
+    // switch (true) {
+    //   case curr_mrgn_pct < -50:
+    //     score += -4;
+    //     break;
+    //   case curr_mrgn_pct >= -50 && curr_mrgn_pct < -30:
+    //     score += -3;
+    //     break;
+    //   case curr_mrgn_pct >= -30 && curr_mrgn_pct < 30:
+    //     score += +2;
+    //     break;
+    //   case curr_mrgn_pct >= 30 && curr_mrgn_pct <= 50:
+    //     score += -3;
+    //     break;
+    //   case curr_mrgn_pct > 50:
+    //     score += -4;
+    //     break;
+    // }
 
     dscrptnSegments.forEach((giveWord: string) => {
       if (product.nameSegments.includes(giveWord)) {
         score++;
       }
     });
+    
     if (product.nameSegments.includes(mnfctr.toLowerCase())) {
       score += 2;
     }
@@ -296,19 +294,27 @@ export function calculateArbitrage(
 }
 
 export function reduceString(str: string, limit: number) {
+  let query = str;
+
+  query = query
+    .replaceAll(/([\b\r\n]|\\r|\\b|\\n)/g, ' ')
+    .replaceAll(/[\\(\\)]/g, '')
+    .replaceAll(/[,&@:]/g, ' ')
+    .replaceAll(/ +/g, ' ').trim();
+
   // Check if the string is already within the limit
-  if (str.length <= limit) return str;
+  if (query.length <= limit) return query;
 
   // Find the index of the last space within the limit
-  let lastSpace = str.substring(0, limit).lastIndexOf(' ');
+  let lastSpace = query.substring(0, limit).lastIndexOf(' ');
 
   // If there is no space in the range, try to find the first space after the limit
   if (lastSpace === -1) {
-    lastSpace = str.indexOf(' ', limit);
+    lastSpace = query.indexOf(' ', limit);
     // If there is still no space, return the whole string
     if (lastSpace === -1) return str;
   }
 
   // Return the substring up to the last space found
-  return str.substring(0, lastSpace);
+  return query.substring(0, lastSpace);
 }

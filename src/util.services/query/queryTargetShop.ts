@@ -31,7 +31,7 @@ export const queryTargetShops = async (
           };
           const isFinished = async (interm?: IntermediateProdInfo) => {
             if (interm) {
-              const { intermProcProd, targetShops: intermTargetShops } = interm;
+              const { intermProcProd, targetShops: intermTargetShops, candidates } = interm;
 
               procProd = { ...procProd, ...intermProcProd };
 
@@ -50,15 +50,15 @@ export const queryTargetShops = async (
                   await shopQueryPromises,
                 )) as TargetShopProducts[];
 
-                const { procProd: arbitragePerMatchedTargetShopProduct } =
+                const { procProd: arbitragePerMatchedTargetShopProduct, candidates } =
                   matchTargetShopProdsWithRawProd(targetShopProds, prodInfo);
                 procProd = {
                   ...procProd,
                   ...arbitragePerMatchedTargetShopProduct,
                 };
-                res({ targetShop, procProd });
+                res({ targetShop, procProd, candidates });
               } else {
-                res({ targetShop, procProd });
+                res({ targetShop, procProd, candidates });
               }
             } else {
               res({ products, targetShop });

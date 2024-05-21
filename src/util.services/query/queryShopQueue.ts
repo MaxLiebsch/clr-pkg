@@ -12,6 +12,7 @@ import { crawlProducts } from '../../util/crawl/crawlProducts';
 import { runActions } from '../../util/query/runActions';
 import { TargetShop } from '../../types';
 import { QueryRequest } from '../../types/query-request';
+import { reduceTargetShopCandidates } from '../../util/query/matchTargetShopProdsWithRawProd';
 
 export const targetRetailerList = [
   { d: 'amazon.de', prefix: 'a_', name: 'amazon' },
@@ -51,14 +52,14 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
   if (res === 'crawled' && !page.isClosed()) {
     if (extendedLookUp && prodInfo && targetShop) {
-      //TODO: THERE SHOULD BE ALWAYS A LINK
-      const candidates = segmentFoundProds(
-        (products as Product[]).filter((p) => p.price !== '' && p.link !== ''),
-      );
+      //TODO: THERE SHOULD BE ALWAYS A LINK 
+      const { foundProds, candidatesToSave: candidates } =
+        reduceTargetShopCandidates(products as Product[]);
+
       let { procProd, rawProd } = prodInfo;
 
       const { arbitrage, bestMatch } = addBestMatchToProduct(
-        candidates,
+        foundProds,
         targetShop,
         prodInfo, //TODO use mnfctr.name for namesplit
       );
@@ -83,6 +84,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
             isFinished &&
               isFinished({
+                candidates,
                 targetShops: [
                   targetRetailerList[targetShopIndex === 0 ? 1 : 0],
                 ],
@@ -93,6 +95,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             await closePage(page);
             isFinished &&
               isFinished({
+                candidates,
                 targetShops: targetRetailerList,
                 intermProcProd: procProd,
               });
@@ -100,6 +103,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             await closePage(page);
             isFinished &&
               isFinished({
+                candidates,
                 targetShops: targetRetailerList,
                 intermProcProd: procProd,
               });
@@ -151,6 +155,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
           isFinished &&
             isFinished({
+              candidates,
               targetShops: missingShops,
               intermProcProd: procProd,
             });
@@ -158,6 +163,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
       } else {
         isFinished &&
           isFinished({
+            candidates,
             targetShops: targetRetailerList,
             intermProcProd: procProd,
           });

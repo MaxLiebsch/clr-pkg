@@ -119,7 +119,7 @@ export const acceptEncodingList = [
 
 export const languagesLists = [
   ['de', 'de-AT'],
-  ['de-DE', "de"],
+  ['de', 'de-DE'],
   ['de-CH', 'de'],
 ];
 
