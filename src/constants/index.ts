@@ -125,7 +125,7 @@ export const languagesLists = [
   ['de-CH', 'de-DE', 'de'],
 ];
 
-export const languageList = ['de-DE', 'de', 'de-CH'];
+export const languageList = ['de-DE', 'de', 'de-CH', 'de-AT'];
 
 export const timezones = [
   // 'Europe/Kiev',
