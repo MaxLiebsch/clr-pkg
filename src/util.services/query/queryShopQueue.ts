@@ -6,7 +6,6 @@ import { closePage } from '../../util/browser/closePage';
 import {
   addBestMatchToProduct,
   calculateArbitrage,
-  segmentFoundProds,
 } from '../../util/matching/compare_helper';
 import { crawlProducts } from '../../util/crawl/crawlProducts';
 import { runActions } from '../../util/query/runActions';
@@ -14,7 +13,7 @@ import { TargetShop } from '../../types';
 import { QueryRequest } from '../../types/query-request';
 import { reduceTargetShopCandidates } from '../../util/query/matchTargetShopProdsWithRawProd';
 
-export const targetRetailerList = [
+export const standardTargetRetailerList = [
   { d: 'amazon.de', prefix: 'a_', name: 'amazon' },
   { d: 'ebay.de', prefix: 'e_', name: 'ebay' },
 ];
@@ -30,6 +29,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
     prodInfo,
     extendedLookUp,
     targetShop,
+    targetRetailerList,
   } = request;
   const { queryActions, waitUntil } = shop;
 
@@ -52,22 +52,23 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
   if (res === 'crawled' && !page.isClosed()) {
     if (extendedLookUp && prodInfo && targetShop) {
-      //TODO: THERE SHOULD BE ALWAYS A LINK 
-      const { foundProds, candidatesToSave: candidates } =
-        reduceTargetShopCandidates(products as Product[]);
+      const currentTargetRetailerList = targetRetailerList || standardTargetRetailerList;
 
+      const { foundProds, candidatesToSave: candidates } =
+      reduceTargetShopCandidates(products as Product[]);
+  
       let { procProd, rawProd } = prodInfo;
 
       const { arbitrage, bestMatch } = addBestMatchToProduct(
         foundProds,
         targetShop,
-        prodInfo, //TODO use mnfctr.name for namesplit
+        prodInfo,
       );
       if (bestMatch) {
         if (bestMatch.vendor) {
           //direct vertrieb
           const vendor = bestMatch.vendor.toLowerCase();
-          const targetShopIndex = targetRetailerList.findIndex((shop) =>
+          const targetShopIndex = currentTargetRetailerList.findIndex((shop) =>
             vendor.includes(shop.name),
           );
           if (targetShopIndex !== -1) {
@@ -76,7 +77,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             const arbitrage = calculateArbitrage(
               procProd.prc,
               bestMatch,
-              targetRetailerList[targetShopIndex],
+              currentTargetRetailerList[targetShopIndex],
             );
             procProd = { ...procProd, ...arbitrage };
 
@@ -86,7 +87,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
               isFinished({
                 candidates,
                 targetShops: [
-                  targetRetailerList[targetShopIndex === 0 ? 1 : 0],
+                  currentTargetRetailerList[targetShopIndex === 0 ? 1 : 0],
                 ],
                 intermProcProd: procProd,
               });
@@ -96,7 +97,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             isFinished &&
               isFinished({
                 candidates,
-                targetShops: targetRetailerList,
+                targetShops: currentTargetRetailerList,
                 intermProcProd: procProd,
               });
           } else {
@@ -104,7 +105,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             isFinished &&
               isFinished({
                 candidates,
-                targetShops: targetRetailerList,
+                targetShops: currentTargetRetailerList,
                 intermProcProd: procProd,
               });
           }
@@ -127,11 +128,11 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
           await closePage(page);
 
-          let missingShops: TargetShop[] = targetRetailerList;
+          let missingShops: TargetShop[] = currentTargetRetailerList;
           foundShops.forEach((shop) => {
             const vendor = (shop.vendor as string).toLowerCase();
             if (vendor) {
-              const targetShopIndex = targetRetailerList.findIndex(
+              const targetShopIndex = currentTargetRetailerList.findIndex(
                 (targetShop) => (vendor as string).includes(targetShop.name),
               );
               if (targetShopIndex !== -1) {
@@ -140,13 +141,13 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
                   {
                     ...shop,
                     image: rawProd.image,
-                    shop: targetRetailerList[targetShopIndex].d,
+                    shop: currentTargetRetailerList[targetShopIndex].d,
                     name: shop.name,
                   } as Product,
-                  targetRetailerList[targetShopIndex],
+                  currentTargetRetailerList[targetShopIndex],
                 );
                 missingShops = missingShops.filter(
-                  (shop) => shop.d !== targetRetailerList[targetShopIndex].d,
+                  (shop) => shop.d !== currentTargetRetailerList[targetShopIndex].d,
                 );
                 procProd = { ...procProd, ...arbitrage };
               }
@@ -164,7 +165,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
         isFinished &&
           isFinished({
             candidates,
-            targetShops: targetRetailerList,
+            targetShops: currentTargetRetailerList,
             intermProcProd: procProd,
           });
         await closePage(page);

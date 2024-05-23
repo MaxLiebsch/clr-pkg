@@ -237,7 +237,7 @@ export interface Arbitrage {
 
 export const addBestMatchToProduct = (
   candidates: CandidateProduct[],
-  shop: { d: string; prefix: string },
+  shop: TargetShop,
   prodInfo: ProdInfo,
 ) => {
   const { procProd } = prodInfo;

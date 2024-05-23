@@ -238,6 +238,7 @@ export interface Year {
 export interface TargetShop {
   prefix: string;
   d: string;
+  name: string;
 }
 
 export interface ShopObject {

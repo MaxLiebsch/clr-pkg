@@ -19,6 +19,7 @@ export interface QRequest {
 export interface QueryRequest extends QRequest {
     queue: QueryQueue;
     extendedLookUp?: boolean;
+    targetRetailerList?: TargetShop[];
     targetShop?: TargetShop;
     prodInfo?: ProdInfo;
     limit?: Limit;
