@@ -6,7 +6,7 @@ import {
   classifyMeasurements,
   levelNormalizedMeasurements,
   numberRegExp,
-} from '../normalizeSIUnits';
+} from './normalizeSIUnits';
 import parsePrice from 'parse-price';
 
 const regexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;

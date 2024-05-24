@@ -1,4 +1,4 @@
-import { Browser, Page } from 'puppeteer1';
+import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
@@ -16,6 +16,7 @@ import {
   ACCESS_DENIED_FREQUENCE,
   MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
+  MAX_RETRIES_NOT_FOUND,
   RANDOM_TIMEOUT_MAX,
   RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
@@ -135,11 +136,11 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
   }
   async disconnect(taskFinished = false): Promise<void> {
     this.taskFinished = taskFinished;
+    if (taskFinished) {
+      this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
+      this.timeouts = [];
+    }
     try {
-      if (taskFinished) {
-        this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
-        this.timeouts = [];
-      }
       if (this.browser?.connected && !taskFinished) {
         const pages = await this.browser.pages(); // Get all open pages
         // Iterate through each page and close it
@@ -150,6 +151,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     } catch (error) {
       this.logError({ msg: 'Could not close all pages', taskFinished });
     }
+
     try {
       await this.browser?.close();
     } catch (error) {
@@ -350,10 +352,16 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
         if (status === 404 && !this.taskFinished) {
           const errorType = ErrorType.NotFound;
           this.queueTask.statistics.errorTypeCount[errorType] += 1;
-          await closePage(page);
-          if ('onNotFound' in request && request?.onNotFound)
-            request.onNotFound();
-          return { status: 'not-found', retries };
+          if (retries < MAX_RETRIES_NOT_FOUND) {
+            throw new Error(ErrorType.NotFound);
+          } else {
+            // if the page is not found and the retries are more than the limit
+            await closePage(page);
+            if ('onNotFound' in request && request?.onNotFound) {
+              request.onNotFound();
+            }
+            return { status: 'not-found', retries };
+          }
         }
         if (status === 429 && !this.taskFinished) {
           throw new Error(ErrorType.RateLimit);
@@ -383,7 +391,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             if (
               error.message === ErrorType.RateLimit ||
               error.message === ErrorType.AccessDenied ||
-              error.message === ErrorType.ServerError
+              error.message === ErrorType.ServerError ||
+              error.message === ErrorType.NotFound
             ) {
               if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
                 this.pauseQueue('error');

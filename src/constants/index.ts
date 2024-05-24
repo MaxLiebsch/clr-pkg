@@ -1,6 +1,7 @@
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
 export const MAX_RETRIES = 500;
+export const MAX_RETRIES_NOT_FOUND = 5;
 export const RANDOM_TIMEOUT_MIN = 3000;
 export const RANDOM_TIMEOUT_MAX = 8000;
 export const MAX_CRITICAL_ERRORS = 15;
@@ -165,14 +166,19 @@ export const refererList = [
 export const graphicsCardListByPlatform = {
   Windows: [
     { renderer: 'Intel Iris OpenGL Engine', vendor: 'Intel Inc.' },
-    // {
-    //   renderer: 'ANGLE (NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0)',
-    //   vendor: 'NVIDIA Corporation',
-    // },
-    // {
-    //   renderer: 'ANGLE (AMD Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0)',
-    //   vendor: 'Advanced Micro Devices, Inc.',
-    // },
+    {
+      renderer:
+        'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)f',
+      vendor: 'Google Inc. (Intel)',
+    },
+    {
+      renderer: 'ANGLE (NVIDIA GeForce GTX 1080 Direct3D11 vs_5_0 ps_5_0)',
+      vendor: 'Google Inc.',
+    },
+    {
+      renderer: 'ANGLE (Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)',
+      vendor: 'Google Inc. (Intel)',
+    },
     // {
     //   renderer: 'ANGLE (Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
     //   vendor: 'Intel Inc.',
@@ -229,16 +235,19 @@ export const graphicsCardListByPlatform = {
     //     'Radeon RX 560 Series (POLARIS11, DRM 3.40.0, 5.7.8, LLVM 10.0.0)',
     //   vendor: 'Advanced Micro Devices, Inc.',
     // },
-    // { renderer: 'NVIDIA Quadro P1000/PCIe/SSE2', vendor: 'NVIDIA Corporation' },
+    {
+      renderer: 'Mesa DRI Intel HD Graphics 630 (Kaby Lake GT2)',
+      vendor: 'Goolgle Inc. (Intel)',
+    },
     {
       vendor: 'Goolgle Inc. (Intel)',
       renderer:
         'ANGLE (Intel, Mesa Intel(R) HD Graphics 4000 (IVB GT2), OpenGL ES 3.0)',
     },
-    // {
-    //   renderer: 'NVIDIA GeForce GTX 1660 Ti/PCIe/SSE2',
-    //   vendor: 'NVIDIA Corporation',
-    // },
+    {
+      renderer: 'Mesa DRI Intel Iris Plus Graphics 640 (Ice Lake 8x8 GT2)',
+      vendor: 'Goolgle Inc. (Intel)',
+    },
   ],
   macOS: [
     // { renderer: 'Intel Iris Plus Graphics 640', vendor: 'Intel Inc.' },

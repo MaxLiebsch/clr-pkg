@@ -74,7 +74,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
-
   // slow done
   const pause = Math.floor(Math.random() * 3000) + 1500;
   await new Promise((r) => setTimeout(r, pause));
@@ -162,6 +161,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       }
     }
   }
+  const url = page.url();
   if (rawProductInfos.length) {
     const cleanedProductInfo = rawProductInfos.map((rawInfo) => {
       const { key, value } = rawInfo;
@@ -179,10 +179,11 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       }
       return { key, value };
     });
-    if (addProductInfo) addProductInfo(cleanedProductInfo);
+    if (addProductInfo)
+      addProductInfo({ productInfo: cleanedProductInfo, url });
     await closePage(page);
   } else {
-    if (addProductInfo) addProductInfo(null);
+    if (addProductInfo) addProductInfo({ productInfo: null, url });
     await closePage(page);
   }
 }

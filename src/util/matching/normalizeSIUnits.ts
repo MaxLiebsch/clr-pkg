@@ -1,8 +1,8 @@
 import pkg2, { Unit } from 'convert-units';
 let convert = pkg2;
 import _ from 'underscore';
-import { MainUnit, NormalizeMeasure, SiUnits } from '../types/units';
-import units from '../constants/units.json';
+import { MainUnit, NormalizeMeasure, SiUnits } from '../../types/units';
+import units from '../../constants/units.json';
 
 export const numberRegExp = /^([-+])?\d+$/;
 
