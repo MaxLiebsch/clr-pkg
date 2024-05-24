@@ -11,9 +11,11 @@ export const ACCESS_DENIED_FREQUENCE = 10000;
 export const STANDARD_FREQUENCE = 10000;
 
 export const CHROME_VERSIONS = [
-  '122.0.6261.94',
+  "125.0.6422.60",
+  '124.0.6367.91',
   '123.0.6312.58',
   '124.0.6367.60',
+  '122.0.6261.94',
 ];
 
 export const uuidRegex =
@@ -179,14 +181,14 @@ export const graphicsCardListByPlatform = {
       renderer: 'ANGLE (Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)',
       vendor: 'Google Inc. (Intel)',
     },
-    // {
-    //   renderer: 'ANGLE (Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
-    //   vendor: 'Intel Inc.',
-    // },
-    // {
-    //   renderer: 'NVIDIA GeForce GTX 1080/PCIe/SSE2',
-    //   vendor: 'NVIDIA Corporation',
-    // },
+    {
+      renderer: 'ANGLE (AMD, AMD Readon (TM) R9 390 Series (0x00006781) Direct3011 vs_5_0 ps_5_0, D3D11)',
+      vendor: 'Google Inc. (AMD)',
+    },
+    {
+      renderer: 'ANGLE (NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+      vendor: 'Google Inc. (NVIDIA)',
+    },
     // {
     //   renderer: 'NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2',
     //   vendor: 'NVIDIA Corporation',

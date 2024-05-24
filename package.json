@@ -54,6 +54,8 @@
     "puppeteer1": "yarn:puppeteer@v22.4.0",
     "puppeteer2": "yarn:puppeteer@v22.6.0",
     "puppeteer3": "yarn:puppeteer@v22.7.0",
+    "puppeteer4": "yarn:puppeteer@v22.8.0",
+    "puppeteer5": "yarn:puppeteer@v22.9.0",
     "standard-version": "^9.5.0",
     "ts-node-dev": "^2.0.0",
     "tslib": "^2.5.0",

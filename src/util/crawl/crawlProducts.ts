@@ -198,8 +198,6 @@ export const crawlProducts = async (
               }
             }
           }
-          product['createdAt'] = new Date().toISOString();
-          product['updatedAt'] = new Date().toISOString();
 
           if (shop?.ece && shop.ece.length) {
             product.link = removeRandomKeywordInURL(

@@ -23,6 +23,7 @@ export * from './util/logger';
 export * from './util/fs/stats';
 export * from './util/matching/normalizeSIUnits'
 export * from "./util/matching/compare_helper"
+export * from './util/browser/yieldBrowserVersion';
 
 // BROWSER
 export * from './util/browser/browsers';
