@@ -25,6 +25,7 @@ import {
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
 import { sample } from 'underscore';
+import { Infos } from '../../types/Infos';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
@@ -205,7 +206,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     }
   }
   /*  QUEUE RELATED FUNCTIONS  */
-  async clearQueue(event: string) {
+  async clearQueue(event: string, infos: Infos) {
     await this.disconnect(true);
     this.queue = [];
     this.timeouts = [];
@@ -224,6 +225,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.log({
       errorTypes: errorTypeCount,
       browserStarts,
+      infos,
       expectedProducts,
       resetedSession,
       statusHeuristic,

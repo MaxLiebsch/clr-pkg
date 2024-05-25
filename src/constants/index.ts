@@ -4,7 +4,7 @@ export const MAX_RETRIES = 500;
 export const MAX_RETRIES_NOT_FOUND = 5;
 export const RANDOM_TIMEOUT_MIN = 3000;
 export const RANDOM_TIMEOUT_MAX = 8000;
-export const MAX_CRITICAL_ERRORS = 15;
+export const MAX_CRITICAL_ERRORS = 7;
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;

@@ -3,6 +3,7 @@ import { ProxyAuth } from '../../types/proxyAuth';
 import { QueueTask } from '../../types/QueueTask';
 import { CrawlerRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
+import { Infos } from '../../types/Infos';
 
 type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
 
@@ -35,8 +36,8 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   }
   /*  QUEUE RELATED FUNCTIONS  */
   /* Placeholder  function for interoperability with BaseQueue class  */
-  public clearQueue(event: string) {
-    return super.clearQueue(event);
+  public clearQueue(event: string, infos: Infos) {
+    return super.clearQueue(event,infos);
   }
   resumeQueue() {
     return super.resumeQueue();

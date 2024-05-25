@@ -4,6 +4,7 @@ import { DbProduct, ProductRecord } from '../../types/product';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
+import { Infos } from '../../types/Infos';
 
 export interface ProdInfo {
   procProd: DbProduct;
@@ -44,8 +45,8 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   }
   /*  QUEUE RELATED FUNCTIONS  */
   /*  Placeholder  function for interoperability with BaseQueue class */
-  public async clearQueue(event: string) {
-    return await super.clearQueue(event);
+  public async clearQueue(event: string, infos: Infos) {
+    return await super.clearQueue(event, infos);
   }
   resumeQueue() {
     return super.resumeQueue();
