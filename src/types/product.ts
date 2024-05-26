@@ -1,9 +1,9 @@
 import { Content } from '.';
 
 export interface Product {
-  createdAt: string;
-  updatedAt: string;
-  matchedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  matchedAt?: string;
   link: string;
   image: string;
   name: string;
