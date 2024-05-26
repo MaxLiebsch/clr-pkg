@@ -5,7 +5,7 @@ export interface QueueTask {
     errorTypeCount: {
       [key: string]: number;
     };
-    expectedProducts: number;
+    estimatedProducts: number;
     statusHeuristic: {
       "error-handled": number;
       "page-completed": number;

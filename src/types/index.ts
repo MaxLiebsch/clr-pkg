@@ -155,8 +155,6 @@ export type Content =
   | 'image'
   | 'prime'
   | 'year'
-  | 'createdAt'
-  | 'updatedAt';
 
 export interface Detail {
   content: Content;

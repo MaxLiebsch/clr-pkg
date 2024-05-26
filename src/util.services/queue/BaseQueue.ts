@@ -69,7 +69,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     this.queueTask = {
       ...task,
       statistics: {
-        expectedProducts: task.productLimit,
+        estimatedProducts: task.productLimit,
         statusHeuristic: {
           'error-handled': 0,
           'not-found': 0,
@@ -218,15 +218,17 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       errorTypeCount,
       browserStarts,
       resetedSession,
-      expectedProducts,
+      estimatedProducts,
       retriesHeuristic,
       statusHeuristic,
     } = this.queueTask.statistics;
     this.log({
       errorTypes: errorTypeCount,
       browserStarts,
-      infos,
-      expectedProducts,
+      infos: {
+        ...infos,
+        estimatedProducts,
+      },
       resetedSession,
       statusHeuristic,
       retriesHeuristic,

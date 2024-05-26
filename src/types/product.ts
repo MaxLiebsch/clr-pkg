@@ -1,6 +1,9 @@
 import { Content } from '.';
 
 export interface Product {
+  createdAt: string;
+  updatedAt: string;
+  matchedAt: string;
   link: string;
   image: string;
   name: string;
@@ -13,8 +16,6 @@ export interface Product {
   shop?: string;
   nameSub?: string;
   year?: string;
-  createdAt: string;
-  updatedAt: string;
   prime: boolean;
 }
 
