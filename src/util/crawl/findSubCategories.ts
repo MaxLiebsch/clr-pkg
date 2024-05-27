@@ -22,9 +22,9 @@ const findSubCategories = async (
 
   for (let index = 0; index < subCategories.length; index++) {
     subCategory = subCategories[index];
-    const { sel } = subCategory;
+    const { sel, visible } = subCategory;
 
-    subCategoryHandle = sel ? await waitForSelector(page, sel) : 'missing';
+    subCategoryHandle = sel ? await waitForSelector(page, sel,5000, visible) : 'missing';
 
     if (subCategoryHandle !== 'missing' && subCategoryHandle) break;
   }

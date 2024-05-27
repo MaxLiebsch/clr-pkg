@@ -17,7 +17,12 @@ export interface WaitUntil {
   entryPoint: PuppeteerLifeCycleEvent;
 }
 
-export type ActionType = 'button' | 'input' | 'select' | 'shadowroot-button' | 'recursive-button';
+export type ActionType =
+  | 'button'
+  | 'input'
+  | 'select'
+  | 'shadowroot-button'
+  | 'recursive-button';
 
 export interface BaseAction {
   type: ActionType;
@@ -50,7 +55,11 @@ export interface InputAction extends BaseAction {
   wait: boolean;
 }
 
-export type QueryAction = ButtonAction | SelectAction | InputAction | recursiveButtonAction;
+export type QueryAction =
+  | ButtonAction
+  | SelectAction
+  | InputAction
+  | recursiveButtonAction;
 
 export type CrawlAction = QueryAction;
 
@@ -72,6 +81,7 @@ export interface Categories {
 }
 
 export interface SubCategoriesSel {
+  visible?: boolean;
   sel: string;
   type: string;
 }
@@ -154,7 +164,7 @@ export type Content =
   | 'redirect_link'
   | 'image'
   | 'prime'
-  | 'year'
+  | 'year';
 
 export interface Detail {
   content: Content;
