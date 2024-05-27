@@ -1,11 +1,11 @@
 import { describe, expect, test } from '@jest/globals';
 import { paginationUrlBuilder } from '../util/crawl/paginationURLBuilder';
 
-describe('sum module', () => {
+describe('Pagination Builder', () => {
   test('reichelt.de generate page 3', () => {
     expect(
       paginationUrlBuilder(
-        'https://www.reichelt.de/headsets-c9845.html',
+        'https://www.reichelt.de/de/de/index.html?ACTION=446&LA=102&GROUPID=5820&VIEWALL=1&search=specialprice&nbc=1',
         [
           {
             type: 'pagination',

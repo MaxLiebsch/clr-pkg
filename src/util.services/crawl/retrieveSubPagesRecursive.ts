@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer1';
-import {  getProductCount } from '../..';
+import { getProductCount } from '../..';
 import { StatService } from '../../util/fs/stats';
 import { getCategories } from '../../util/crawl/getCategories';
 import { subPageLoop } from './crawlSubPageLoop';
@@ -24,14 +24,7 @@ export const retrieveSubPagesRecursive = async (
   const { categories, productList } = shop;
   const { subCategory: subCateg } = limit;
 
-  const subsubCategLnks = await getCategories(
-    page,
-    categories,
-    request.queue,
-    shop.d,
-    shop?.ece,
-    true,
-  );
+  const subsubCategLnks = await getCategories(page, request, true);
   const productCount = await getProductCount(page, productList);
   if (productCount && onlyCrawlCategories)
     category['cnt_products'] = productCount;

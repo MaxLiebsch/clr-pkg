@@ -36,7 +36,7 @@ export async function browseProductPagesQueue(
     query,
     queue,
     productCount,
-  } = request;
+  } = request; 
   const statService = StatService.getSingleton(shop.d);
   let category: SubCategory = {
     link: '',
@@ -49,7 +49,11 @@ export async function browseProductPagesQueue(
   const scanShop = category && productPagePath;
   const { paginationEl: paginationEls, waitUntil } = shop;
 
-  let { pagination, paginationEl } = await findPagination(page, paginationEls, limit);
+  let { pagination, paginationEl } = await findPagination(
+    page,
+    paginationEls,
+    limit,
+  );
 
   if (pagination !== 'missing' && pagination) {
     const { type } = paginationEl;
@@ -92,6 +96,21 @@ export async function browseProductPagesQueue(
             ? noOfFoundPages
             : limitPages
           : noOfFoundPages;
+
+        switch (true) {
+          case noOfFoundPages === 0:
+            request.productPageCountHeuristic['0'] += 1;
+            break;
+          case noOfFoundPages >= 0 && noOfFoundPages < 10:
+            request.productPageCountHeuristic['1-9'] += 1;
+            break;
+          case noOfFoundPages >= 10 && noOfFoundPages < 50:
+            request.productPageCountHeuristic['10-49'] += 1;
+            break;
+          case noOfFoundPages >= 50:
+            request.productPageCountHeuristic['+50'] += 1;
+            break;
+        }
 
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;

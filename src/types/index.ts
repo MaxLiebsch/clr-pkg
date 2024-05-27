@@ -68,7 +68,7 @@ export interface Categories {
   categoryRegexp?: string;
   visible?: boolean;
   type: string;
-  subCategories: SubCategoriesSel;
+  subCategories: SubCategoriesSel[];
 }
 
 export interface SubCategoriesSel {

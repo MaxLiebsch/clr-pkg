@@ -38,6 +38,24 @@ export interface CrawlerRequest extends QRequest {
   parentPath: string;
   parent: ICategory | null;
   limit: Limit;
+  categoriesHeuristic: {
+    subCategories: {
+      0: number,
+      "1-9": number,
+      "10-19": number,
+      "20-29": number,
+      "30-39": number,
+      "40-49": number,
+      "+50": number,
+    },
+    mainCategories: number,
+  }
+  productPageCountHeuristic: {
+    '0': number;
+    '1-9': number;
+    '10-49': number;
+    '+50': number;
+  };
   noOfPages?: number;
   productCount?: number | null;
   initialProductPageUrl?: string;

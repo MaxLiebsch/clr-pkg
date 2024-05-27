@@ -18,17 +18,10 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
     category = statService.get(path);
   }
 
-  const { categories, productList } = shop;
+  const { productList } = shop;
   const { subCategory: subCateg } = limit;
 
-  const subCategLnks = await getCategories(
-    page,
-    categories,
-    request.queue,
-    shop.d,
-    shop?.ece,
-    true,
-  );
+  const subCategLnks = await getCategories(page, request, true);
 
   const cntCategs = subCategLnks?.length ?? 0;
 
@@ -50,7 +43,7 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
       ? subCateg > cntCategs
         ? cntCategs
         : subCateg
-      : cntCategs;
+      : cntCategs; 
 
     for (let index = 0; index < maxSubCategs; index++) {
       const pageInfo: ICategory = {

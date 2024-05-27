@@ -391,6 +391,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     } catch (error) {
       if (!this.taskFinished) {
         if (!this.repairing) {
+
+          
           if (error instanceof Error) {
             if (
               error.message === ErrorType.RateLimit ||

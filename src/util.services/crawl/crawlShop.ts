@@ -21,7 +21,7 @@ export const crawlShop = async (page: Page, request: CrawlerRequest) => {
     categLinks.push(...shop.manualCategories);
   }
 
-  const foundCategories = await getCategories(page, categories, queue, d);
+  const foundCategories = await getCategories(page, request);
 
   if (foundCategories) {
     categLinks.push(...foundCategories);

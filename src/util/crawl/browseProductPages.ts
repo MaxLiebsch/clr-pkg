@@ -93,9 +93,7 @@ export async function browseProductpages(
 
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
-          LoggerService.getSingleton().logger.info(
-            `Page ${pageNo} of ${noOfPages} Pages`,
-          );
+
           if (i === 0) {
             if (scanShop) {
               category.productpages!.push({
