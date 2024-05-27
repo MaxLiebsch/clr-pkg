@@ -390,9 +390,10 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       return { status: 'page-completed', retries };
     } catch (error) {
       if (!this.taskFinished) {
+        this.pushTask(task, { ...request, retries: retries + 1 });
+        if (page) await closePage(page);
+        this.clearTimeout(id);
         if (!this.repairing) {
-
-          
           if (error instanceof Error) {
             if (
               error.message === ErrorType.RateLimit ||
@@ -450,8 +451,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
-        if (page) await closePage(page);
-        this.pushTask(task, { ...request, retries: retries + 1 });
         return { status: 'error-handled', retries };
       }
     } finally {
