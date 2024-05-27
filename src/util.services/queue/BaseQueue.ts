@@ -311,10 +311,6 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     request: T,
     id: string,
   ): Promise<WrapperFunctionResponse> {
-    let response = {
-      status: 'page-completed',
-      retries: 0,
-    };
     const { retries } = request;
     if (retries > MAX_RETRIES) {
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
@@ -389,10 +385,8 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       await task(page, request);
       return { status: 'page-completed', retries };
     } catch (error) {
+      process.env.DEBUG === 'true' && console.log('error:', error)
       if (!this.taskFinished) {
-        this.pushTask(task, { ...request, retries: retries + 1 });
-        if (page) await closePage(page);
-        this.clearTimeout(id);
         if (!this.repairing) {
           if (error instanceof Error) {
             if (
@@ -400,7 +394,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               error.message === ErrorType.AccessDenied ||
               error.message === ErrorType.ServerError ||
               error.message === ErrorType.NotFound
-            ) {
+            ) { 
               if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
                 this.pauseQueue('error');
               } else {
@@ -451,6 +445,9 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
+        this.pushTask(task, { ...request, retries: retries + 1 });
+        if (page) await closePage(page);
+        this.clearTimeout(id);
         return { status: 'error-handled', retries };
       }
     } finally {

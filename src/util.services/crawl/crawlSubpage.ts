@@ -43,7 +43,7 @@ export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
       ? subCateg > cntCategs
         ? cntCategs
         : subCateg
-      : cntCategs; 
+      : cntCategs;
 
     for (let index = 0; index < maxSubCategs; index++) {
       const pageInfo: ICategory = {
