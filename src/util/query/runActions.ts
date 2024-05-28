@@ -43,7 +43,7 @@ export async function runActions(page: Page, shop: ShopObject) {
             action.waitDuration,
             true,
           );
-          if (btn !== 'missing' && !btn) {
+          if (btn !== 'missing' && btn) {
             await clickBtn(
               page,
               action.sel,
