@@ -82,7 +82,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     const productInfo = productInfos[index];
     const { sel, timeout, type, productDetails } = productInfo;
     const selector = await waitForSelector(page, sel, timeout ?? 5000, false);
-    if (selector !== 'missing' && selector) {
+    if (selector) {
       if (type === 'table' && 'th' in productInfo && 'td' in productInfo) {
         const { th, td } = productInfo;
         const keyHandles = await page.$$(th).catch((e) => {

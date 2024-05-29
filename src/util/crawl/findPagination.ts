@@ -2,18 +2,17 @@ import { ElementHandle, Page } from 'puppeteer1';
 import { Limit, PaginationEl } from '../../types';
 import { waitForSelector } from '../helpers';
 
-const findPagination = async (page: Page, paginationEls: PaginationEl[], limit?: Limit ) => {
+const findPagination = async (
+  page: Page,
+  paginationEls: PaginationEl[],
+  limit?: Limit,
+) => {
   if (!paginationEls.length || limit?.pages === 0)
     return {
       pagination: 'missing',
       paginationEl: {} as PaginationEl,
     };
-  let pagination:
-    | ElementHandle<Element>
-    | 'missing'
-    | null
-    | undefined
-    | boolean;
+  let pagination: ElementHandle<Element> | null = null;
   let paginationEl = paginationEls[0];
 
   if (paginationEl.calculation.method === 'estimate') {
@@ -24,9 +23,9 @@ const findPagination = async (page: Page, paginationEls: PaginationEl[], limit?:
     paginationEl = paginationEls[index];
     const { sel } = paginationEl;
 
-    pagination = sel ? await waitForSelector(page, sel) : 'missing';
+    if (sel) pagination = await waitForSelector(page, sel);
 
-    if (pagination !== 'missing' && pagination) break;
+    if (pagination) break;
   }
   return { pagination, paginationEl };
 };

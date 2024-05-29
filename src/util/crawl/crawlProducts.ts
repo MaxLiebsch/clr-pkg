@@ -45,7 +45,7 @@ export const crawlProducts = async (
     const { sel, product, timeout } = productList[index];
     const selector = await waitForSelector(page, sel, timeout?? 5000, false);
 
-    if (selector !== 'missing' && selector) {
+    if (selector) {
       const productEls = await page.$$(product.sel).catch((e) => {
         if (e instanceof TimeoutError) {
           return 'missing';

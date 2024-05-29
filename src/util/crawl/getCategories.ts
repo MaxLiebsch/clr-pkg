@@ -118,7 +118,7 @@ export const getCategories = async (
       categorieEls.visible,
     );
 
-    if (handle !== 'missing' && handle) {
+    if (handle) {
       const categories = await myQuerySelectorAll(page, sel);
       if (categories !== 'missing' && categories) {
         request.categoriesHeuristic.mainCategories = categories.length;

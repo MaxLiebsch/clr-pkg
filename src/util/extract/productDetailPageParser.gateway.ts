@@ -49,7 +49,7 @@ export class PageParser {
         300,
         false,
       );
-      if (elementHandle !== 'missing' && elementHandle) {
+      if (elementHandle) {
         const result = await extractor.class.extractDetail(
           elementHandle,
           //@ts-ignore

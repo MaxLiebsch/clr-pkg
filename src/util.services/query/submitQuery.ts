@@ -10,8 +10,8 @@ export async function submitQuery(
   waitUntil: WaitUntil,
   query: Query,
 ) {
-  if(! queryActions.length) return;
-  
+  if (!queryActions.length) return;
+
   for (const action of queryActions) {
     const { sel, type } = action;
     const selector = await waitForSelector(
@@ -20,7 +20,7 @@ export async function submitQuery(
       type === 'shadowroot-button' ? 7000 : 5000,
       type !== 'shadowroot-button',
     );
-    if (selector === 'missing' || !selector) {
+    if (!selector) {
       continue;
     }
     if (type === 'button' && 'wait' in action) {
@@ -38,12 +38,16 @@ export async function submitQuery(
     if ('target' in action) {
       if (action.target) {
         const selector = await waitForSelector(page, action.target);
-        if (selector === 'missing') {
+        if (!selector) {
           continue;
         }
       }
     }
-    if ('what' in action && typeof action.what === 'string' && action.what.length) {
+    if (
+      'what' in action &&
+      typeof action.what === 'string' &&
+      action.what.length
+    ) {
       if (action.wait) {
         await Promise.all([
           page.waitForNavigation({

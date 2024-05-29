@@ -13,7 +13,7 @@ export async function runActions(page: Page, shop: ShopObject) {
         type === 'shadowroot-button' ? 7000 : 5000,
         type !== 'shadowroot-button',
       );
-      if (selector === 'missing' || !selector) {
+      if (!selector) {
         continue;
       }
       if (type === 'button' && 'wait' in action && 'waitDuration' in action) {
@@ -43,7 +43,7 @@ export async function runActions(page: Page, shop: ShopObject) {
             action.waitDuration,
             true,
           );
-          if (btn !== 'missing' && btn) {
+          if (btn) {
             await clickBtn(
               page,
               action.sel,

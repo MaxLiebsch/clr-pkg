@@ -1,4 +1,4 @@
-import { ElementHandle, Page, TimeoutError } from 'puppeteer1'
+import { ElementHandle, Page, TimeoutError } from 'puppeteer1';
 import {
   BrowserGroup,
   BrowserInfo,
@@ -174,7 +174,6 @@ export const clickElementInShadowRoot = async (
     .evaluate((sel, btn_sel) => {
       if (sel.shadowRoot) {
         const btn = sel.shadowRoot.querySelector(btn_sel) as HTMLButtonElement;
-        console.log('btn:', btn);
         if (btn) {
           btn.click();
         }
@@ -281,17 +280,17 @@ export const waitForSelector = async (
   sel: string,
   timeout: number = 5000,
   visible: boolean = true,
-) =>
-  page
-    .waitForSelector(sel, {
+): Promise<ElementHandle | null> => {
+  try {
+    const result = await page.waitForSelector(sel, {
       visible,
       timeout,
-    })
-    .catch((e) => {
-      if (e instanceof TimeoutError) {
-        return 'missing';
-      }
     });
+    return result;
+  } catch (error) {
+    return null;
+  }
+};
 
 export async function nestedProductName(
   elementHandle: ElementHandle,

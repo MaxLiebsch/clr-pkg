@@ -15,7 +15,7 @@ export async function performCrawlAction(
       type === 'shadowroot-button' ? 7000 : 5000,
       type !== 'shadowroot-button',
     );
-    if (selector === 'missing' || !selector) {
+    if (!selector) {
       continue;
     }
     if (type === 'button' && 'wait' in action) {
@@ -33,7 +33,7 @@ export async function performCrawlAction(
     if ('target' in action) {
       if (action.target) {
         const selector = await waitForSelector(page, action.target);
-        if (selector === 'missing') {
+        if (!selector) {
           continue;
         }
       }
