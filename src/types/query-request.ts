@@ -5,17 +5,41 @@ import { IntermediateProdInfo } from '../util/query/matchTargetShopProdsWithRawP
 import { CrawlerQueue } from '../util.services/queue/CrawlerQueue';
 import { ProductRecord } from './product';
 import { Query } from './query';
+import { ScanQueue } from '../util.services/queue/ScanQueue';
 
 export interface QRequest {
   prio: number;
   retries: number;
   shop: ShopObject;
-  addProduct: (product: ProductRecord) => Promise<void>;
   pageInfo: ICategory;
+}
+
+export interface ScanRequest extends QRequest {
+  parentPath: string;
+  queue: ScanQueue;
+  categoriesHeuristic: {
+    subCategories: {
+      0: number;
+      '1-9': number;
+      '10-19': number;
+      '20-29': number;
+      '30-39': number;
+      '40-49': number;
+      '+50': number;
+    };
+    mainCategories: number;
+  };
+  productPageCountHeuristic: {
+    '0': number;
+    '1-9': number;
+    '10-49': number;
+    '+50': number;
+  };
 }
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
+  addProduct: (product: ProductRecord) => Promise<void>;
   extendedLookUp?: boolean;
   targetRetailerList?: TargetShop[];
   targetShop?: TargetShop;
@@ -35,21 +59,20 @@ export interface QueryRequest extends QRequest {
 
 export interface CrawlerRequest extends QRequest {
   queue: CrawlerQueue;
-  parentPath: string;
-  parent: ICategory | null;
+  addProduct: (product: ProductRecord) => Promise<void>;
   limit: Limit;
   categoriesHeuristic: {
     subCategories: {
-      0: number,
-      "1-9": number,
-      "10-19": number,
-      "20-29": number,
-      "30-39": number,
-      "40-49": number,
-      "+50": number,
-    },
-    mainCategories: number,
-  }
+      0: number;
+      '1-9': number;
+      '10-19': number;
+      '20-29': number;
+      '30-39': number;
+      '40-49': number;
+      '+50': number;
+    };
+    mainCategories: number;
+  };
   productPageCountHeuristic: {
     '0': number;
     '1-9': number;
@@ -63,5 +86,4 @@ export interface CrawlerRequest extends QRequest {
   productPagePath?: string;
   paginationType?: string;
   query?: Query;
-  onlyCrawlCategories: boolean;
 }

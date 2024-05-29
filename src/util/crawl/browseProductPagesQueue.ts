@@ -6,8 +6,6 @@ import {
   waitForSelector,
 } from '../helpers';
 import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
-import { ICategory } from '../crawl/getCategories';
-import { StatService, SubCategory } from '../fs/stats';
 import { closePage } from '../browser/closePage';
 import { crawlProductsQueue } from '../crawl/crawlProductsQueue';
 import findPagination from '../crawl/findPagination';
@@ -15,43 +13,13 @@ import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPaginatio
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
 
-const addPageCountAndPushSubPages = (
-  category: SubCategory | null,
-  productPagePath: string | undefined,
-  pageInfo: ICategory,
-) => {
-  if (productPagePath && category) {
-    category.productpages!.push({
-      link: pageInfo.link,
-    });
-    category['cnt_pages'] = 0;
-  }
-};
-
 export async function browseProductPagesQueue(
   page: Page,
   request: CrawlerRequest,
 ) {
-  const {
-    shop,
-    productPagePath,
-    limit,
-    addProduct,
-    pageInfo,
-    query,
-    queue,
-    productCount,
-  } = request;
-  const statService = StatService.getSingleton(shop.d);
-  let category: SubCategory = {
-    link: '',
-    productpages: [],
-  };
+  const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
+    request;
 
-  if (productPagePath) {
-    category = statService.get(productPagePath);
-  }
-  const scanShop = category && productPagePath;
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
 
@@ -110,9 +78,6 @@ export async function browseProductPagesQueue(
       );
 
       if (noOfFoundPages) {
-        if (scanShop) {
-          category['cnt_pages'] = pages.length;
-        }
         const limitPages = limit?.pages ? limit?.pages : 0;
 
         const noOfPages = limitPages
@@ -139,24 +104,12 @@ export async function browseProductPagesQueue(
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
           if (i === 0) {
-            if (scanShop) {
-              category.productpages!.push({
-                link: pageInfo.link,
-                offset: 0,
-                cnt: 0,
-              });
-            }
-            await crawlProducts(
-              page,
-              shop,
-              pageNo,
-              addProduct,
-              pageInfo,
-              scanShop ? productPagePath : undefined,
-            ).finally(() => {
-              timeouts.forEach((timeout) => clearInterval(timeout));
-              closePage(page).then();
-            });
+            await crawlProducts(page, shop, addProduct, pageInfo).finally(
+              () => {
+                timeouts.forEach((timeout) => clearInterval(timeout));
+                closePage(page).then();
+              },
+            );
           } else {
             let nextUrl = `${initialpageurl}${paginationEl.nav}${pageNo}`;
             if (paginationEl?.paginationUrlSchema) {
@@ -167,11 +120,6 @@ export async function browseProductPagesQueue(
                 query?.product.value,
               );
             }
-            if (scanShop) {
-              category.productpages!.push({
-                link: nextUrl,
-              });
-            }
             queue.pushTask(crawlProductsQueue, {
               ...request,
               retries: 0,
@@ -179,7 +127,6 @@ export async function browseProductPagesQueue(
               pageNo,
               paginationType: type,
               noOfPages,
-              productPagePath: scanShop ? productPagePath : undefined,
               pageInfo: {
                 ...pageInfo,
                 link: nextUrl,
@@ -193,17 +140,9 @@ export async function browseProductPagesQueue(
         }
       }
     } else if (type === 'infinite_scroll') {
-      addPageCountAndPushSubPages(category, productPagePath, pageInfo);
       const scrolling = await scrollToBottom(page);
       if (scrolling === 'finished') {
-        await crawlProducts(
-          page,
-          shop,
-          1,
-          addProduct,
-          pageInfo,
-          scanShop ? productPagePath : undefined,
-        ).finally(() => {
+        await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
           timeouts.forEach((timeout) => clearInterval(timeout));
           closePage(page).then();
         });
@@ -220,31 +159,15 @@ export async function browseProductPagesQueue(
           exists = false;
         }
       }
-      await crawlProducts(
-        page,
-        shop,
-        1,
-        addProduct,
-        pageInfo,
-        scanShop ? productPagePath : undefined,
-      ).finally(() => {
+      await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
     }
   } else {
-    addPageCountAndPushSubPages(category, productPagePath, pageInfo);
-    await crawlProducts(
-      page,
-      shop,
-      1,
-      addProduct,
-      pageInfo,
-      scanShop ? productPagePath : undefined,
-    ).finally(() => {
+    await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
       timeouts.forEach((timeout) => clearInterval(timeout));
       closePage(page).then();
     });
   }
-  scanShop && statService.set(productPagePath, category);
 }

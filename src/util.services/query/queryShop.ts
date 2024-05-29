@@ -37,7 +37,6 @@ export const queryShop = async (
     addProduct,
     { link: entryPoint, name: '' },
     undefined,
-    undefined,
     query,
   );
   if (res === 'crawled' && !page.isClosed()) {

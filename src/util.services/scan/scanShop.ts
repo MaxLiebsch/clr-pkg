@@ -1,20 +1,19 @@
 import { Page } from 'puppeteer1';
 import { ICategory, getCategories } from '../../util/crawl/getCategories';
-import { subPageLoop } from './crawlSubPageLoop';
-import { performCrawlAction } from '../../util/crawl/performCrawlaction';
+import { ICategoryStats, StatService } from '../../util/fs/stats';
+import { transformCategories } from '../../util/crawl/transformCategories';
 import { closePage } from '../../util/browser/closePage';
 import { LoggerService } from '../../util/logger';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScanRequest } from '../../types/query-request';
+import { scanSubpageLoop } from './scanSubpageLoop';
 
-export const crawlShop = async (page: Page, request: CrawlerRequest) => {
-  const { shop, limit } = request;
-  const { waitUntil, categories, crawlActions } = shop;
-  const { mainCategory: mainCateg } = limit;
-
-  await performCrawlAction(page, crawlActions, waitUntil);
+export const scanShop = async (page: Page, request: ScanRequest) => {
+  const { pageInfo, shop, queue, parentPath } = request;
+  const { categories, d } = shop;
+  const statService = StatService.getSingleton(d);
 
   const categLinks: ICategory[] = [];
-
+  
   let foundCategories: ICategory[] | undefined = undefined;
   if (shop.manualCategories.length) {
     categLinks.push(...shop.manualCategories);
@@ -27,21 +26,26 @@ export const crawlShop = async (page: Page, request: CrawlerRequest) => {
       categLinks.push(...foundCategories);
     }
   }
-
   const cntCategs = categLinks.length;
 
   if (cntCategs) {
-    const maxCategs = mainCateg
-      ? mainCateg > cntCategs
-        ? cntCategs
-        : mainCateg
-      : cntCategs;
+    const subcategories = transformCategories(
+      categLinks.filter((pageInfo) => !queue.linkExists(pageInfo.link)),
+    );
+    const stats: ICategoryStats = {
+      default: {},
+      name: shop.d,
+      link: pageInfo.link,
+      cnt_category: cntCategs,
+      subcategories,
+    };
+    statService.set('sitemap', stats);
 
-    // "Idealo"
-    await subPageLoop({
+    await scanSubpageLoop({
+      parentPath,
+      parent: pageInfo,
       categories,
       categLinks,
-      maxCategs,
       request,
     });
   } else {

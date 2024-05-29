@@ -29,6 +29,10 @@ export * from './util/browser/yieldBrowserVersion';
 export * from './util/browser/browsers';
 export * from './util/browser/getPage';
 
+// SCAN
+export * from './util.services/queue/ScanQueue';
+export * from './util.services/scan/scanShop';
+
 // QUERY
 export * from './util.services/query/submitQuery';
 export * from './util.services/query/queryShop';

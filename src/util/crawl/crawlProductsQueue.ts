@@ -42,7 +42,7 @@ export const crawlProductsQueue = async (
 
     for (let index = 0; index < productList.length; index++) {
       const { product } = productList[index];
-      const productEls = await myQuerySelectorAll(page, product.sel); 
+      const productEls = await myQuerySelectorAll(page, product.sel);
       if (productEls) {
         hasProducts = true;
       }
@@ -90,6 +90,6 @@ export const crawlProductsQueue = async (
       }
     }
   }
-  await crawlProducts(page, shop, pageNo ?? 1, addProduct, pageInfo, undefined);
+  await crawlProducts(page, shop, addProduct, pageInfo);
   await closePage(page);
 };

@@ -5,7 +5,11 @@ import { QueueTask } from '../../types/QueueTask';
 import { LoggerService } from '../../util/logger';
 import { mainBrowser } from '../../util/browser/browsers';
 import { closePage } from '../../util/browser/closePage';
-import { CrawlerRequest, QueryRequest } from '../../types/query-request';
+import {
+  CrawlerRequest,
+  QueryRequest,
+  ScanRequest,
+} from '../../types/query-request';
 import { prefixLink } from '../../util/matching/compare_helper';
 import { getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
@@ -40,7 +44,9 @@ export type WrapperFunctionResponse =
     }
   | undefined;
 
-export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
+export abstract class BaseQueue<
+  T extends CrawlerRequest | QueryRequest | ScanRequest,
+> {
   private queue: Array<{
     task: Task;
     request: T;
@@ -386,7 +392,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
       await task(page, request);
       return { status: 'page-completed', retries };
     } catch (error) {
-      process.env.DEBUG === 'true' && console.log('error:', error)
+      process.env.DEBUG === 'true' && console.log('error:', error);
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {
@@ -395,7 +401,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
               error.message === ErrorType.AccessDenied ||
               error.message === ErrorType.ServerError ||
               error.message === ErrorType.NotFound
-            ) { 
+            ) {
               if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
                 this.pauseQueue('error');
               } else {

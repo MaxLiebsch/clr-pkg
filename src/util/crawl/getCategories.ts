@@ -17,7 +17,8 @@ import {
 import { CrawlerQueue } from '../../util.services/queue/CrawlerQueue';
 import { prefixLink } from '../matching/compare_helper';
 import findSubCategories from './findSubCategories';
-import { CrawlerRequest } from '../../types/query-request';
+import { CrawlerRequest, ScanRequest } from '../../types/query-request';
+import { ScanQueue } from '../../util.services/queue/ScanQueue';
 
 export interface ICategory {
   name: string;
@@ -27,7 +28,7 @@ export interface ICategory {
 
 export const getCategories = async (
   page: Page,
-  request: CrawlerRequest,
+  request: CrawlerRequest | ScanRequest,
   sub: boolean = false,
 ) => {
   const { queue, shop } = request;
@@ -112,12 +113,7 @@ export const getCategories = async (
     }
   } else {
     const { sel, type, visible, wait } = categorieEls;
-    const handle = await waitForSelector(
-      page,
-      sel,
-      wait ?? 5000,
-      visible,
-    );
+    const handle = await waitForSelector(page, sel, wait ?? 5000, visible);
 
     if (handle) {
       const categories = await myQuerySelectorAll(page, sel);
@@ -171,7 +167,7 @@ export const getCategories = async (
 };
 
 const testAndPushUrl = (
-  queue: CrawlerQueue,
+  queue: CrawlerQueue | ScanQueue,
   categorieLinks: ICategory[],
   categoryLink: string,
   categoryName: string,

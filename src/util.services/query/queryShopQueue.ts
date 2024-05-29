@@ -46,7 +46,6 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
     extendedLookUp ? addProductCb : addProduct,
     pageInfo,
     limit,
-    undefined,
     query,
   );
 
@@ -124,7 +123,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             });
           await runActions(page, shop);
 
-          await crawlProducts(page, shop, 1, addProductCb, pageInfo, undefined);
+          await crawlProducts(page, shop,  addProductCb, pageInfo);
 
           await closePage(page);
 

@@ -5,41 +5,24 @@ import {
   extractPart,
   myQuerySelectorAll,
   nestedProductName,
-  slug,
   waitForSelector,
 } from '../helpers';
 import { ProductRecord } from '../../types/product';
 import { ICategory } from './getCategories';
-import { ProductPage, StatService } from '../fs/stats';
 import { prefixLink } from '../matching/compare_helper';
 import { removeRandomKeywordInURL } from '../sanitize';
 
 export const crawlProducts = async (
   page: Page,
-  shop: ShopObject,
-  pageNo: number,
+  shop: ShopObject, 
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
-  productPagePath?: string,
 ) => {
-  let productPage: ProductPage = {
-    offset: 0,
-    link: '',
-    cnt: 0,
-  };
-  const statService = StatService.getSingleton(shop.d);
-  let path = `${productPagePath}.productpages.[${pageNo - 1}]`;
-
-  if (productPagePath) {
-    productPage = statService.get(path);
-  }
-
   if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
     const { min, max } = shop.pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
     await new Promise((r) => setTimeout(r, pause));
   }
-  const scanShop = productPagePath !== undefined;
 
   const { productList } = shop;
   for (let index = 0; index < productList.length; index++) {
@@ -50,10 +33,7 @@ export const crawlProducts = async (
     const productEls = await myQuerySelectorAll(page, product.sel);
     if (!productEls) continue;
 
-    if (scanShop) {
-      delete productPage.missing;
-      productPage['offset'] = (pageNo - 1) * productEls.length;
-    }
+  
     const { type, details } = product;
     for (let i = 0; i < productEls.length; i++) {
       const productEl = productEls[i];
@@ -214,5 +194,5 @@ export const crawlProducts = async (
       await addProductCb(product);
     }
   }
-  scanShop && statService.set(path, productPage);
+ 
 };
