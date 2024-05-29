@@ -6,6 +6,7 @@ import {
   getElementHandleInnerText,
   makeSuitableObjectKey,
   myQuerySelectorAll,
+  myQuerySelectorAll2,
   waitForSelector,
 } from '../helpers';
 import {
@@ -41,7 +42,7 @@ export const getCategories = async (
     if (subCategoryHandle !== 'missing' && subCategoryHandle) {
       const { sel, type } = subCategory;
       const categories = await myQuerySelectorAll(page, sel);
-      if (categories !== 'missing' && categories) {
+      if (categories) {
         switch (true) {
           case categories.length === 0:
             request.categoriesHeuristic.subCategories['0'] += 1;
@@ -110,17 +111,17 @@ export const getCategories = async (
       }
     }
   } else {
-    const { sel, type } = categorieEls;
+    const { sel, type, visible, wait } = categorieEls;
     const handle = await waitForSelector(
       page,
       sel,
-      categorieEls.wait ?? 5000,
-      categorieEls.visible,
+      wait ?? 5000,
+      visible,
     );
 
     if (handle) {
       const categories = await myQuerySelectorAll(page, sel);
-      if (categories !== 'missing' && categories) {
+      if (categories) {
         request.categoriesHeuristic.mainCategories = categories.length;
         for (let index = 0; index < categories.length; index++) {
           const categoryLink = await getElementHandleAttribute2(

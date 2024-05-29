@@ -17,6 +17,7 @@ import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
 import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
+import { ShopObject } from '../../types';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -119,11 +120,13 @@ export const rotateGraphicUnit = (
 
 const setPageProperties = async (
   page: Page,
+  shop: ShopObject,
   exceptions: string[] = [],
   requestCount: number | null,
   disAllowedResourceTypes?: ResourceType[],
   rules?: Rule[],
 ) => {
+  const { javascript } = shop;
   await page.setRequestInterception(true);
   page.on('request', (request) => {
     const resourceType = request.resourceType();
@@ -298,12 +301,12 @@ const setPageProperties = async (
   // //     },
   // //   });
   // //   // //@ts-ignore
-  // //   // screen.height = viewPort.height; 
+  // //   // screen.height = viewPort.height;
   // //   // //@ts-ignore
   // //   // screen.width = viewPort.width;
   // //   window.outerHeight = viewPort.height - 120;
   // //   window.outerWidth = viewPort.width - 384;
-   
+
   // }, viewPort);
 
   await page.evaluateOnNewDocument(() => {
@@ -410,29 +413,39 @@ const setPageProperties = async (
 
   await new WebGlVendor(graphicCard).onPageCreated(page);
 
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(window, 'Worker', {
-      get: function () {
-        throw new Error('Web Workers are disabled.');
-      },
+  if (javascript?.webWorker === undefined || javascript?.webWorker === 'disabled'){
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'Worker', {
+        get: function () {
+          throw new Error('Web Workers are disabled.');
+        },
+      });
     });
-  });
 
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'serviceWorker', {
-      //@ts-ignore
-      register: function () {
-        return Promise.reject('Service Workers are disabled.');
-      },
+  }
+
+  if (javascript?.serviceWorker === undefined  || javascript?.serviceWorker === 'disabled'){
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'serviceWorker', {
+        //@ts-ignore
+        register: function () {
+          return Promise.reject('Service Workers are disabled.');
+        },
+      });
     });
-  });
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(window, 'SharedWorker', {
-      get: function () {
-        throw new Error('Shared Workers are disabled.');
-      },
+
+  }
+  if (javascript?.sharedWorker === undefined  || javascript?.sharedWorker === 'disabled'){
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'SharedWorker', {
+        get: function () {
+          throw new Error('Shared Workers are disabled.');
+        },
+      });
     });
-  });
+
+  }
+
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(window, 'Websocket', {
       get: function () {
@@ -444,6 +457,7 @@ const setPageProperties = async (
 
 export async function getPage(
   browser: Browser,
+  shop: ShopObject,
   requestCount: number | null,
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
@@ -453,6 +467,7 @@ export async function getPage(
 
   await setPageProperties(
     page,
+    shop,
     exceptions,
     requestCount,
     disAllowedResourceTypes,

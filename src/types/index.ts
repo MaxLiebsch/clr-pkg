@@ -19,6 +19,7 @@ export interface WaitUntil {
 
 export type ActionType =
   | 'button'
+  | 'element'
   | 'input'
   | 'select'
   | 'shadowroot-button'
@@ -28,6 +29,10 @@ export interface BaseAction {
   type: ActionType;
   sel: string;
   name: string;
+}
+
+export interface RemoveAction extends BaseAction {
+  interval: number;
 }
 
 export interface ButtonAction extends BaseAction {
@@ -90,6 +95,7 @@ export interface PaginationEl {
   type: string;
   sel: string;
   nav: string;
+  wait?: boolean;
   initialUrl?: {
     type: string;
     regexp: string;
@@ -138,6 +144,7 @@ export interface ProductList {
   sel: string;
   type: string;
   timeout?: number;
+  awaitProductCntSel?: boolean;
   productsPerPage?: number;
   productCntSel: string[];
   product: IProductSelector;
@@ -152,6 +159,8 @@ export interface IProductSelector {
 export type Content =
   | 'link'
   | 'price'
+  | 'mnfctr'
+  | 'hasMnfctr'
   | 'promoPrice'
   | 'van'
   | 'vendor'
@@ -249,6 +258,8 @@ export interface TargetShop {
   name: string;
 }
 
+export type status = 'enabled' | 'disabled';
+
 export interface ShopObject {
   _id: string;
   mimic?: string;
@@ -257,6 +268,11 @@ export interface ShopObject {
   ne: string; // name
   purlschema: string;
   fetch: boolean; // fetch with get
+  javascript?: {
+    webWorker: status;
+    serviceWorker: status;
+    sharedWorker: status;
+  },
   resourceTypes: {
     query: ResourceTypes[];
     crawl: ResourceTypes[];

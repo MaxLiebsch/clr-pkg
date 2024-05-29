@@ -14,12 +14,12 @@ export const getPageNumberFromPagination = async (
 ) => {
   if (!Object.keys(paginationEl).length)
     return { pages: [], noOfFoundPages: 0 };
-  
+
   let pages: number[] = [];
   const { calculation, type } = paginationEl;
   if (calculation.method === 'button') {
     const pageButtons = await myQuerySelectorAll(page, calculation.sel);
-    if (pageButtons !== 'missing' && pageButtons) {
+    if (pageButtons) {
       pages = new Array(pageButtons.length);
     }
   }
@@ -35,12 +35,8 @@ export const getPageNumberFromPagination = async (
     }
   }
   if (calculation.method === 'count') {
-    const paginationEls = await page.$$(calculation.sel).catch((e) => {
-      if (e instanceof TimeoutError) {
-        return 'missing';
-      }
-    });
-    if (paginationEls !== 'missing' && paginationEls) {
+    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+    if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
         const paginationEl = paginationEls[index];
@@ -57,12 +53,8 @@ export const getPageNumberFromPagination = async (
   }
 
   if (calculation.method === 'match_text' && calculation.textToMatch) {
-    const paginationEls = await page.$$(calculation.sel).catch((e) => {
-      if (e instanceof TimeoutError) {
-        return 'missing';
-      }
-    });
-    if (paginationEls !== 'missing' && paginationEls) {
+    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+    if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
         const paginationEl = paginationEls[index];
@@ -77,12 +69,8 @@ export const getPageNumberFromPagination = async (
   }
 
   if (calculation.method === 'find_highest') {
-    const paginationEls = await page.$$(calculation.sel).catch((e) => {
-      if (e instanceof TimeoutError) {
-        return 'missing';
-      }
-    });
-    if (paginationEls !== 'missing' && paginationEls) {
+    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+    if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
         const paginationEl = paginationEls[index];

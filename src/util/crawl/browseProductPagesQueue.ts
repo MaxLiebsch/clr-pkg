@@ -1,5 +1,10 @@
 import { Page } from 'puppeteer1';
-import { scrollToBottom } from '../helpers';
+import {
+  clickBtn,
+  deleteElementFromPage,
+  scrollToBottom,
+  waitForSelector,
+} from '../helpers';
 import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
 import { ICategory } from '../crawl/getCategories';
 import { StatService, SubCategory } from '../fs/stats';
@@ -36,7 +41,7 @@ export async function browseProductPagesQueue(
     query,
     queue,
     productCount,
-  } = request; 
+  } = request;
   const statService = StatService.getSingleton(shop.d);
   let category: SubCategory = {
     link: '',
@@ -47,7 +52,27 @@ export async function browseProductPagesQueue(
     category = statService.get(productPagePath);
   }
   const scanShop = category && productPagePath;
+  const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
+
+  if (shop.crawlActions && shop.crawlActions.length > 0) {
+    for (let i = 0; i < shop.crawlActions.length; i++) {
+      const action = shop.crawlActions[i];
+      if (
+        action.type === 'element' &&
+        'action' in action &&
+        action.action === 'delete' &&
+        'interval' in action
+      ) {
+        timeouts.push(
+          setInterval(
+            async () => await deleteElementFromPage(page, action.sel),
+            action.interval as number,
+          ),
+        );
+      }
+    }
+  }
 
   let { pagination, paginationEl } = await findPagination(
     page,
@@ -55,9 +80,8 @@ export async function browseProductPagesQueue(
     limit,
   );
 
-  if (pagination !== 'missing' && pagination) {
-    const { type } = paginationEl;
-
+  if (pagination) {
+    const { type, sel, wait } = paginationEl;
     if (type === 'pagination') {
       let initialpageurl = page.url();
       if (paginationEl.initialUrl) {
@@ -130,6 +154,7 @@ export async function browseProductPagesQueue(
               pageInfo,
               scanShop ? productPagePath : undefined,
             ).finally(() => {
+              timeouts.forEach((timeout) => clearInterval(timeout));
               closePage(page).then();
             });
           } else {
@@ -162,12 +187,12 @@ export async function browseProductPagesQueue(
             });
           }
           if (i === noOfPages - 1) {
+            timeouts.forEach((timeout) => clearInterval(timeout));
             await closePage(page);
           }
         }
       }
-    } else {
-      // type === 'infinite_scroll'
+    } else if (type === 'infinite_scroll') {
       addPageCountAndPushSubPages(category, productPagePath, pageInfo);
       const scrolling = await scrollToBottom(page);
       if (scrolling === 'finished') {
@@ -179,9 +204,33 @@ export async function browseProductPagesQueue(
           pageInfo,
           scanShop ? productPagePath : undefined,
         ).finally(() => {
+          timeouts.forEach((timeout) => clearInterval(timeout));
           closePage(page).then();
         });
       }
+    } else if (type === 'recursive-more-button') {
+      let exists = true;
+      let cnt = 0;
+      while (exists && cnt <= limit.pages) {
+        cnt++;
+        const btn = await waitForSelector(page, sel, undefined, true);
+        if (btn) {
+          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+        } else {
+          exists = false;
+        }
+      }
+      await crawlProducts(
+        page,
+        shop,
+        1,
+        addProduct,
+        pageInfo,
+        scanShop ? productPagePath : undefined,
+      ).finally(() => {
+        timeouts.forEach((timeout) => clearInterval(timeout));
+        closePage(page).then();
+      });
     }
   } else {
     addPageCountAndPushSubPages(category, productPagePath, pageInfo);
@@ -193,6 +242,7 @@ export async function browseProductPagesQueue(
       pageInfo,
       scanShop ? productPagePath : undefined,
     ).finally(() => {
+      timeouts.forEach((timeout) => clearInterval(timeout));
       closePage(page).then();
     });
   }

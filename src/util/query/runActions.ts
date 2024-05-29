@@ -1,6 +1,7 @@
 import { Page } from 'puppeteer1';
 import { ShopObject } from '../../types';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
+import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
 
 export async function runActions(page: Page, shop: ShopObject) {
   const { actions, waitUntil } = shop;
@@ -35,8 +36,12 @@ export async function runActions(page: Page, shop: ShopObject) {
         );
       }
       if (type === 'recursive-button' && 'waitDuration' in action) {
-        let exists = true;
-        while (exists) {
+        let safeguard = 0;
+        while (true) {
+          safeguard++;
+          if (safeguard >= RECURSIVE_BUTTON_SAFEGUARD) {
+            break;
+          }
           const btn = await waitForSelector(
             page,
             action.sel,
@@ -52,7 +57,7 @@ export async function runActions(page: Page, shop: ShopObject) {
               undefined,
             );
           } else {
-            exists = false;
+            break;
           }
         }
       }

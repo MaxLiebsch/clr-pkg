@@ -5,6 +5,7 @@ import { paginationUrlBuilder } from './paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
+import { myQuerySelectorAll } from '../helpers';
 
 export const crawlProductsQueue = async (
   page: Page,
@@ -41,12 +42,8 @@ export const crawlProductsQueue = async (
 
     for (let index = 0; index < productList.length; index++) {
       const { product } = productList[index];
-      const productEls = await page.$$(product.sel).catch((e) => {
-        if (e instanceof TimeoutError) {
-          return 'missing';
-        }
-      });
-      if (productEls !== 'missing' && productEls) {
+      const productEls = await myQuerySelectorAll(page, product.sel); 
+      if (productEls) {
         hasProducts = true;
       }
     }

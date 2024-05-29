@@ -1,8 +1,9 @@
-import { Page, TimeoutError } from 'puppeteer1';
+import { Page } from 'puppeteer1';
 import { ShopObject } from '../../types';
 import {
   cleanUpHTML,
   extractPart,
+  myQuerySelectorAll,
   nestedProductName,
   slug,
   waitForSelector,
@@ -43,173 +44,174 @@ export const crawlProducts = async (
   const { productList } = shop;
   for (let index = 0; index < productList.length; index++) {
     const { sel, product, timeout } = productList[index];
-    const selector = await waitForSelector(page, sel, timeout?? 5000, false);
+    const selector = await waitForSelector(page, sel, timeout ?? 5000, false);
+    if (!selector) continue;
 
-    if (selector) {
-      const productEls = await page.$$(product.sel).catch((e) => {
-        if (e instanceof TimeoutError) {
-          return 'missing';
-        }
-      });
-      if (productEls !== 'missing' && productEls) {
-        if (scanShop) {
-          delete productPage.missing;
-          productPage['offset'] = (pageNo - 1) * productEls.length;
-        }
-        const { type, details } = product;
-        for (let i = 0; i < productEls.length; i++) {
-          const productEl = productEls[i];
-          const category: string[] = [];
-          if (pageInfo.entryCategory) {
-            category.push(pageInfo.entryCategory);
+    const productEls = await myQuerySelectorAll(page, product.sel);
+    if (!productEls) continue;
+
+    if (scanShop) {
+      delete productPage.missing;
+      productPage['offset'] = (pageNo - 1) * productEls.length;
+    }
+    const { type, details } = product;
+    for (let i = 0; i < productEls.length; i++) {
+      const productEl = productEls[i];
+      const category: string[] = [];
+      if (pageInfo.entryCategory) {
+        category.push(pageInfo.entryCategory);
+      }
+      if (pageInfo.name) {
+        category.push(pageInfo.name);
+      }
+
+      let proprietaryProducts: null | string = null;
+      const product: ProductRecord = {
+        link: '',
+        image: '',
+        shop: shop.d,
+        category,
+        name: '',
+        van: '',
+        vendor: '',
+        mnfctr: '',
+        hasMnfctr: false,
+        price: '',
+        promoPrice: '',
+        year: '',
+        prime: false,
+        description: '',
+        nameSub: '',
+        redirect_link: '',
+        vendorLink: '',
+      };
+
+      if (type === 'link') {
+        const href = await productEl
+          .evaluate((el) => el.getAttribute('href'))
+          .catch((e) => {});
+        if (href) {
+          if (href?.startsWith('https://')) {
+            product.link = href;
+          } else {
+            product.link = 'https://' + shop.d + href;
           }
-          if (pageInfo.name) {
-            category.push(pageInfo.name);
-          }
-
-          const product: ProductRecord = {
-            link: '',
-            image: '',
-            shop: shop.d,
-            category,
-            name: '',
-            van: '',
-            vendor: '',
-            price: '',
-            promoPrice: '',
-            year: '',
-            prime: false,
-            description: '',
-            nameSub: '',
-            redirect_link: '',
-            vendorLink: '',
-          };
-
-          if (type === 'link') {
-            const href = await productEl
-              .evaluate((el) => el.getAttribute('href'))
-              .catch((e) => {});
-            if (href) {
-              if (href?.startsWith('https://')) {
-                product.link = href;
-              } else {
-                product.link = 'https://' + shop.d + href;
-              }
-            }
-          }
-          let proprietaryProducts: null | string = null;
-
-          for (const index in details) {
-            const detail = details[index];
-
-            if (detail?.proprietaryProducts)
-              proprietaryProducts = detail.proprietaryProducts;
-
-            const { sel, type, content } = detail;
-            if (type === 'text') {
-              const el = await productEl
-                .$eval(sel, (i) => {
-                  const innerText = (i as HTMLElement).innerText.trim();
-                  if (innerText !== '') {
-                    return innerText;
-                  } else {
-                    const innerHTML = (i as HTMLElement).innerHTML;
-                    return innerHTML;
-                  }
-                })
-                .catch((e) => {});
-              if (el) {
-                let foundEl = el;
-                if (content === 'price') {
-                  foundEl = foundEl.replace(/\s/g, '');
-                }
-                if (content === 'image' && 'regexp' in detail) {
-                  foundEl = extractPart(
-                    foundEl,
-                    detail.regexp!,
-                    detail?.extractPart ?? 1,
-                  );
-                }
-                product[content] = cleanUpHTML(foundEl);
-              }
-            } else if (type === 'nested') {
-              const name = await nestedProductName(productEl, detail);
-              if (name) {
-                product[content] = name;
-              }
-            } else if (type === 'exist') {
-              const el = await productEl
-                .$eval(sel, (i, type) => i, type)
-                .catch((e) => {});
-              if (el) {
-                product[content] = true;
-              } else {
-                product[content] = false;
-              }
-            } else if (
-              type === 'parse_json' &&
-              'key' in detail &&
-              'attr' in detail &&
-              'urls' in detail &&
-              'redirect_regex' in detail
-            ) {
-              const { key, attr, urls, redirect_regex } = detail;
-              try {
-                const el = await productEl
-                  .$eval(sel, (i, attr) => i.getAttribute(attr!), attr)
-                  .catch((e) => {});
-                if (el) {
-                  const parsed = JSON.parse(el);
-                  const value = parsed[key!];
-                  if (value) {
-                    const redirect = new RegExp(redirect_regex!);
-                    if (redirect.test(value)) {
-                      product[content] = urls.redirect.replace('<key>', value);
-                    } else {
-                      product[content] = urls.default + value;
-                    }
-                  }
-                }
-              } catch (error) {
-                console.error('error:', error);
-              }
-            } else {
-              const el = await productEl
-                .$eval(sel, (i, type) => i.getAttribute(type), type)
-                .catch((e) => {});
-              if (el) {
-                let foundAttr = el;
-                if (type === 'href' || type === 'src' || type === 'srcset') {
-                  if ('regexp' in detail && 'baseUrl' in detail) {
-                    const regexp = new RegExp(detail.regexp!);
-                    if (regexp.test(foundAttr)) {
-                      const match = foundAttr.match(regexp);
-                      if (match) {
-                        foundAttr = detail.baseUrl + match[0].trim();
-                      }
-                    }
-                  }
-                  product[content] = prefixLink(foundAttr, shop.d);
-                } else {
-                  product[content] = foundAttr;
-                }
-              }
-            }
-          }
-
-          if (shop?.ece && shop.ece.length) {
-            product.link = removeRandomKeywordInURL(
-              product.link as string,
-              shop.ece,
-            );
-          }
-          if (proprietaryProducts) {
-            product.name = proprietaryProducts + ' ' + product.name;
-          }
-          await addProductCb(product);
         }
       }
-      break;
+
+      for (const index in details) {
+        const detail = details[index];
+
+        if (detail?.proprietaryProducts)
+          proprietaryProducts = detail.proprietaryProducts;
+
+        const { sel, type, content } = detail;
+        if (type === 'text') {
+          const el = await productEl
+            .$eval(sel, (i) => {
+              const innerText = (i as HTMLElement).innerText.trim();
+              if (innerText !== '') {
+                return innerText;
+              } else {
+                const innerHTML = (i as HTMLElement).innerHTML;
+                return innerHTML;
+              }
+            })
+            .catch((e) => {});
+          if (el) {
+            let foundEl = el;
+            if (content === 'price') {
+              foundEl = foundEl.replace(/\s/g, '');
+            }
+            if (content === 'image' && 'regexp' in detail) {
+              foundEl = extractPart(
+                foundEl,
+                detail.regexp!,
+                detail?.extractPart ?? 1,
+              );
+            }
+            product[content] = cleanUpHTML(foundEl);
+          }
+        } else if (type === 'nested') {
+          const name = await nestedProductName(productEl, detail);
+          if (name) {
+            product[content] = name;
+          }
+        } else if (type === 'exist') {
+          const el = await productEl
+            .$eval(sel, (i, type) => i, type)
+            .catch((e) => {});
+          if (el) {
+            product[content] = true;
+          } else {
+            product[content] = false;
+          }
+        } else if (
+          type === 'parse_json' &&
+          'key' in detail &&
+          'attr' in detail &&
+          'urls' in detail &&
+          'redirect_regex' in detail
+        ) {
+          const { key, attr, urls, redirect_regex } = detail;
+          try {
+            const el = await productEl
+              .$eval(sel, (i, attr) => i.getAttribute(attr!), attr)
+              .catch((e) => {});
+            if (el) {
+              const parsed = JSON.parse(el);
+              const value = parsed[key!];
+              if (value) {
+                const redirect = new RegExp(redirect_regex!);
+                if (redirect.test(value)) {
+                  product[content] = urls.redirect.replace('<key>', value);
+                } else {
+                  product[content] = urls.default + value;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('error:', error);
+          }
+        } else {
+          const el = await productEl
+            .$eval(sel, (i, type) => i.getAttribute(type), type)
+            .catch((e) => {});
+          if (el) {
+            let foundAttr = el;
+            if (type === 'href' || type === 'src' || type === 'srcset') {
+              if ('regexp' in detail && 'baseUrl' in detail) {
+                const regexp = new RegExp(detail.regexp!);
+                if (regexp.test(foundAttr)) {
+                  const match = foundAttr.match(regexp);
+                  if (match) {
+                    foundAttr = detail.baseUrl + match[0].trim();
+                  }
+                }
+              }
+              product[content] = prefixLink(foundAttr, shop.d);
+            } else {
+              product[content] = foundAttr;
+            }
+          }
+        }
+      }
+      // Remove random keywords from the URL
+      if (shop?.ece && shop.ece.length) {
+        product.link = removeRandomKeywordInURL(
+          product.link as string,
+          shop.ece,
+        );
+      }
+      // Add proprietary products to the name
+      if (proprietaryProducts) {
+        product.name = proprietaryProducts + ' ' + product.name;
+      }
+      // If the product has a manufacturer, set the hasMnfctr flag to true
+      if (product.mnfctr) {
+        product.hasMnfctr = true;
+      }
+      await addProductCb(product);
     }
   }
   scanShop && statService.set(path, productPage);

@@ -8,7 +8,7 @@ import { closePage } from '../../util/browser/closePage';
 import { CrawlerRequest, QueryRequest } from '../../types/query-request';
 import { prefixLink } from '../../util/matching/compare_helper';
 import { getPage } from '../../util/browser/getPage';
-import { checkForBlockingSignals } from '../queue/checkPageHealth';
+import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
 import crypto from 'crypto';
@@ -329,6 +329,7 @@ export abstract class BaseQueue<T extends CrawlerRequest | QueryRequest> {
     try {
       page = await getPage(
         this.browser!,
+        shop,
         this.requestCount,
         resourceTypes?.query,
         shop.exceptions,

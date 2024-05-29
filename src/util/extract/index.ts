@@ -489,6 +489,7 @@ export const getProductInfoWithBrowser = async (
 
   const page = await getPage(
     browserInfo.brs,
+    shopObject,
     null,
     shopObject.resourceTypes['query'],
     shopObject.exceptions,

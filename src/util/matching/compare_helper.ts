@@ -75,13 +75,21 @@ export const segmentFoundProds = (candidates: Product[]) =>
 export function prefixLink(src: string, shopDomain: string) {
   if (!src || src === '') return '';
 
-  if (!src.startsWith('https://')) {
-    return 'https://www.' + shopDomain + src;
+  let newSrc = src;
+
+  newSrc = newSrc.replaceAll(/[\n\r\t]/g, '');
+  
+  if(newSrc.startsWith('//')) {
+    return 'https:' + newSrc;
   }
-  if (src.startsWith('https://' + shopDomain)) {
-    return src.replace(shopDomain, `www.${shopDomain}`);
+
+  if (!newSrc.startsWith('https://')) {
+    return 'https://www.' + shopDomain + newSrc;
   }
-  return src;
+  if (newSrc.startsWith('https://' + shopDomain)) {
+    return newSrc.replace(shopDomain, `www.${shopDomain}`);
+  }
+  return newSrc;
 }
 
 export function getManufacturer(src: string) {
@@ -130,7 +138,7 @@ export const getNumbers = (str: string) => {
 };
 
 export const getNumber = (priceStr: string) => {
-  const match = priceStr.match(/\d+(?=\s*\w*$)/g);
+  const match = priceStr.match(/(\d+(?=\s*\w*$)|\d+)/g);
   if (match) {
     if (match.length === 2) {
       return parseInt(match[1].replace(/[.,]/, ''));
@@ -208,7 +216,7 @@ export const findBestMatch = (
         score++;
       }
     });
-    
+
     if (product.nameSegments.includes(mnfctr.toLowerCase())) {
       score += 2;
     }
@@ -300,7 +308,8 @@ export function reduceString(str: string, limit: number) {
     .replaceAll(/([\b\r\n]|\\r|\\b|\\n)/g, ' ')
     .replaceAll(/[\\(\\)]/g, '')
     .replaceAll(/[,&@:]/g, ' ')
-    .replaceAll(/ +/g, ' ').trim();
+    .replaceAll(/ +/g, ' ')
+    .trim();
 
   // Check if the string is already within the limit
   if (query.length <= limit) return query;

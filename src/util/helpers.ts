@@ -45,12 +45,24 @@ export async function filter(arr: any[], callback: Function) {
 
 //Puppeteer
 
-export const myQuerySelectorAll = async (page: Page, sel: string) =>
-  page.$$(sel).catch((e) => {
-    if (e instanceof TimeoutError) {
-      return 'missing';
-    }
-  });
+export const myQuerySelectorAll = async (page: Page, sel: string) => {
+  try {
+    return await page.$$(sel);
+  } catch (error) {
+    return null;
+  }
+};
+
+export const myQuerySelectorAll2 = async (page: Page, sel: string) =>
+  page
+    .evaluate((sel) => {
+      return document.querySelectorAll(sel);
+    }, sel)
+    .catch((e) => {
+      if (e instanceof TimeoutError) {
+        return 'missing';
+      }
+    });
 
 export function extractPart(str: string, pattern: string, part: number) {
   const regex = new RegExp(pattern);
@@ -105,17 +117,37 @@ export const getProductCount = async (
   productList: ProductList[],
 ) => {
   if (productList.length) {
-    const { productCntSel, productsPerPage } = productList[0];
+    const { productCntSel, productsPerPage, awaitProductCntSel } =
+      productList[0];
     if (productCntSel.length) {
-      for (let index = 0; index < productCntSel.length; index++) {
-        const selector = productCntSel[index];
-        const productCnt = await getInnerText(page, selector);
-        if (productCnt) {
-          const cnt = getNumber(productCnt);
-          if (productsPerPage && cnt) {
-            return cnt * productsPerPage;
-          } else {
-            return cnt;
+      if (awaitProductCntSel) {
+        for (let index = 0; index < productCntSel.length; index++) {
+          const selector = productCntSel[index];
+          const handle = await waitForSelector(page, selector, 5000, false);
+
+          if (!handle) continue;
+
+          const productCnt = await getElementHandleInnerText(handle);
+          if (productCnt) {
+            const cnt = getNumber(productCnt);
+            if (productsPerPage && cnt) {
+              return cnt * productsPerPage;
+            } else {
+              return cnt;
+            }
+          }
+        }
+      } else {
+        for (let index = 0; index < productCntSel.length; index++) {
+          const selector = productCntSel[index];
+          const productCnt = await getInnerText(page, selector);
+          if (productCnt) {
+            const cnt = getNumber(productCnt);
+            if (productsPerPage && cnt) {
+              return cnt * productsPerPage;
+            } else {
+              return cnt;
+            }
           }
         }
       }
@@ -146,10 +178,10 @@ export const clickBtn = async (
         page.waitForNavigation({
           waitUntil: waitUntil ? waitUntil.product : 'networkidle2',
         }),
-        page.click(sel).catch((e) => console.log(e.message)),
+        page.click(sel).catch((e) => {}),
       ]);
     } else {
-      await page.click(sel).catch((e) => console.log(e.message));
+      await page.click(sel).catch((e) => {});
       if (waitDuration) {
         await new Promise((r) => setTimeout(r, waitDuration));
       }
@@ -221,12 +253,28 @@ export const getInnerText = async (page: Page, sel: string) => {
         return null;
       }
     }, sel)
-    .catch((e) => {});
+    .catch((e) => {
+      console.log(e);
+    });
   if (typeof result === 'string') {
     return cleanUpHTML(result);
   } else {
     return null;
   }
+};
+
+export const deleteElementFromPage = async (page: Page, sel: string) => {
+  await page
+    .evaluate((sel) => {
+      const element = document.querySelector(sel);
+      if (element) {
+        element.remove();
+        return 'removed';
+      } else {
+        return 'missing';
+      }
+    }, sel)
+    .catch((e) => {});
 };
 
 export const getElementHandleInnerText = async (

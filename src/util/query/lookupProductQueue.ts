@@ -1,7 +1,7 @@
 import { Page, TimeoutError } from 'puppeteer1';
 import {
   getElementHandleInnerText,
-  getInnerText,
+  myQuerySelectorAll,
   waitForSelector,
 } from '../helpers';
 import { closePage } from '../browser/closePage';
@@ -85,23 +85,10 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     if (selector) {
       if (type === 'table' && 'th' in productInfo && 'td' in productInfo) {
         const { th, td } = productInfo;
-        const keyHandles = await page.$$(th).catch((e) => {
-          if (e instanceof TimeoutError) {
-            return 'missing';
-          }
-        });
-        const valueHandles = await page.$$(td).catch((e) => {
-          if (e instanceof TimeoutError) {
-            return 'missing';
-          }
-        });
+        const keyHandles = await myQuerySelectorAll(page, th);
+        const valueHandles = await myQuerySelectorAll(page, td);
 
-        if (
-          keyHandles !== 'missing' &&
-          keyHandles &&
-          valueHandles &&
-          valueHandles !== 'missing'
-        ) {
+        if (keyHandles && valueHandles)
           for (let i = 0; i < keyHandles.length; i++) {
             let valueText = '';
             const key = keyHandles[i];
@@ -119,7 +106,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
               });
             }
           }
-        }
       }
 
       if (
@@ -128,12 +114,9 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
         'seperator' in productInfo
       ) {
         const { listItem, seperator } = productInfo;
-        const listItemHandles = await page.$$(listItem).catch((e) => {
-          if (e instanceof TimeoutError) {
-            return 'missing';
-          }
-        });
-        if (listItemHandles && listItemHandles !== 'missing') {
+        const listItemHandles = await myQuerySelectorAll(page, listItem);
+
+        if (listItemHandles)
           for (let i = 0; i < listItemHandles.length; i++) {
             const listItemHandle = listItemHandles[i];
             const innerText = await getElementHandleInnerText(listItemHandle);
@@ -147,7 +130,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
               }
             }
           }
-        }
       }
       if (productDetails) {
         const pageParser = new PageParser(shop.d, []);

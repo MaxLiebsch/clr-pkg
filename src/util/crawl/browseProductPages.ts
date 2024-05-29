@@ -1,17 +1,21 @@
 import { Page } from 'puppeteer1';
 import { Limit, ShopObject } from '../../types';
-import { scrollToBottom } from '../helpers';
+import {
+  clickBtn,
+  deleteElementFromPage,
+  scrollToBottom,
+  waitForSelector,
+} from '../helpers';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { ProductRecord } from '../../types/product';
 import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
 import { Query } from '../../types/query';
 import { ICategory } from '../crawl/getCategories';
 import { StatService, SubCategory } from '../fs/stats';
-import { checkForBlockingSignals } from '../../util.services/queue/checkPageHealth';
+import { checkForBlockingSignals } from '../../util.services/queue/checkForBlockingSignals';
 import { closePage } from '../browser/closePage';
 import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
-import { LoggerService } from '../logger';
 
 const addPageCountAndPushSubPages = (
   category: SubCategory | null,
@@ -59,18 +63,35 @@ export async function browseProductpages(
     category = statService.get(productPagePath);
   }
   const scanShop = category && productPagePath;
+  const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
 
-  let pages: number[] = [];
   let { pagination, paginationEl } = await findPagination(
     page,
     paginationEls,
     limit,
   );
-  const limitPages = limit?.pages ? limit?.pages : 0;
+  const limitPages = limit?.pages ? limit?.pages : 1;
 
-  if (pagination !== 'missing' && pagination && limitPages > 0) {
-    const { calculation, type } = paginationEl;
+  if (shop.crawlActions && shop.crawlActions.length > 0) {
+    for (let i = 0; i < shop.crawlActions.length; i++) {
+      const action = shop.crawlActions[i];
+      if (
+        action.type === 'element' &&
+        'action' in action &&
+        action.action === 'delete' &&
+        'interval' in action
+      ) {
+        timeouts.push(setInterval(
+          async () => await deleteElementFromPage(page, action.sel),
+          action.interval as number,
+        ));
+      }
+    }
+  }
+
+  if (pagination && limitPages > 0) {
+    const { calculation, type, sel, wait } = paginationEl;
 
     if (type === 'pagination') {
       const initialpageurl = page.url();
@@ -166,12 +187,13 @@ export async function browseProductpages(
             }
           }
           if (i === noOfPages - 1) {
+            timeouts.forEach((timeout) => clearInterval(timeout));
             await closePage(page);
           }
         }
         return 'crawled';
       }
-    } else {
+    } else if (type === 'infinite_scroll') {
       // type === 'infinite_scroll'
       addPageCountAndPushSubPages(category, productPagePath, pageInfo);
       const scrolling = await scrollToBottom(page);
@@ -186,6 +208,29 @@ export async function browseProductpages(
         );
         return 'crawled';
       }
+    } else if (type === 'recursive-more-button') {
+      let exists = true;
+      let cnt = 0;
+      while (exists && cnt <= limitPages) {
+        cnt++;
+        const btn = await waitForSelector(page, sel, undefined, true);
+        if (btn) {
+          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+        } else {
+          exists = false;
+        }
+      }
+      await crawlProducts(
+        page,
+        shop,
+        1,
+        addProductCb,
+        pageInfo,
+        scanShop ? productPagePath : undefined,
+      ).finally(() => {
+        timeouts.forEach((timeout) => clearInterval(timeout));
+        closePage(page).then();
+      });
     }
   } else {
     addPageCountAndPushSubPages(category, productPagePath, pageInfo);

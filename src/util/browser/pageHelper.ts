@@ -1,5 +1,11 @@
 import { Rule } from '../../types/rules';
 
+/**
+ * Checks if a request should be aborted based on the provided rules.
+ * @param requestUrl - The URL of the request.
+ * @param rules - An array of rules to check against.
+ * @returns A boolean indicating whether the request should be aborted.
+ */
 export function shouldAbortRequest(requestUrl: string, rules: Rule[] | undefined) {
   if(!rules) return false;
   

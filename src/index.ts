@@ -40,12 +40,18 @@ export * from './util/query/matchTargetShopProdsWithRawProd';
 //QUEUE
 export * from './util.services/queue/CrawlerQueue';
 export * from './util.services/queue/QueryQueue';
+export * from './util.services/queue/checkForBlockingSignals';
 
 // CRAWL
 export * from './util.services/crawl/crawlShop';
 export * from './util.services/crawl/crawlSubpage'
 export * from './util/crawl/browseProductPages';
 export * from './util/crawl/paginationURLBuilder';
+export * from './util/crawl/getCategories';
+export * from './util/crawl/getPageNumberFromPagination';
+export * from './util/crawl/findPagination';
+export * from './util/crawl/crawlProducts';
+export * from './util/crawl/browseProductPagesQueue';
 
 
 

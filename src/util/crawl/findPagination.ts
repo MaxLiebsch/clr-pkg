@@ -9,7 +9,7 @@ const findPagination = async (
 ) => {
   if (!paginationEls.length || limit?.pages === 0)
     return {
-      pagination: 'missing',
+      pagination: null,
       paginationEl: {} as PaginationEl,
     };
   let pagination: ElementHandle<Element> | null = null;
