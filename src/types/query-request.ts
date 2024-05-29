@@ -6,6 +6,7 @@ import { CrawlerQueue } from '../util.services/queue/CrawlerQueue';
 import { ProductRecord } from './product';
 import { Query } from './query';
 import { ScanQueue } from '../util.services/queue/ScanQueue';
+import { Infos } from './Infos';
 
 export interface QRequest {
   prio: number;
@@ -16,6 +17,7 @@ export interface QRequest {
 
 export interface ScanRequest extends QRequest {
   parentPath: string;
+  infos: Infos;
   queue: ScanQueue;
   categoriesHeuristic: {
     subCategories: {

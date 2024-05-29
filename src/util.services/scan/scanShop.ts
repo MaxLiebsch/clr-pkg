@@ -8,7 +8,7 @@ import { ScanRequest } from '../../types/query-request';
 import { scanSubpageLoop } from './scanSubpageLoop';
 
 export const scanShop = async (page: Page, request: ScanRequest) => {
-  const { pageInfo, shop, queue, parentPath } = request;
+  const { pageInfo, shop, queue, parentPath, infos } = request;
   const { categories, d } = shop;
   const statService = StatService.getSingleton(d);
 
@@ -26,9 +26,12 @@ export const scanShop = async (page: Page, request: ScanRequest) => {
       categLinks.push(...foundCategories);
     }
   }
+  
+  
   const cntCategs = categLinks.length;
-
+  
   if (cntCategs) {
+    infos.total += cntCategs;
     const subcategories = transformCategories(
       categLinks.filter((pageInfo) => !queue.linkExists(pageInfo.link)),
     );
