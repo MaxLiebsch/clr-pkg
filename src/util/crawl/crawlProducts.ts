@@ -11,6 +11,7 @@ import { ProductRecord } from '../../types/product';
 import { ICategory } from './getCategories';
 import { prefixLink } from '../matching/compare_helper';
 import { removeRandomKeywordInURL } from '../sanitize';
+import parsePrice from 'parse-price'
 
 export const crawlProducts = async (
   page: Page,
@@ -56,7 +57,7 @@ export const crawlProducts = async (
         vendor: '',
         mnfctr: '',
         hasMnfctr: false,
-        price: '',
+        price: 0,
         promoPrice: '',
         year: '',
         prime: false,
@@ -175,6 +176,9 @@ export const crawlProducts = async (
             }
           }
         }
+      }
+      if(product.price !== ''){
+        product.price = parsePrice(product.price)
       }
       // Remove random keywords from the URL
       if (shop?.ece && shop.ece.length) {

@@ -31,7 +31,7 @@ export interface SrcProductDetails {
   mnfctr: string;
 }
 
-export type ProductRecord = Record<Content, string | boolean | Array<string>>;
+export type ProductRecord = Record<Content, string | boolean | Array<string> | number>;
 
 export interface DbProduct {
   s: string;
