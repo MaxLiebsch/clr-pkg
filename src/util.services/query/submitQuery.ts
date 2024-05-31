@@ -1,8 +1,10 @@
 import { Page } from 'puppeteer1';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../../util/helpers';
-import { QueryAction, WaitUntil } from '../../types';
+
 import { Brand, Model, Product, Query } from '../../types/query';
 import { get } from 'underscore';
+import { QueryAction } from '../../types/queryActions';
+import { WaitUntil } from '../../types/shop';
 
 export async function submitQuery(
   page: Page,

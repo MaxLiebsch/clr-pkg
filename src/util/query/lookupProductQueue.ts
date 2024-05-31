@@ -1,14 +1,13 @@
-import { Page, TimeoutError } from 'puppeteer1';
+import { Page } from 'puppeteer1';
 import {
   getElementHandleInnerText,
   myQuerySelectorAll,
   waitForSelector,
 } from '../helpers';
 import { closePage } from '../browser/closePage';
-import { getPrice } from '../matching/compare_helper';
-import parsePrice from 'parse-price';
-import { QueryRequest } from '../../types/query-request';
+import {  QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
+import { safeParsePrice } from '../safeParsePrice';
 
 const de_bsrRegex =
   /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
@@ -148,13 +147,13 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     const cleanedProductInfo = rawProductInfos.map((rawInfo) => {
       const { key, value } = rawInfo;
       if (key.includes('Rang') || key.includes('Bestseller')) {
-        return { key: 'bsr', value: splitNumberAndCategory(value, 'de') };
+        return { key: 'bsr', value: splitNumberAndCategory(value, 'de') ?? '' };
       }
       if (key.includes('Rank') || key.includes('BestSeller')) {
-        return { key: 'bsr', value: splitNumberAndCategory(value, 'en') };
+        return { key: 'bsr', value: splitNumberAndCategory(value, 'en') ?? '' };
       }
       if (key === 'a_prc') {
-        return { key, value: parsePrice(getPrice(value)) };
+        return { key, value: safeParsePrice(value) as any };
       }
       if (key.toLowerCase().includes('asin')) {
         return { key: key.toLowerCase(), value };

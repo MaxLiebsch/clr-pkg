@@ -1,12 +1,9 @@
 import { Page } from 'puppeteer1';
-import { Categories } from '../../types';
 import {
   extractCategoryNameAndCapitalize,
-  getElementHandleAttribute2,
   getElementHandleInnerText,
   makeSuitableObjectKey,
   myQuerySelectorAll,
-  myQuerySelectorAll2,
   waitForSelector,
 } from '../helpers';
 import {
@@ -19,6 +16,7 @@ import { prefixLink } from '../matching/compare_helper';
 import findSubCategories from './findSubCategories';
 import { CrawlerRequest, ScanRequest } from '../../types/query-request';
 import { ScanQueue } from '../../util.services/queue/ScanQueue';
+import { extractAttributeElementHandle } from '../extract/extractAttributeFromHandle';
 
 export interface ICategory {
   name: string;
@@ -68,7 +66,7 @@ export const getCategories = async (
             break;
         }
         for (let index = 0; index < categories.length; index++) {
-          const categoryLink = await getElementHandleAttribute2(
+          const categoryLink = await extractAttributeElementHandle(
             categories[index],
             type,
           );
@@ -120,7 +118,7 @@ export const getCategories = async (
       if (categories) {
         request.categoriesHeuristic.mainCategories = categories.length;
         for (let index = 0; index < categories.length; index++) {
-          const categoryLink = await getElementHandleAttribute2(
+          const categoryLink = await extractAttributeElementHandle(
             categories[index],
             type,
           );

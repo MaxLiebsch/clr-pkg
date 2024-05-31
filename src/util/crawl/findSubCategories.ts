@@ -1,6 +1,7 @@
 import { ElementHandle, Page } from 'puppeteer1';
-import { Limit, SubCategoriesSel } from '../../types';
+import { Limit,} from '../../types';
 import { waitForSelector } from '../helpers';
+import { SubCategoriesSel } from '../../types/categories';
 
 const findSubCategories = async (
   page: Page,

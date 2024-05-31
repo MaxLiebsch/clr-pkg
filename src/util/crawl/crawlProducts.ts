@@ -5,17 +5,26 @@ import {
   extractPart,
   myQuerySelectorAll,
   nestedProductName,
+  removeNestedElementAndReturnText,
   waitForSelector,
 } from '../helpers';
 import { ProductRecord } from '../../types/product';
 import { ICategory } from './getCategories';
 import { prefixLink } from '../matching/compare_helper';
 import { removeRandomKeywordInURL } from '../sanitize';
-import parsePrice from 'parse-price'
+
+import { extractTextFromElementHandle } from '../extract/extractTextFromHandle';
+import {
+  attrFromEleInEleHandle,
+  extractAttributeElementHandle,
+} from '../extract/extractAttributeFromHandle';
+import { get } from 'lodash';
+import { safeJSONParse } from '../extract/saveParseJSON';
+import { safeParsePrice } from '../safeParsePrice';
 
 export const crawlProducts = async (
   page: Page,
-  shop: ShopObject, 
+  shop: ShopObject,
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
 ) => {
@@ -34,7 +43,6 @@ export const crawlProducts = async (
     const productEls = await myQuerySelectorAll(page, product.sel);
     if (!productEls) continue;
 
-  
     const { type, details } = product;
     for (let i = 0; i < productEls.length; i++) {
       const productEl = productEls[i];
@@ -58,7 +66,7 @@ export const crawlProducts = async (
         mnfctr: '',
         hasMnfctr: false,
         price: 0,
-        promoPrice: '',
+        promoPrice: 0,
         year: '',
         prime: false,
         description: '',
@@ -87,18 +95,9 @@ export const crawlProducts = async (
           proprietaryProducts = detail.proprietaryProducts;
 
         const { sel, type, content } = detail;
+
         if (type === 'text') {
-          const el = await productEl
-            .$eval(sel, (i) => {
-              const innerText = (i as HTMLElement).innerText.trim();
-              if (innerText !== '') {
-                return innerText;
-              } else {
-                const innerHTML = (i as HTMLElement).innerHTML;
-                return innerHTML;
-              }
-            })
-            .catch((e) => {});
+          const el = await extractTextFromElementHandle(productEl, sel);
           if (el) {
             let foundEl = el;
             if (content === 'price') {
@@ -115,6 +114,14 @@ export const crawlProducts = async (
           }
         } else if (type === 'nested') {
           const name = await nestedProductName(productEl, detail);
+          if (name) {
+            product[content] = name;
+          }
+        } else if (type === 'nested_remove') {
+          const name = await removeNestedElementAndReturnText(
+            productEl,
+            detail,
+          );
           if (name) {
             product[content] = name;
           }
@@ -135,12 +142,10 @@ export const crawlProducts = async (
           'redirect_regex' in detail
         ) {
           const { key, attr, urls, redirect_regex } = detail;
-          try {
-            const el = await productEl
-              .$eval(sel, (i, attr) => i.getAttribute(attr!), attr)
-              .catch((e) => {});
-            if (el) {
-              const parsed = JSON.parse(el);
+          const el = await attrFromEleInEleHandle(productEl, sel, attr!);
+          if (el) {
+            const parsed = safeJSONParse(el);
+            if (parsed) {
               const value = parsed[key!];
               if (value) {
                 const redirect = new RegExp(redirect_regex!);
@@ -151,13 +156,25 @@ export const crawlProducts = async (
                 }
               }
             }
-          } catch (error) {
-            console.error('error:', error);
+          }
+        } else if (
+          type === 'parse_object_property' &&
+          'key' in detail &&
+          'attr' in detail
+        ) {
+          const { key, attr } = detail;
+          const el = await extractAttributeElementHandle(productEl, attr!);
+          if (el) {
+            const parsed = safeJSONParse(el);
+            if (parsed) {
+              const value = get(parsed, key!, '');
+              if (value) {
+                product[content] = value;
+              }
+            }
           }
         } else {
-          const el = await productEl
-            .$eval(sel, (i, type) => i.getAttribute(type), type)
-            .catch((e) => {});
+          const el = await attrFromEleInEleHandle(productEl, sel, type);
           if (el) {
             let foundAttr = el;
             if (type === 'href' || type === 'src' || type === 'srcset') {
@@ -177,8 +194,12 @@ export const crawlProducts = async (
           }
         }
       }
-      if(product.price !== ''){
-        product.price = parsePrice(product.price)
+      if (product.price !== 0) {
+        product.price = safeParsePrice(product.price); 
+      }
+
+      if (product.promoPrice !== 0) {
+        product.promoPrice = safeParsePrice(product.promoPrice);
       }
       // Remove random keywords from the URL
       if (shop?.ece && shop.ece.length) {
@@ -198,5 +219,4 @@ export const crawlProducts = async (
       await addProductCb(product);
     }
   }
- 
 };

@@ -1,15 +1,15 @@
 import { TargetShop } from '../../types';
 import { CandidateProduct, Product } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
+import { safeParsePrice } from '../safeParsePrice';
 import {
   buildRegexForSiUnits,
   classifyMeasurements,
   levelNormalizedMeasurements,
   numberRegExp,
 } from './normalizeSIUnits';
-import parsePrice from 'parse-price';
 
-const regexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
+export const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
 const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
 const dimensionRegex =
   /(Ø|)(\d+\s*[xX-a]|)\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|Stück|St|kapseln|pixel|)/gi;
@@ -78,8 +78,8 @@ export function prefixLink(src: string, shopDomain: string) {
   let newSrc = src;
 
   newSrc = newSrc.replaceAll(/[\n\r\t]/g, '');
-  
-  if(newSrc.startsWith('//')) {
+
+  if (newSrc.startsWith('//')) {
     return 'https:' + newSrc;
   }
 
@@ -116,7 +116,7 @@ export const cleanString = (src: string) => {
 };
 
 export const getPrice = (priceStr: string) => {
-  const match = priceStr.match(regexp);
+  const match = priceStr.match(priceRegexp);
   if (match) {
     return match[0]
       .replace(regex, '')
@@ -188,7 +188,7 @@ export const findBestMatch = (
   const nameSplit = segmentString(nm);
 
   foundProds.forEach((product, index) => {
-    const curr_prc = parsePrice(product.price);
+    const curr_prc = safeParsePrice(product.price);
     const mrgn = Number((curr_prc - prc).toFixed(2));
     const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
     let score = 0;
@@ -268,7 +268,7 @@ export function calculateArbitrage(
   const { price } = bestMatch;
   const arbitrageInfo: { [key: string]: any } = {};
   const { d: domain, prefix } = targetShop;
-  if (typeof srcPrice === 'number' && typeof price === 'string') {
+  if (typeof srcPrice === 'number' && typeof price === 'number') {
     Object.entries(bestMatch).forEach(([key, value]) => {
       if (['link', 'image', 'name', 'price'].includes(key)) {
         if (key === 'link') {
@@ -282,8 +282,9 @@ export function calculateArbitrage(
         }
       }
     });
-    const bm_prc = parsePrice(price);
 
+    const bm_prc = safeParsePrice(price);
+  
     if (bm_prc && srcPrice) {
       const mrgn = Number((bm_prc - srcPrice).toFixed(2));
       const mrgn_pct = Number(((mrgn / srcPrice) * 100).toFixed(1));

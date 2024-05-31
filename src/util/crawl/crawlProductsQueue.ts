@@ -24,7 +24,7 @@ export const crawlProductsQueue = async (
     initialProductPageUrl,
     queue,
   } = request;
-  const { productList, paginationEl: paginationEls } = shop;
+  const { paginationEl: paginationEls } = shop;
 
   const paginationEl = shop.paginationEl[0];
   const lastPage = pageNo === noOfPages;

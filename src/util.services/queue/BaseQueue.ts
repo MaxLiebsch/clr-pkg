@@ -317,6 +317,8 @@ export abstract class BaseQueue<
     request: T,
     id: string,
   ): Promise<WrapperFunctionResponse> {
+    if (this.taskFinished) return;
+
     const { retries } = request;
     if (retries > MAX_RETRIES) {
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;

@@ -1,22 +1,36 @@
 import { TargetShop } from '../../types';
-import { DbProduct, Product, } from '../../types/product';
+import { DbProduct, Product } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
-import { 
+import {
   addBestMatchToProduct,
   segmentFoundProds,
 } from '../matching/compare_helper';
 
+export type ProductOriginPath =
+  | 'bm_v_self_vendor_search_all'
+  | 'bm_v_catch_all_search_all'
+  | 'bm_v_m_amazon'
+  | 'bm_v_m_ebay'
+  | 'hp_search_all'
+  | 'hp_found_all'
+  | 'hp_m_amazon'
+  | 'hp_m_ebay'
+  | 'no_bm_search_all'
+  | 'wtf';
+
 export interface IntermediateProdInfo {
   intermProcProd: DbProduct;
-  candidates: Candidate[] 
-  targetShops: TargetShop[];
+  candidates: Candidate[];
+  missingShops: TargetShop[];
+  path: ProductOriginPath;
 }
 
 export interface TargetShopProducts {
   products?: Product[];
   procProd?: DbProduct;
-  candidates?: {[key: string]:Candidate[]} | Candidate[];
+  candidates?: { [key: string]: Candidate[] } | Candidate[];
   targetShop: TargetShop;
+  path: ProductOriginPath;
 }
 
 interface Candidate {
@@ -32,12 +46,12 @@ export const matchTargetShopProdsWithRawProd = (
 ) => {
   let { procProd } = prodInfo;
   const candidates: { [key: string]: Candidate[] } = {};
-  
+
   targetShopProducts.forEach(({ products, targetShop }) => {
     if (products && products.length) {
       const { foundProds, candidatesToSave } =
-      reduceTargetShopCandidates(products);
-      
+        reduceTargetShopCandidates(products);
+
       candidates[targetShop.d] = candidatesToSave;
       const { arbitrage, bestMatch } = addBestMatchToProduct(
         foundProds,
@@ -47,15 +61,18 @@ export const matchTargetShopProdsWithRawProd = (
       procProd = { ...procProd, ...arbitrage.arbitrage };
     }
   });
-  return { procProd, candidates};
+  return { procProd, candidates };
 };
 
 export const reduceTargetShopCandidates = (products: Product[]) => {
-  const foundProds = segmentFoundProds(products.filter((p) => p.price && p.link && p.name && p.image));
+  const foundProds = segmentFoundProds(
+    products.filter((p) => p.price && p.link && p.name && p.image),
+  );
 
   const candidatesToSave = foundProds.map((candidate) => {
-    const { nameSegments: nmSegments, link: lnk, name: nm } = candidate;
+    const { nameSegments: nmSegments, link: lnk, name: nm, vendor } = candidate;
     return {
+      vendor: vendor || '',
       nm,
       lnk,
       nmSegments,

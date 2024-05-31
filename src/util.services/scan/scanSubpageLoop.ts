@@ -1,7 +1,7 @@
-import { Categories } from '../../types';
 import { ScanRequest } from '../../types/query-request';
 import { scanSubpage } from './scanSubpage';
 import { ICategory } from '../../util/crawl/getCategories';
+import { Categories } from '../../types/categories';
 
 export const scanSubpageLoop = async (options: {
   parentPath: string;

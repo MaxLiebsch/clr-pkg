@@ -11,7 +11,10 @@ import { crawlProducts } from '../../util/crawl/crawlProducts';
 import { runActions } from '../../util/query/runActions';
 import { TargetShop } from '../../types';
 import { QueryRequest } from '../../types/query-request';
-import { reduceTargetShopCandidates } from '../../util/query/matchTargetShopProdsWithRawProd';
+import {
+  ProductOriginPath,
+  reduceTargetShopCandidates,
+} from '../../util/query/matchTargetShopProdsWithRawProd';
 
 export const standardTargetRetailerList = [
   { d: 'amazon.de', prefix: 'a_', name: 'amazon' },
@@ -51,11 +54,13 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
   if (res === 'crawled' && !page.isClosed()) {
     if (extendedLookUp && prodInfo && targetShop) {
-      const currentTargetRetailerList = targetRetailerList || standardTargetRetailerList;
+      const currentTargetRetailerList =
+        targetRetailerList || standardTargetRetailerList;
 
+      // These are the products that we found on I D E A L O
       const { foundProds, candidatesToSave: candidates } =
-      reduceTargetShopCandidates(products as Product[]);
-  
+        reduceTargetShopCandidates(products as Product[]);
+
       let { procProd, rawProd } = prodInfo;
 
       const { arbitrage, bestMatch } = addBestMatchToProduct(
@@ -63,53 +68,85 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
         targetShop,
         prodInfo,
       );
-      if (bestMatch) {
+      // No match found on I D E A L O => we need to search on the A M A Z O N and E B A Y
+      if (!bestMatch) {
+        isFinished &&
+          isFinished({
+            path: 'no_bm_search_all',
+            candidates,
+            missingShops: currentTargetRetailerList,
+            intermProcProd: procProd,
+          });
+        await closePage(page);
+      } else {
+        // Best match on I D E A L O
         if (bestMatch.vendor) {
-          //direct vertrieb
-          const vendor = bestMatch.vendor.toLowerCase();
-          const targetShopIndex = currentTargetRetailerList.findIndex((shop) =>
-            vendor.includes(shop.name),
+          const vendor = bestMatch.vendor.toLowerCase().trim();
+          const isEbay = vendor.includes('ebay');
+          const isAmazon = vendor.includes('amazon');
+          const isSelfVendor = vendor.includes(
+            (rawProd.shop as string).split('.')[0],
           );
-          if (targetShopIndex !== -1) {
-            // search in either amazon and ebay
-
-            const arbitrage = calculateArbitrage(
-              procProd.prc,
-              bestMatch,
-              currentTargetRetailerList[targetShopIndex],
-            );
-            procProd = { ...procProd, ...arbitrage };
-
-            await closePage(page);
-
-            isFinished &&
-              isFinished({
-                candidates,
-                targetShops: [
-                  currentTargetRetailerList[targetShopIndex === 0 ? 1 : 0],
-                ],
-                intermProcProd: procProd,
-              });
-          } else if (vendor.includes((rawProd.shop as string).split('.')[0])) {
-            // search in amazon and ebay
+          // best match vendor is the same as the raw product
+          //Verkauft durch ... e.g. r e i c h e l t . . .
+          // => we need check if we need to search on the A M A Z O N and E B A Y
+          if (isSelfVendor) {
             await closePage(page);
             isFinished &&
               isFinished({
+                path: 'bm_v_self_vendor_search_all',
                 candidates,
-                targetShops: currentTargetRetailerList,
-                intermProcProd: procProd,
-              });
-          } else {
-            await closePage(page);
-            isFinished &&
-              isFinished({
-                candidates,
-                targetShops: currentTargetRetailerList,
+                missingShops: currentTargetRetailerList,
                 intermProcProd: procProd,
               });
           }
+          // best match vendor is neither ebay nor amazon
+          if (!isEbay && !isAmazon) {
+            await closePage(page);
+            isFinished &&
+              isFinished({
+                path: 'bm_v_catch_all_search_all',
+                candidates,
+                missingShops: currentTargetRetailerList,
+                intermProcProd: procProd,
+              });
+          }
+          // best match vendor is ebay or amazon
+          if (isEbay || isAmazon) {
+            const path = isEbay ? 'bm_v_m_amazon' : 'bm_v_m_ebay';
+            const targetShopIndex = currentTargetRetailerList.findIndex(
+              (shop) => {
+                return vendor.includes(shop.name);
+              },
+            );
+            const missingShops = [
+              currentTargetRetailerList[targetShopIndex === 0 ? 1 : 0],
+            ];
+
+            if (targetShopIndex !== -1) {
+              // we found A M A Z O N or E B A Y in I D E A L O best match
+              const foundShop = currentTargetRetailerList[targetShopIndex];
+
+              const arbitrage = calculateArbitrage(
+                procProd.prc,
+                bestMatch,
+                foundShop,
+              );
+              procProd = { ...procProd, ...arbitrage };
+
+              await closePage(page);
+
+              isFinished &&
+                isFinished({
+                  path,
+                  candidates,
+                  missingShops,
+                  intermProcProd: procProd,
+                });
+            }
+          }
         } else {
-          //goto page
+          //Happy path We found a match on I D E A L O but no vendor
           const foundShops: ProductRecord[] = [];
           const addProductCb = async (product: ProductRecord) => {
             foundShops.push(product);
@@ -123,51 +160,61 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             });
           await runActions(page, shop);
 
-          await crawlProducts(page, shop,  addProductCb, pageInfo);
+          await crawlProducts(page, shop, addProductCb, pageInfo);
 
           await closePage(page);
 
           let missingShops: TargetShop[] = currentTargetRetailerList;
+
           foundShops.forEach((shop) => {
-            const vendor = (shop.vendor as string).toLowerCase();
-            if (vendor) {
-              const targetShopIndex = currentTargetRetailerList.findIndex(
-                (targetShop) => (vendor as string).includes(targetShop.name),
+            const vendor = (shop.vendor as string).toLowerCase().trim();
+            if (!vendor) return;
+
+            const targetShopIndex = currentTargetRetailerList.findIndex(
+              (targetShop) => (vendor as string).includes(targetShop.name),
+            );
+            if (targetShopIndex !== -1) {
+              const foundShop = currentTargetRetailerList[targetShopIndex];
+              const arbitrage = calculateArbitrage(
+                procProd.prc,
+                {
+                  ...shop,
+                  image: rawProd.image,
+                  shop: foundShop.d,
+                  name: shop.name,
+                } as Product,
+                foundShop,
               );
-              if (targetShopIndex !== -1) {
-                const arbitrage = calculateArbitrage(
-                  procProd.prc,
-                  {
-                    ...shop,
-                    image: rawProd.image,
-                    shop: currentTargetRetailerList[targetShopIndex].d,
-                    name: shop.name,
-                  } as Product,
-                  currentTargetRetailerList[targetShopIndex],
-                );
-                missingShops = missingShops.filter(
-                  (shop) => shop.d !== currentTargetRetailerList[targetShopIndex].d,
-                );
-                procProd = { ...procProd, ...arbitrage };
-              }
+              missingShops = missingShops.filter(
+                (shop) => shop.d !== foundShop.d,
+              );
+              procProd = { ...procProd, ...arbitrage };
             }
           });
 
+          let path: ProductOriginPath;
+
+          switch (missingShops.length) {
+            case 1:
+              path =
+                missingShops[0].name === 'ebay' ? 'hp_m_ebay' : 'hp_m_amazon';
+              break;
+            case 2:
+              path = 'hp_search_all';
+              break;
+            default:
+              path = 'hp_found_all';
+              break;
+          }
+
           isFinished &&
             isFinished({
+              path,
               candidates,
-              targetShops: missingShops,
+              missingShops,
               intermProcProd: procProd,
             });
         }
-      } else {
-        isFinished &&
-          isFinished({
-            candidates,
-            targetShops: currentTargetRetailerList,
-            intermProcProd: procProd,
-          });
-        await closePage(page);
       }
     } else {
       isFinished && isFinished();

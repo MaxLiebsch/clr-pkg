@@ -1,5 +1,4 @@
-import { QueryURLSchema } from '../types';
-import { Query } from '../types/query';
+import { Query, QueryURLSchema } from '../types/query';
 
 export const queryURLBuilder = (
   queryUrlSchema: QueryURLSchema[],

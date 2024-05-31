@@ -1,16 +1,11 @@
 import { ElementHandle, Page, TimeoutError } from 'puppeteer1';
-import {
-  BrowserGroup,
-  BrowserInfo,
-  ChildProcessInfo,
-  Detail,
-  ProductList,
-  WaitUntil,
-} from '../types/index';
+import { BrowserGroup, BrowserInfo, ChildProcessInfo } from '../types/index';
 import { getNumber } from '../util/matching/compare_helper';
 import { load } from 'cheerio';
 
 import { NestedNameDetail } from '../types/productInfoDetails';
+import { ProductList } from '../types/productList';
+import { WaitUntil } from '../types/shop';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
   Object.keys(browserGroup).reduce(
@@ -238,8 +233,8 @@ export const clickShadowBtn = async (
 };
 
 export const getInnerText = async (page: Page, sel: string) => {
-  const result = await page
-    .evaluate((sel) => {
+  try {
+    const result = await page.evaluate((sel) => {
       const element = document.querySelector(sel);
       if (element) {
         const innerText = (element as HTMLElement).innerText.trim();
@@ -252,29 +247,32 @@ export const getInnerText = async (page: Page, sel: string) => {
       } else {
         return null;
       }
-    }, sel)
-    .catch((e) => {
-      console.log(e);
-    });
-  if (typeof result === 'string') {
-    return cleanUpHTML(result);
-  } else {
+    }, sel);
+
+    if (result) {
+      return cleanUpHTML(result);
+    } else {
+      return null;
+    }
+  } catch (error) {
     return null;
   }
 };
 
 export const deleteElementFromPage = async (page: Page, sel: string) => {
-  await page
-    .evaluate((sel) => {
+  try {
+    return await page.evaluate((sel) => {
       const element = document.querySelector(sel);
       if (element) {
         element.remove();
         return 'removed';
       } else {
-        return 'missing';
+        return null;
       }
-    }, sel)
-    .catch((e) => {});
+    }, sel);
+  } catch (error) {
+    return null;
+  }
 };
 
 export const getElementHandleInnerText = async (
@@ -298,16 +296,20 @@ export const getElementHandleInnerText = async (
   }
 };
 
-export const getElementHandleAttribute2 = (
+export const extractAttributeElementhandle = async (
   elementHandle: ElementHandle,
   type: string,
-) =>
-  elementHandle
-    .evaluate((el, type) => {
+) => {
+  try {
+    const attribute = await elementHandle.evaluate((el, type) => {
       const attribute = el.getAttribute(type);
       return attribute ? el.getAttribute(type) : null;
-    }, type)
-    .catch((e) => {});
+    }, type);
+    return attribute;
+  } catch (error) {
+    return null;
+  }
+};
 
 export const contentMissing = async (page: Page, mimic: string) =>
   await page
@@ -364,6 +366,34 @@ export async function nestedProductName(
       sel,
     )
     .catch((e) => {});
+}
+
+export async function removeNestedElementAndReturnText(
+  elementHandle: ElementHandle,
+  detail: NestedNameDetail,
+) {
+  const { sel, remove } = detail;
+
+  try {
+    const result = await elementHandle.evaluate(
+      (element, remove, sel) => {
+        const productElement = element.querySelector(sel) as HTMLElement;
+        if (!productElement) return null;
+        const elementToBeRemoved = productElement.querySelector(
+          remove,
+        ) as HTMLElement;
+        if (elementToBeRemoved) {
+          elementToBeRemoved.remove();
+        }
+        return productElement.innerText.trim();
+      },
+      remove,
+      sel,
+    );
+    return result;
+  } catch (error) {
+    return null;
+  }
 }
 
 export async function scrollToBottom(page: Page) {

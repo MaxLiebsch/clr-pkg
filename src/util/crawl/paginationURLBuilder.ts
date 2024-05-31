@@ -1,8 +1,10 @@
-import { PaginationEl, PaginationUrlSchema } from '../../types';
+
+
+import { PaginationElement } from '../../types/paginationElement';
 
 export const paginationUrlBuilder = (
   url: string,
-  paginationEls: PaginationEl[],
+  paginationEls: PaginationElement[],
   pageNo: number,
   query?: string,
 ) => {

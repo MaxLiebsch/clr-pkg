@@ -1,16 +1,17 @@
 import { ElementHandle, Page } from 'puppeteer1';
-import { Limit, PaginationEl } from '../../types';
+import { Limit } from '../../types';
 import { waitForSelector } from '../helpers';
+import { PaginationElement } from '../../types/paginationElement';
 
 const findPagination = async (
   page: Page,
-  paginationEls: PaginationEl[],
+  paginationEls: PaginationElement[],
   limit?: Limit,
 ) => {
   if (!paginationEls.length || limit?.pages === 0)
     return {
       pagination: null,
-      paginationEl: {} as PaginationEl,
+      paginationEl: {} as PaginationElement,
     };
   let pagination: ElementHandle<Element> | null = null;
   let paginationEl = paginationEls[0];

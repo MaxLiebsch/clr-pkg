@@ -21,7 +21,7 @@ export const queryTargetShops = async (
 ) =>
   targetShops.map(
     (targetShop) =>
-      new Promise<TargetShopProducts>((res, rej) => {
+      new Promise<TargetShopProducts>((resolve, rej) => {
         try {
           const { extendedLookUp, limit } = task;
           let { procProd } = prodInfo;
@@ -30,38 +30,79 @@ export const queryTargetShops = async (
             products.push(<Product>product);
           };
           const isFinished = async (interm?: IntermediateProdInfo) => {
-            if (interm) {
-              const { intermProcProd, targetShops: intermTargetShops, candidates } = interm;
+            if (!interm) return resolve({ products, targetShop, path: 'wtf' });
 
-              procProd = { ...procProd, ...intermProcProd };
+            const { intermProcProd, missingShops, candidates, path } = interm;
 
-              if (intermTargetShops.length) {
-                task.extendedLookUp = false;
-                const shopQueryPromises = queryTargetShops(
-                  intermTargetShops,
-                  queue,
-                  shops,
-                  query,
-                  task,
-                  prodInfo,
-                );
+            procProd = {
+              ...procProd,
+              ...intermProcProd,
+            };
+            const missing =
+              path === 'bm_v_catch_all_search_all' ||
+              path === 'bm_v_self_vendor_search_all' ||
+              path === 'no_bm_search_all' ||
+              path === 'hp_search_all';
 
-                const targetShopProds = (await Promise.all(
-                  await shopQueryPromises,
-                )) as TargetShopProducts[];
+            if ((path.includes('amazon') || missing) && procProd.a_lnk) {
+              procProd.a_orgn = path;
+            }
 
-                const { procProd: arbitragePerMatchedTargetShopProduct, candidates } =
-                  matchTargetShopProdsWithRawProd(targetShopProds, prodInfo);
-                procProd = {
-                  ...procProd,
-                  ...arbitragePerMatchedTargetShopProduct,
-                };
-                res({ targetShop, procProd, candidates });
-              } else {
-                res({ targetShop, procProd, candidates });
+            if ((path.includes('ebay') || missing) && procProd.e_lnk) {
+              procProd.e_orgn = path;
+            }
+
+            if (missingShops.length) {
+              // WE DID NOT FIND ALL IN I D E A L O
+              task.extendedLookUp = false;
+
+              const shopQueryPromises = queryTargetShops(
+                missingShops,
+                queue,
+                shops,
+                query,
+                task,
+                prodInfo,
+              );
+
+              const targetShopProducts = (await Promise.all(
+                await shopQueryPromises,
+              )) as TargetShopProducts[];
+
+              // CALCULATE ARBIBTRAGE FOR THE REMAINING SHOP(S)
+              const {
+                procProd: arbitragePerMatchedTargetShopProduct,
+                candidates,
+              } = matchTargetShopProdsWithRawProd(targetShopProducts, prodInfo);
+
+              procProd = {
+                ...procProd,
+                ...arbitragePerMatchedTargetShopProduct,
+              };
+
+              const missing =
+                path === 'bm_v_catch_all_search_all' ||
+                path === 'bm_v_self_vendor_search_all' ||
+                path === 'no_bm_search_all' ||
+                path === 'hp_search_all';
+
+              if ((path.includes('amazon') || missing) && procProd.a_lnk) {
+                procProd.a_orgn = path;
               }
+
+              if ((path.includes('ebay') || missing) && procProd.e_lnk) {
+                procProd.e_orgn = path;
+              }
+
+              resolve({ targetShop, procProd, candidates, path });
             } else {
-              res({ products, targetShop });
+              // WE FOUND A M A Z O N AND E B A Y IN I D E A L O
+              resolve({
+                targetShop,
+                procProd: { ...procProd, a_orgn: 'i', e_orgn: 'i' },
+                candidates,
+                path,
+              });
             }
           };
 

@@ -1,5 +1,5 @@
 import { Page, TimeoutError } from 'puppeteer1';
-import { PaginationEl, ShopObject } from '../../types';
+import { ShopObject } from '../../types';
 import {
   getElementHandleInnerText,
   getInnerText,
@@ -7,11 +7,12 @@ import {
   myQuerySelectorAll,
 } from '../helpers';
 import { getNumber, getNumbers } from '../matching/compare_helper';
+import { PaginationElement } from '../../types/paginationElement';
 
 export const getPageNumberFromPagination = async (
   page: Page,
   shop: ShopObject,
-  paginationEl: PaginationEl,
+  paginationEl: PaginationElement,
   productCount?: number | null,
 ) => {
   if (!Object.keys(paginationEl).length)
