@@ -1,4 +1,22 @@
-import { Content } from '.';
+
+export type Content =
+  | 'link'
+  | 'price'
+  | 'mnfctr'
+  | 'hasMnfctr'
+  | 'promoPrice'
+  | 'van'
+  | 'vendor'
+  | 'vendorLink'
+  | 'name'
+  | 'shop'
+  | 'category'
+  | 'description'
+  | 'nameSub'
+  | 'redirect_link'
+  | 'image'
+  | 'prime'
+  | 'year';
 
 export interface Product {
   createdAt?: string;
@@ -10,7 +28,7 @@ export interface Product {
   vendor?: string;
   vendorLink?: string;
   promoPrice?: string;
-  price: string;
+  price: number;
   category?: string[];
   description?: string;
   shop?: string;

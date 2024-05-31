@@ -188,7 +188,7 @@ export const findBestMatch = (
   const nameSplit = segmentString(nm);
 
   foundProds.forEach((product, index) => {
-    const curr_prc = parsePrice(getPrice(product.price ?? 0));
+    const curr_prc = parsePrice(product.price);
     const mrgn = Number((curr_prc - prc).toFixed(2));
     const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
     let score = 0;
@@ -282,7 +282,7 @@ export function calculateArbitrage(
         }
       }
     });
-    const bm_prc = parsePrice(getPrice(price ?? 0));
+    const bm_prc = parsePrice(price);
 
     if (bm_prc && srcPrice) {
       const mrgn = Number((bm_prc - srcPrice).toFixed(2));

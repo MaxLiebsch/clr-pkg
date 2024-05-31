@@ -5,6 +5,7 @@ import { Browser, PuppeteerLifeCycleEvent } from 'puppeteer1';
 import { QueryKeys } from './query';
 import { ICategory } from '../util/crawl/getCategories';
 import { Rule } from './rules';
+import { Content } from './product';
 
 export interface ImgMeta {
   baseurl: string;
@@ -114,6 +115,12 @@ export interface PaginationUrlSchema {
   };
   calculation: {
     method: string;
+    replace?: {
+      use?: string;
+      skip?: number;
+      search: string;
+      replace?: string;
+    }[];
     offset: number;
   };
 }
@@ -155,25 +162,6 @@ export interface IProductSelector {
   type: string;
   details: Detail[];
 }
-
-export type Content =
-  | 'link'
-  | 'price'
-  | 'mnfctr'
-  | 'hasMnfctr'
-  | 'promoPrice'
-  | 'van'
-  | 'vendor'
-  | 'vendorLink'
-  | 'name'
-  | 'shop'
-  | 'category'
-  | 'description'
-  | 'nameSub'
-  | 'redirect_link'
-  | 'image'
-  | 'prime'
-  | 'year';
 
 export interface Detail {
   content: Content;
@@ -272,7 +260,7 @@ export interface ShopObject {
     webWorker: status;
     serviceWorker: status;
     sharedWorker: status;
-  },
+  };
   resourceTypes: {
     query: ResourceTypes[];
     crawl: ResourceTypes[];

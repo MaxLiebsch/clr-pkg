@@ -3,10 +3,8 @@ import { DbProduct, Product, } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
 import { 
   addBestMatchToProduct,
-  getPrice,
   segmentFoundProds,
 } from '../matching/compare_helper';
-import parsePrice from 'parse-price';
 
 export interface IntermediateProdInfo {
   intermProcProd: DbProduct;
@@ -53,7 +51,7 @@ export const matchTargetShopProdsWithRawProd = (
 };
 
 export const reduceTargetShopCandidates = (products: Product[]) => {
-  const foundProds = segmentFoundProds(products.filter((p) => p.price !== '' && p.link !== '' && p.price !== ''));
+  const foundProds = segmentFoundProds(products.filter((p) => p.price && p.link && p.name && p.image));
 
   const candidatesToSave = foundProds.map((candidate) => {
     const { nameSegments: nmSegments, link: lnk, name: nm } = candidate;
@@ -61,7 +59,7 @@ export const reduceTargetShopCandidates = (products: Product[]) => {
       nm,
       lnk,
       nmSegments,
-      prc: parsePrice(getPrice(candidate.price)),
+      prc: candidate.price,
     };
   });
   return { foundProds, candidatesToSave };
