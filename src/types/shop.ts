@@ -1,0 +1,105 @@
+import { PuppeteerLifeCycleEvent } from "puppeteer1";
+import { QueryAction } from "./queryActions";
+import { QueryURLSchema } from "./query";
+import { ProductList } from "./productList";
+import { Categories } from "./categories";
+import { CrawlAction } from "./crawlActions";
+import { ICategory } from "../util/crawl/getCategories";
+import { Rule } from "./rules";
+import { PaginationElement } from "./paginationElement";
+import { ImgMeta } from ".";
+
+export interface Shop {
+  _id: string;
+  mimic?: string;
+  d: string; // domain
+  l: string; // link to shop
+  ne: string; // name
+  purlschema: string;
+  fetch: boolean; // fetch with get
+  javascript?: {
+    webWorker: status;
+    serviceWorker: status;
+    sharedWorker: status;
+  };
+  resourceTypes: {
+    query: ResourceTypes[];
+    crawl: ResourceTypes[];
+  };
+  entryPoints: EntryPoint[];
+  waitUntil: WaitUntil;
+  kws: string[]; // keywords
+  ap: string[]; // anti pattern
+  ece: string[]; // escape characters
+  active: boolean; // shop is active
+  lastCrawlAt: string;
+  lastSelectorTestAt: string;
+
+  /*                      QUERY                            */
+
+  actions: QueryAction[];
+  queryActions: QueryAction[];
+  queryUrlSchema: QueryURLSchema[];
+
+  /*                      CRAWL                            */
+
+  productList: ProductList[];
+  categories: Categories;
+  crawlActions: CrawlAction[];
+  exceptions?: string[];
+  manualCategories: ICategory[];
+  rules?: Rule[];
+  category: string[];
+  pauseOnProductPage?: { pause: boolean; max: number; min: number };
+  paginationEl: PaginationElement[];
+  imgMeta: ImgMeta;
+
+  /*                  PRODUCT DETAILS                       */
+
+  f?: string;
+  n: string; // product name
+  p: string[]; // price
+  a: string; // availability
+  ean: string; //  EAN
+  img: string[]; // image
+  s: {
+    gp: number; // Grundpreis Versand
+    fs: number; // Minimum Order Free shipping
+    wr: number; // Prescription free shipping if wr = 0
+  };
+  pzn: string; // PZN
+  ps: string; //package size
+  m: string; //manufactuerer name
+}
+
+export type status = 'enabled' | 'disabled';
+
+export type ResourceTypes =
+  | 'image'
+  | 'script'
+  | 'document'
+  | 'stylesheet'
+  | 'media'
+  | 'font'
+  | 'texttrack'
+  | 'xhr'
+  | 'fetch'
+  | 'prefetch'
+  | 'eventsource'
+  | 'websocket'
+  | 'manifest'
+  | 'signedexchange'
+  | 'ping'
+  | 'cspviolationreport'
+  | 'preflight'
+  | 'other';
+
+export interface EntryPoint {
+  url: string;
+  category: string;
+}
+
+export interface WaitUntil {
+  product: PuppeteerLifeCycleEvent;
+  entryPoint: PuppeteerLifeCycleEvent;
+}

@@ -77,12 +77,14 @@ export interface DbProduct {
   createdAt: string;
   updatedAt: string;
   e_lnk: string;
+  e_orgn: string;
   e_img: string;
   e_nm: string;
   e_prc: number;
   e_mrgn: number;
   e_fat: boolean;
   e_mrgn_pct: number;
+  a_orgn: string;
   a_lnk: string;
   a_bsr: string;
   a_img: string;

@@ -14,6 +14,7 @@ export interface Query {
   }
   export interface Year {
     min: number
+    param?:string
     max: number
   }
 
@@ -41,3 +42,23 @@ export interface Query {
     key: string;
     value: string
   }
+
+
+  export interface QueryURLSchema {
+    baseUrl: string;
+    searchParams?: SearchParams;
+    suffix?: string;
+    category: string;
+  }
+
+  export interface SearchParams {
+    brand?: Brand;
+    continent?: string;
+    queryPart?: QueryPart;
+    year?: Year;
+  }
+
+  export interface QueryPart {
+    seperator: string;
+  }
+  

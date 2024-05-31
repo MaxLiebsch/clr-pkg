@@ -39,6 +39,13 @@ export interface ScanRequest extends QRequest {
   };
 }
 
+export interface ProductInfo {
+  key: string;
+  value: string
+
+
+}
+
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
   addProduct: (product: ProductRecord) => Promise<void>;
@@ -53,7 +60,7 @@ export interface QueryRequest extends QRequest {
     productInfo,
     url,
   }: {
-    productInfo: { key: string; value: string }[] | null;
+    productInfo: ProductInfo[] | null;
     url: string;
   }) => Promise<void>;
   onNotFound?: () => Promise<void>;
