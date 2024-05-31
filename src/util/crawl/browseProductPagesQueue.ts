@@ -73,9 +73,10 @@ export async function browseProductPagesQueue(
 
       const { pages, noOfFoundPages } = await getPageNumberFromPagination(
         page,
+        shop,
         paginationEl,
         productCount,
-      );
+      ); 
 
       if (noOfFoundPages) {
         const limitPages = limit?.pages ? limit?.pages : 0;

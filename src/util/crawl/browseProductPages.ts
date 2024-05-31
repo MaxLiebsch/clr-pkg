@@ -61,6 +61,7 @@ export async function browseProductpages(
 
       const { noOfFoundPages } = await getPageNumberFromPagination(
         page,
+        shop,
         paginationEl,
       );
 

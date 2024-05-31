@@ -50,6 +50,7 @@ export const crawlProductsQueue = async (
     if (hasProducts) {
       const { noOfFoundPages } = await getPageNumberFromPagination(
         page,
+        shop,
         paginationEl,
         productCount,
       );

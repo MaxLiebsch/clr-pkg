@@ -17,6 +17,7 @@ export const paginationUrlBuilder = (
       if (withQuery && query) {
         navStr = nav.replace('<query>', encodeURIComponent(query));
       }
+
       if (paginationUrlSchema.parseAndReplace) {
         const { regexp, replace } = paginationUrlSchema.parseAndReplace;
         const parsedUrlPart = resultUrl.match(new RegExp(regexp));
@@ -24,17 +25,35 @@ export const paginationUrlBuilder = (
           navStr = navStr.replace(replace, parsedUrlPart[0]);
         }
       }
+
       if (calculation.method === 'offset') {
         const finalNavStr = `${navStr.replace('<page>', ((pageNo - startPointSubstractor) * calculation.offset).toString())}`;
         const replaceRegExp = new RegExp(replace);
         if (replaceRegExp.test(resultUrl)) {
           return resultUrl.replace(replaceRegExp, finalNavStr);
         }
-        if (replace === 'attach_end'){
-          return resultUrl + finalNavStr
+        if (replace === 'attach_end') {
+          return resultUrl + finalNavStr;
         }
 
         return resultUrl;
+      }
+
+      if ('replace' in calculation && calculation.method === 'replace_append') {
+        calculation.replace!.forEach((_replace) => {
+          if ('replace' in _replace) {
+            resultUrl = resultUrl.replaceAll(_replace.search, _replace.replace!);
+          }
+          if ('use' in _replace) {
+            if (_replace.use === 'skip' && 'skip' in _replace) {
+              navStr = navStr.replaceAll(
+                _replace.search,
+                (pageNo * _replace.skip!).toString(),
+              );
+            }
+          }
+        });
+        resultUrl = resultUrl + navStr;
       }
     }
   }

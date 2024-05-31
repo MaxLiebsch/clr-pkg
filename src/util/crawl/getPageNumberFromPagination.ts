@@ -1,14 +1,16 @@
 import { Page, TimeoutError } from 'puppeteer1';
-import { PaginationEl } from '../../types';
+import { PaginationEl, ShopObject } from '../../types';
 import {
   getElementHandleInnerText,
   getInnerText,
+  getProductCount,
   myQuerySelectorAll,
 } from '../helpers';
 import { getNumber, getNumbers } from '../matching/compare_helper';
 
 export const getPageNumberFromPagination = async (
   page: Page,
+  shop: ShopObject,
   paginationEl: PaginationEl,
   productCount?: number | null,
 ) => {
@@ -95,6 +97,14 @@ export const getPageNumberFromPagination = async (
     calculation.productsPerPage
   ) {
     pages = new Array(Math.floor(productCount / calculation.productsPerPage));
+  }
+
+  if (calculation.method === 'product_count' && calculation.productsPerPage) {
+
+    const count = await getProductCount(page, shop.productList);
+    if (count) {
+      pages = new Array(Math.floor(count / calculation.productsPerPage));
+    }
   }
 
   const noOfFoundPages = pages?.length ?? 0;
