@@ -30,6 +30,7 @@ import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
 import { sample } from 'underscore';
 import { Infos } from '../../types/Infos';
+import { isDomainAllowed } from '../../util/isDomainAllowed';
 
 type Task = (page: Page, request: any) => Promise<void>;
 
@@ -370,7 +371,7 @@ export abstract class BaseQueue<
             if ('onNotFound' in request && request?.onNotFound) {
               request.onNotFound();
             }
-            return {details: '', status: 'not-found', retries };
+            return { details: '', status: 'not-found', retries };
           }
         }
         if (status === 429 && !this.taskFinished) {
@@ -393,7 +394,7 @@ export abstract class BaseQueue<
         throw new Error(ErrorType.AccessDenied);
       }
       await task(page, request);
-      return { details: 'retries exceeded', status: 'page-completed', retries };
+      return { details: 'tippy-toppy', status: 'page-completed', retries };
     } catch (error) {
       process.env.DEBUG === 'true' && console.log('error:', error);
       if (!this.taskFinished) {
@@ -455,9 +456,8 @@ export abstract class BaseQueue<
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
-        this.pushTask(task, { ...request, retries: retries + 1 });
-        if (page) await closePage(page);
-        this.clearTimeout(id);
+
+        isDomainAllowed(pageInfo.link) && this.pushTask(task, request);
         return { details: `${error}`, status: 'error-handled', retries };
       }
     } finally {

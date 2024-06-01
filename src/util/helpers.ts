@@ -102,7 +102,6 @@ export function extractCategoryNameAndCapitalize(
       segment.charAt(0).toUpperCase() + segment.slice(1).replaceAll(/[-]/g, ' ')
     );
   } catch (error) {
-    if (error instanceof Error) console.error('Error:', error.message);
     return '';
   }
 }
