@@ -26,6 +26,8 @@ export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';       
 export * from './util/matching/calculateArbitrage';       
 export * from './util/browser/yieldBrowserVersion';
+export * from './static/allowed';
+export * from './static/blocked';
 
 // BROWSER
 export * from './util/browser/browsers';
