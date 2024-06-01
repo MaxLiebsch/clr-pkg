@@ -367,7 +367,6 @@ export abstract class BaseQueue<
             throw new Error(ErrorType.NotFound);
           } else {
             // if the page is not found and the retries are more than the limit
-            await closePage(page);
             if ('onNotFound' in request && request?.onNotFound) {
               request.onNotFound();
             }
@@ -461,8 +460,8 @@ export abstract class BaseQueue<
         return { details: `${error}`, status: 'error-handled', retries };
       }
     } finally {
-      if (page) await closePage(page);
       this.clearTimeout(id);
+      if (page) await closePage(page);
     }
   }
 
