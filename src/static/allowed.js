@@ -1,4 +1,4 @@
-const allowed = [
+export const allowed = [
   'prescience-data.github.io',
   "www.idealo.de",
   "cdn.idealo.com",
@@ -56,4 +56,4 @@ const allowed = [
   "www.ebay.de",
 ];
 
-export default allowed;
+

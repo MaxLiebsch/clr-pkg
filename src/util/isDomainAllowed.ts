@@ -1,4 +1,4 @@
-import allowed from '../static/allowed';
+import {allowed} from '../static/allowed';
 
 export const isDomainAllowed = (url: string) => {
   try {
