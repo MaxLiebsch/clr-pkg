@@ -142,7 +142,6 @@ export async function browseProductpages(
       await crawlProducts(
         page,
         shop,
-
         addProductCb,
         pageInfo,
       ).finally(() => {

@@ -23,7 +23,8 @@ export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
 export * from './util/fs/stats';
 export * from './util/matching/normalizeSIUnits';
-export * from './util/matching/compare_helper';
+export * from './util/matching/compare_helper';       
+export * from './util/matching/calculateArbitrage';       
 export * from './util/browser/yieldBrowserVersion';
 
 // BROWSER

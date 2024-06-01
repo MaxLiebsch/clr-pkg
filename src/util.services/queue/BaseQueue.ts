@@ -41,6 +41,7 @@ export type WrapperFunctionResponse =
         | 'limit-reached'
         | 'not-found';
       retries: number;
+      details: string;
     }
   | undefined;
 
@@ -322,7 +323,7 @@ export abstract class BaseQueue<
     const { retries } = request;
     if (retries > MAX_RETRIES) {
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
-      return { status: 'error-handled', retries };
+      return { details: 'retries exceeded', status: 'error-handled', retries };
     }
 
     let { pageInfo, shop } = request;
@@ -369,7 +370,7 @@ export abstract class BaseQueue<
             if ('onNotFound' in request && request?.onNotFound) {
               request.onNotFound();
             }
-            return { status: 'not-found', retries };
+            return {details: '', status: 'not-found', retries };
           }
         }
         if (status === 429 && !this.taskFinished) {
@@ -392,7 +393,7 @@ export abstract class BaseQueue<
         throw new Error(ErrorType.AccessDenied);
       }
       await task(page, request);
-      return { status: 'page-completed', retries };
+      return { details: 'retries exceeded', status: 'page-completed', retries };
     } catch (error) {
       process.env.DEBUG === 'true' && console.log('error:', error);
       if (!this.taskFinished) {
@@ -457,7 +458,7 @@ export abstract class BaseQueue<
         this.pushTask(task, { ...request, retries: retries + 1 });
         if (page) await closePage(page);
         this.clearTimeout(id);
-        return { status: 'error-handled', retries };
+        return { details: `${error}`, status: 'error-handled', retries };
       }
     } finally {
       if (page) await closePage(page);
@@ -508,7 +509,7 @@ export abstract class BaseQueue<
           this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
             (result: WrapperFunctionResponse) => {
               console.log(
-                `status: ${result?.status}, retries: ${result?.retries}}`,
+                `details: ${result?.details},\nstatus: ${result?.status}, retries: ${result?.retries}}`,
               );
               if (result) {
                 const { retries, status } = result;

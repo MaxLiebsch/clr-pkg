@@ -23,6 +23,7 @@ export async function browseProductPagesQueue(
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
 
+  
   if (shop.crawlActions && shop.crawlActions.length > 0) {
     for (let i = 0; i < shop.crawlActions.length; i++) {
       const action = shop.crawlActions[i];
@@ -71,12 +72,12 @@ export async function browseProductPagesQueue(
         }
       }
 
-      const { pages, noOfFoundPages } = await getPageNumberFromPagination(
+      const { noOfFoundPages } = await getPageNumberFromPagination(
         page,
         shop,
         paginationEl,
         productCount,
-      ); 
+      );
 
       if (noOfFoundPages) {
         const limitPages = limit?.pages ? limit?.pages : 0;
