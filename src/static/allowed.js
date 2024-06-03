@@ -39,6 +39,7 @@ export const allowed = [
   // "cdn.jsdelivr.net",
   // "cdnjs.cloudflare.com",
   // "browserleaks.com",
+  // "ipinfo.io",
   "www.metro.de",
   "www.mindfactory.de",
   "www.mueller.de",
