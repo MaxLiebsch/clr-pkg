@@ -344,6 +344,7 @@ export abstract class BaseQueue<
         resourceTypes?.query,
         shop.exceptions,
         shop.rules,
+        this.queueTask.timezones,
       );
 
       if (retries === 0) {
@@ -508,7 +509,7 @@ export abstract class BaseQueue<
           this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
             (result: WrapperFunctionResponse) => {
               console.log(
-                `details: ${result?.details},\nstatus: ${result?.status}, retries: ${result?.retries}}`,
+                `details: ${result?.details}, status: ${result?.status}, retries: ${result?.retries}`,
               );
               if (result) {
                 const { retries, status } = result;
