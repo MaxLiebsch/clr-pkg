@@ -19,6 +19,7 @@ export interface IProductSelector {
 export type DetailType =
   | 'data-llsrc'
   | 'data-original'
+  | 'data-srcset'
   | 'srcset'
   | 'content'
   | 'data-src'
