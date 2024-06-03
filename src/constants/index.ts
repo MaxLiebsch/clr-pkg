@@ -1,3 +1,5 @@
+import { Versions } from '../util/versionProvider';
+
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
 export const MAX_RETRIES = 500;
@@ -11,12 +13,14 @@ export const MAX_CRITICAL_ERRORS = 7;
 export const ACCESS_DENIED_FREQUENCE = 10000;
 export const STANDARD_FREQUENCE = 10000;
 
-export const CHROME_VERSIONS = [
-  "125.0.6422.60",
-  '124.0.6367.91',
-  '123.0.6312.58',
-  '124.0.6367.60',
-  '122.0.6261.94',
+export const CHROME_VERSIONS: Versions[] = [
+  '125.0.6422.78', // Puppeteer v22.10.0
+  '123.0.6312.58', // Puppeteer v22.6.0
+  '125.0.6422.60', // Puppeteer v22.9.0
+  '123.0.6312.86', // Puppeteer v22.6.2
+  '124.0.6367.207', // Puppeteer v22.8.2
+  '124.0.6367.60', // Puppeteer v22.7.0
+  '124.0.6367.91', // Puppeteer v22.8.0
 ];
 
 export const uuidRegex =
@@ -136,8 +140,9 @@ export const languageList = [
 ];
 
 export const timezones = [
-  // 'Europe/Kiev',
+  'Europe/Kiev',
   'America/New_York',
+  'Europe/Amsterdam',
   'Europe/Moscow',
   'America/Phoenix',
   'Europe/Lisbon',
@@ -183,11 +188,13 @@ export const graphicsCardListByPlatform = {
       vendor: 'Google Inc. (Intel)',
     },
     {
-      renderer: 'ANGLE (AMD, AMD Readon (TM) R9 390 Series (0x00006781) Direct3011 vs_5_0 ps_5_0, D3D11)',
+      renderer:
+        'ANGLE (AMD, AMD Readon (TM) R9 390 Series (0x00006781) Direct3011 vs_5_0 ps_5_0, D3D11)',
       vendor: 'Google Inc. (AMD)',
     },
     {
-      renderer: 'ANGLE (NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
+      renderer:
+        'ANGLE (NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0, D3D11)',
       vendor: 'Google Inc. (NVIDIA)',
     },
     // {

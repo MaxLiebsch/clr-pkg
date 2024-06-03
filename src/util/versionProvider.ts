@@ -1,20 +1,45 @@
-import puppeteer from 'puppeteer1';
-import puppeteer2 from 'puppeteer2';
-import puppeteer3 from 'puppeteer3';
-import puppeteer4 from 'puppeteer4';
-import puppeteer5 from 'puppeteer5';
+import puppeteer from 'puppeteer1'; // Puppeteer v22.6.0
+import puppeteer2 from 'puppeteer2'; // Puppeteer v22.6.2
+import puppeteer3 from 'puppeteer3'; // Puppeteer v22.7.0
+import puppeteer4 from 'puppeteer4'; // Puppeteer v22.8.0
+import puppeteer5 from 'puppeteer5'; // Puppeteer v22.9.0
+import puppeteer6 from 'puppeteer6'; // Puppeteer v22.8.2
+import puppeteer7 from 'puppeteer7'; // Puppeteer v22.10.0
 
-export type Versions = '122.0.6261.94' | '123.0.6312.58' | '124.0.6367.60' | '124.0.6367.91' | '125.0.6422.60';
+/*
+Chrome for Testing 125.0.6422.78 - Puppeteer v22.10.0
+Chrome for Testing 125.0.6422.60 - Puppeteer v22.9.0
+Chrome for Testing 124.0.6367.207 - Puppeteer v22.8.2
+Chrome for Testing 124.0.6367.201 - Puppeteer v22.8.1
+Chrome for Testing 124.0.6367.91 - Puppeteer v22.8.0
+Chrome for Testing 124.0.6367.78 - Puppeteer v22.7.1
+Chrome for Testing 124.0.6367.60 - Puppeteer v22.7.0
+Chrome for Testing 123.0.6312.122 - Puppeteer v22.6.4
+Chrome for Testing 123.0.6312.105 - Puppeteer v22.6.3
+Chrome for Testing 123.0.6312.86 - Puppeteer v22.6.2     
+Chrome for Testing 123.0.6312.58 - Puppeteer v22.6.0     
+*/
+
+export type Versions =
+  | '123.0.6312.58' // Puppeteer v22.6.0
+  | '123.0.6312.86' // Puppeteer v22.6.2
+  | '124.0.6367.60' // Puppeteer v22.7.0
+  | '124.0.6367.91' // Puppeteer v22.8.0
+  | '124.0.6367.207' // Puppeteer v22.8.2
+  | '125.0.6422.60' // Puppeteer v22.9.0
+  | '125.0.6422.78'; // Puppeteer v22.10.0
 
 export class VersionProvider {
   public currentPuppeteerVersion: Versions = '123.0.6312.58';
   public puppeteerInstance: any = puppeteer;
   public puppeteer = {
-    '122.0.6261.94': puppeteer,
-    '123.0.6312.58': puppeteer2,
-    '124.0.6367.60': puppeteer3,
-    '124.0.6367.91': puppeteer4,
-    '125.0.6422.60': puppeteer5,
+    '123.0.6312.58': puppeteer, // Puppeteer v22.6.0
+    '123.0.6312.86': puppeteer2, // Puppeteer v22.6.2
+    '124.0.6367.60': puppeteer3, // Puppeteer v22.7.0
+    '124.0.6367.91': puppeteer4, // Puppeteer v22.8.0
+    '124.0.6367.207': puppeteer5, // Puppeteer v22.8.2
+    '125.0.6422.60': puppeteer6, // Puppeteer v22.9.0
+    '125.0.6422.78': puppeteer7, // Puppeteer v22.10.0
   };
 
   public static singleton: VersionProvider;
