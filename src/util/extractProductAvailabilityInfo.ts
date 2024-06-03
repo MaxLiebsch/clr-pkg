@@ -7,7 +7,7 @@ import { eanRegex, regex, regexp } from '../constants';
 
 export const extractPriceAvailabilityInfo = (
   $: CheerioAPI,
-  shopObject: ShopObject,
+  shop: ShopObject,
   url: string
 ): PriceAvailabilityInfo => {
   let p = '';
@@ -16,7 +16,7 @@ export const extractPriceAvailabilityInfo = (
   let ean = '';
   let ps = '';
   //price
-  shopObject.p.map((selector) => {
+  shop.p.map((selector) => {
     const pEl = $(selector);
     if (pEl.length > 0 && pEl.text()) {
       let matchArray = [...pEl.text().matchAll(regexp)];
@@ -25,13 +25,13 @@ export const extractPriceAvailabilityInfo = (
   });
 
   //package size
-  const psEl = $(shopObject.ps);
+  const psEl = $(shop.ps);
   if (psEl.length > 0) {
     ps = psEl.text();
   }
 
   //availability
-  const availabilityEl = $(shopObject.a);
+  const availabilityEl = $(shop.a);
   if (availabilityEl.length > 0) {
     if (availabilityEl.text()) {
       a = deliveryTime(availabilityEl.text());
@@ -41,27 +41,27 @@ export const extractPriceAvailabilityInfo = (
     }
   }
   //ean
-  if (shopObject.ean.includes('meta')) {
-    const eanEl = $(shopObject.ean);
+  if (shop.ean.includes('meta')) {
+    const eanEl = $(shop.ean);
     if (eanEl.length > 0) {
       const content = eanEl.attr('content');
       if (content) {
         ean = content;
       }
     }
-  } else if (shopObject.ean.includes('script')) {
-    console.log(shopObject.ean.split(';')[0]);
+  } else if (shop.ean.includes('script')) {
+    console.log(shop.ean.split(';')[0]);
     //@ts-ignore
-    const jsonRaws = $(shopObject.ean.split(';')[0]);
+    const jsonRaws = $(shop.ean.split(';')[0]);
     for (let index = 0; index < jsonRaws.length; index++) {
       //@ts-ignore
       const content = JSON.parse(jsonRaws[index].children[0].data);
-      if (content[shopObject.ean.split(';')[1]]) {
-        ean = content[shopObject.ean.split(';')[1]];
+      if (content[shop.ean.split(';')[1]]) {
+        ean = content[shop.ean.split(';')[1]];
       }
     }
   } else {
-    const eanEl = $(shopObject.ean);
+    const eanEl = $(shop.ean);
     if (eanEl.length > 0) {
       let match = eanEl.text().match(eanRegex);
       if (match) {
@@ -71,7 +71,7 @@ export const extractPriceAvailabilityInfo = (
   }
 
   //name
-  const nEl = $(shopObject.n);
+  const nEl = $(shop.n);
   if (nEl.length > 0) {
     n = nEl.text();
   }

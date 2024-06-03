@@ -30,10 +30,10 @@ import { getPage } from '../browser/getPage';
 
 const collectInternalLinks = (
   $: CheerioAPI,
-  shopObject: ShopObject,
+  shop: ShopObject,
   url: string,
 ): string[] => {
-  const { d, ece, ap } = shopObject;
+  const { d, ece, ap } = shop;
   let links: string[] = [];
   const elements =
     "a[href^='http://" +
@@ -60,7 +60,7 @@ const collectInternalLinks = (
       const link = href;
       if (
         !antiKeywords
-          .filter((antiKeyword) => !shopObject.d.includes(antiKeyword))
+          .filter((antiKeyword) => !shop.d.includes(antiKeyword))
           .some((el: string) => link.toLowerCase().indexOf(el) !== -1)
       ) {
         const _sensitizedURL = sanitizedURL(link, d, url);
@@ -235,7 +235,7 @@ const extractFromVariousLocations = (
 
 export const findProductInfo = (
   $: CheerioAPI,
-  shopObject: ShopObject,
+  shop: ShopObject,
   url: string,
   extractLinks: boolean = true,
 ): Candidate => {
@@ -256,51 +256,51 @@ export const findProductInfo = (
   let f = '';
   let ls: string[] = [];
 
-  if (shopObject?.img !== undefined) {
-    img = imageLinks($, shopObject.img, urlRegex, shopObject.imgMeta);
+  if (shop?.img !== undefined) {
+    img = imageLinks($, shop.img, urlRegex, shop.imgMeta);
   }
 
   //feature
-  if (shopObject?.f !== undefined) {
-    const fResult = extractFromVariousLocations($, shopObject.f);
+  if (shop?.f !== undefined) {
+    const fResult = extractFromVariousLocations($, shop.f);
     if (fResult) {
       f = fResult;
     }
   }
   //price
-  shopObject.p.map((selector) => {
+  shop.p.map((selector) => {
     const pResult = extractFromVariousLocations($, selector, regexp);
     if (pResult) {
       p = pResult.toString();
     }
   });
   //name
-  const nResult = extractFromVariousLocations($, shopObject.n);
+  const nResult = extractFromVariousLocations($, shop.n);
   if (nResult) {
     n = nResult;
   }
   //availability
-  const aResult = extractFromVariousLocations($, shopObject.a);
+  const aResult = extractFromVariousLocations($, shop.a);
   if (aResult) {
     a = deliveryTime(aResult);
   }
   //manufactuerer
-  const mResult = extractFromVariousLocations($, shopObject.m);
+  const mResult = extractFromVariousLocations($, shop.m);
   if (mResult) {
     m = mResult;
   }
   //package size
-  const psResult = extractFromVariousLocations($, shopObject.ps);
+  const psResult = extractFromVariousLocations($, shop.ps);
   if (psResult) {
     ps = psResult;
   }
   //ean
-  const eanResult = extractFromVariousLocations($, shopObject.ean, eanRegex);
+  const eanResult = extractFromVariousLocations($, shop.ean, eanRegex);
   if (eanResult) {
     ean = eanResult;
   }
   //pzn
-  const pznResult = extractFromVariousLocations($, shopObject.pzn, pznRegex);
+  const pznResult = extractFromVariousLocations($, shop.pzn, pznRegex);
   if (pznResult) {
     pzn = pznResult;
   }
@@ -318,7 +318,7 @@ export const findProductInfo = (
       .trim();
   }
   //collect all internal links of the page
-  ls = extractLinks ? collectInternalLinks($, shopObject, url) : [];
+  ls = extractLinks ? collectInternalLinks($, shop, url) : [];
 
   return {
     l: '',
@@ -422,7 +422,7 @@ export const searchProductWithPZN = async (
 };
 export const getProductInfoWithFetch = async (
   _url: string,
-  shopObject: ShopObject,
+  shop: ShopObject,
 ): Promise<Candidate | FailedPage> => {
   const proxy = _.sample(proxies);
   const userAgent = _.sample(userAgentList);
@@ -436,7 +436,7 @@ export const getProductInfoWithFetch = async (
         headers: { 'User-Agent': userAgent.agent },
       });
       const body = await res.text();
-      const newCandidate = findProductInfo(load(body), shopObject, _url);
+      const newCandidate = findProductInfo(load(body), shop, _url);
       if (body !== '') return { ...newCandidate, l: _url };
       else return { url: _url, err: true };
     } else {
@@ -468,7 +468,7 @@ export const getImageWithFetch = async (_url: string, proxyAuth: ProxyAuth) => {
 
 export const getProductInfoWithBrowser = async (
   url: string,
-  shopObject: ShopObject,
+  shop: ShopObject,
   browserInfo: BrowserInfo,
   extractLinks: boolean = true,
   proxyAuth: ProxyAuth,
@@ -489,22 +489,22 @@ export const getProductInfoWithBrowser = async (
 
   const page = await getPage(
     browserInfo.brs,
-    shopObject,
+    shop,
     null,
-    shopObject.resourceTypes['query'],
-    shopObject.exceptions,
+    shop.resourceTypes['query'],
+    shop.exceptions,
   );
 
   try {
     await page.goto(url, {
-      waitUntil: shopObject?.waitUntil
-        ? shopObject.waitUntil.entryPoint
+      waitUntil: shop?.waitUntil
+        ? shop.waitUntil.entryPoint
         : 'networkidle2',
       timeout: 60000,
     });
 
-    if (shopObject?.actions) {
-      for (const action of shopObject.actions) {
+    if (shop?.actions) {
+      for (const action of shop.actions) {
         const selector = await page
           .waitForSelector(action.sel, {
             visible: true,
@@ -570,7 +570,7 @@ export const getProductInfoWithBrowser = async (
     page.on('response', (request) => {
       console.error(request);
     });
-    newCandidate = findProductInfo(load(html), shopObject, url, extractLinks);
+    newCandidate = findProductInfo(load(html), shop, url, extractLinks);
     newCandidate.l = url;
     await closePage(page);
     return { newCandidate, err: false, url };
