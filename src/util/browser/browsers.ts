@@ -7,7 +7,7 @@ import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
 import { VersionProvider, Versions } from '../versionProvider';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-
+import fetch from 'node-fetch';
 
 let _browsers: BrowserGroup = {};
 
@@ -174,10 +174,15 @@ export const mainBrowser = async (
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
   }
+
+  if (task.proxyType)
+    await fetch(
+      `http://${proxyAuth.host}/change-proxy?proxy=${task.proxyType}`,
+    );
+
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
   try {
-
     puppeteer.use(
       StealthPlugin({
         enabledEvasions: new Set([

@@ -1,6 +1,8 @@
 export interface QueueTask {
   [key: string]: any;
   productLimit: number;
+  proxyType?: 'gb'| 'request';
+  timezones?: string[];
   statistics: {
     errorTypeCount: {
       [key: string]: number;

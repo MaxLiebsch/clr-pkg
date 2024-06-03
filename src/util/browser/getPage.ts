@@ -5,7 +5,6 @@ import {
   graphicsCardListByPlatform,
   languageList,
   languagesLists,
-  pluginList,
   screenResolutions,
   screenResolutionsByPlatform,
   timezones,
@@ -125,8 +124,11 @@ const setPageProperties = async (
   requestCount: number | null,
   disAllowedResourceTypes?: ResourceType[],
   rules?: Rule[],
+  customTimezones?: string[],
 ) => {
   const { javascript } = shop;
+  let _timezones = customTimezones ?? timezones;
+
   await page.setRequestInterception(true);
   page.on('request', (request) => {
     const resourceType = request.resourceType();
@@ -227,7 +229,12 @@ const setPageProperties = async (
 
   await page.setBypassCSP(true);
 
-  await page.emulateTimezone(sample(timezones) ?? 'America/New_York');
+  const timezone = requestCount
+  ? _timezones[requestCount % _timezones.length]
+  : sample(_timezones) ?? 'America/New_York';
+ 
+  
+  await page.emulateTimezone(timezone);
 
   const languages = requestCount
     ? languagesLists[requestCount % languagesLists.length]
@@ -413,7 +420,10 @@ const setPageProperties = async (
 
   await new WebGlVendor(graphicCard).onPageCreated(page);
 
-  if (javascript?.webWorker === undefined || javascript?.webWorker === 'disabled'){
+  if (
+    javascript?.webWorker === undefined ||
+    javascript?.webWorker === 'disabled'
+  ) {
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(window, 'Worker', {
         get: function () {
@@ -421,10 +431,12 @@ const setPageProperties = async (
         },
       });
     });
-
   }
 
-  if (javascript?.serviceWorker === undefined  || javascript?.serviceWorker === 'disabled'){
+  if (
+    javascript?.serviceWorker === undefined ||
+    javascript?.serviceWorker === 'disabled'
+  ) {
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, 'serviceWorker', {
         //@ts-ignore
@@ -433,9 +445,11 @@ const setPageProperties = async (
         },
       });
     });
-
   }
-  if (javascript?.sharedWorker === undefined  || javascript?.sharedWorker === 'disabled'){
+  if (
+    javascript?.sharedWorker === undefined ||
+    javascript?.sharedWorker === 'disabled'
+  ) {
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(window, 'SharedWorker', {
         get: function () {
@@ -443,7 +457,6 @@ const setPageProperties = async (
         },
       });
     });
-
   }
 
   await page.evaluateOnNewDocument(() => {
@@ -462,6 +475,7 @@ export async function getPage(
   disAllowedResourceTypes?: ResourceType[],
   exceptions?: string[],
   rules?: Rule[],
+  timezones?: string[],
 ) {
   const page = await browser.newPage();
 
@@ -472,6 +486,7 @@ export async function getPage(
     requestCount,
     disAllowedResourceTypes,
     rules,
+    timezones
   );
 
   return page;

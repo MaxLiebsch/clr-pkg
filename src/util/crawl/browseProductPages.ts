@@ -64,6 +64,7 @@ export async function browseProductpages(
         shop,
         paginationEl,
       );
+      process.env.DEBUG && console.log('noOfFoundPages:', noOfFoundPages)
 
       if (noOfFoundPages) {
         const noOfPages = limitPages
@@ -87,6 +88,7 @@ export async function browseProductpages(
                 query?.product.value,
               );
             }
+            process.env.DEBUG && console.log('nextUrl:', nextUrl)
 
             await Promise.all([
               page
