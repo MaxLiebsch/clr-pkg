@@ -265,16 +265,14 @@ export function calculateArbitrage(
   bestMatch: Product,
   targetShop: TargetShop,
 ) {
-  const { price } = bestMatch;
+  const { price: bm_prc } = bestMatch;
   const arbitrageInfo: { [key: string]: any } = {};
   const { d: domain, prefix } = targetShop;
-  if (typeof srcPrice === 'number' && typeof price === 'number') {
+  if (typeof srcPrice === 'number' && typeof bm_prc === 'number') {
     Object.entries(bestMatch).forEach(([key, value]) => {
       if (['link', 'image', 'name', 'price'].includes(key)) {
         if (key === 'link') {
-          //TODO: remove legacy, since it is now usually prefixed on the fly
-          arbitrageInfo[`${prefix}` + key.replace(/[aeiou]/gi, '')] =
-            prefixLink(value as string, domain);
+          arbitrageInfo[`${prefix}` + key.replace(/[aeiou]/gi, '')] = value;
         } else if (key === 'image') {
           arbitrageInfo[`${prefix}` + key.replace(/[aeou]/gi, '')] = value;
         } else {
@@ -283,8 +281,6 @@ export function calculateArbitrage(
       }
     });
 
-    const bm_prc = safeParsePrice(price);
-  
     if (bm_prc && srcPrice) {
       const mrgn = Number((bm_prc - srcPrice).toFixed(2));
       const mrgn_pct = Number(((mrgn / srcPrice) * 100).toFixed(1));
