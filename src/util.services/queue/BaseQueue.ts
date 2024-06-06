@@ -396,7 +396,8 @@ export abstract class BaseQueue<
       await task(page, request);
       return { details: 'tippy-toppy', status: 'page-completed', retries };
     } catch (error) {
-      process.env.DEBUG === 'true' && console.log('error:', error);
+      process.env.DEBUG === 'true' &&
+        console.log('WrapperFunction:Error:', error);
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {
@@ -457,7 +458,9 @@ export abstract class BaseQueue<
           }
         }
 
-        isDomainAllowed(pageInfo.link) && this.pushTask(task, request);
+        isDomainAllowed(pageInfo.link) &&
+          this.pushTask(task, { ...request, retries: retries + 1 });
+          
         return { details: `${error}`, status: 'error-handled', retries };
       }
     } finally {
