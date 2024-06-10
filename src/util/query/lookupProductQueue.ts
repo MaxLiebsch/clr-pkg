@@ -156,7 +156,7 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
         return { key, value: safeParsePrice(value) as any };
       }
       if (key.toLowerCase().includes('asin')) {
-        return { key: key.toLowerCase(), value };
+        return { key: key.toLowerCase(), value: value.replace(/\W/g, "") };
       }
       return { key, value };
     });
