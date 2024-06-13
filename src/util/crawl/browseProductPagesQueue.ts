@@ -2,6 +2,7 @@ import { Page } from 'puppeteer1';
 import {
   clickBtn,
   deleteElementFromPage,
+  humanScroll,
   scrollToBottom,
   waitForSelector,
 } from '../helpers';
@@ -23,7 +24,6 @@ export async function browseProductPagesQueue(
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
 
-  
   if (shop.crawlActions && shop.crawlActions.length > 0) {
     for (let i = 0; i < shop.crawlActions.length; i++) {
       const action = shop.crawlActions[i];
@@ -39,6 +39,9 @@ export async function browseProductPagesQueue(
             action.interval as number,
           ),
         );
+      }
+      if (action.type === 'scroll') {
+        await humanScroll(page);
       }
     }
   }
@@ -152,11 +155,17 @@ export async function browseProductPagesQueue(
     } else if (type === 'recursive-more-button') {
       let exists = true;
       let cnt = 0;
-      while (exists && cnt <= limit.pages) {
+      while (exists && cnt < limit.pages - 1) {
         cnt++;
         const btn = await waitForSelector(page, sel, undefined, true);
         if (btn) {
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+          const shouldscroll = shop.crawlActions
+            ? shop.crawlActions.some((action) => action.type === 'scroll')
+            : false;
+          if (shouldscroll) {
+            await humanScroll(page);
+          }
         } else {
           exists = false;
         }

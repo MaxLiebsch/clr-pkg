@@ -3,6 +3,7 @@ import { Limit, ShopObject } from '../../types';
 import {
   clickBtn,
   deleteElementFromPage,
+  humanScroll,
   scrollToBottom,
   waitForSelector,
 } from '../helpers';
@@ -50,6 +51,12 @@ export async function browseProductpages(
           ),
         );
       }
+      if (action.type === 'scroll') {
+        console.log('scrolling....');
+
+        const res = await humanScroll(page);
+        console.log('res:', res);
+      }
     }
   }
 
@@ -64,7 +71,7 @@ export async function browseProductpages(
         shop,
         paginationEl,
       );
-      process.env.DEBUG && console.log('noOfFoundPages:', noOfFoundPages)
+      process.env.DEBUG && console.log('noOfFoundPages:', noOfFoundPages);
 
       if (noOfFoundPages) {
         const noOfPages = limitPages
@@ -88,7 +95,7 @@ export async function browseProductpages(
                 query?.product.value,
               );
             }
-            process.env.DEBUG && console.log('nextUrl:', nextUrl)
+            process.env.DEBUG && console.log('nextUrl:', nextUrl);
 
             await Promise.all([
               page
@@ -132,21 +139,22 @@ export async function browseProductpages(
     } else if (type === 'recursive-more-button') {
       let exists = true;
       let cnt = 0;
-      while (exists && cnt <= limitPages) {
+      while (exists && cnt < limitPages - 1) {
         cnt++;
         const btn = await waitForSelector(page, sel, undefined, true);
         if (btn) {
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+          const shouldscroll = shop.crawlActions
+            ? shop.crawlActions.some((action) => action.type === 'scroll')
+            : false;
+          if (shouldscroll) {
+            await humanScroll(page);
+          }
         } else {
           exists = false;
         }
       }
-      await crawlProducts(
-        page,
-        shop,
-        addProductCb,
-        pageInfo,
-      ).finally(() => {
+      await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });

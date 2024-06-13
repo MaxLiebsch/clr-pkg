@@ -66,7 +66,7 @@ export const matchTargetShopProdsWithRawProd = (
 
 export const reduceTargetShopCandidates = (products: Product[]) => {
   const foundProds = segmentFoundProds(
-    products.filter((p) => p.price && p.link && p.name && p.image),
+    products.filter((p) => p.price && p.link && p.name),
   );
 
   const candidatesToSave = foundProds.map((candidate) => {

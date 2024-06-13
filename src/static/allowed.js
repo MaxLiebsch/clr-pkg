@@ -38,7 +38,7 @@ export const allowed = [
   // "bot.sannysoft.com",
   // "cdn.jsdelivr.net",
   // "cdnjs.cloudflare.com",
-  // "browserleaks.com",
+  "browserleaks.com",
   // "ipinfo.io",
   "www.metro.de",
   "www.mindfactory.de",

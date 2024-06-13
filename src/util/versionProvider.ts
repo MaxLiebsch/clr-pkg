@@ -5,8 +5,10 @@ import puppeteer4 from 'puppeteer4'; // Puppeteer v22.8.0
 import puppeteer5 from 'puppeteer5'; // Puppeteer v22.9.0
 import puppeteer6 from 'puppeteer6'; // Puppeteer v22.8.2
 import puppeteer7 from 'puppeteer7'; // Puppeteer v22.10.0
+import puppeteer8 from 'puppeteer8'; // Puppeteer v22.11.0
 
 /*
+Chrome for Testing 126.0.6478.55 - Puppeteer v22.11.0
 Chrome for Testing 125.0.6422.78 - Puppeteer v22.10.0
 Chrome for Testing 125.0.6422.60 - Puppeteer v22.9.0
 Chrome for Testing 124.0.6367.207 - Puppeteer v22.8.2
@@ -27,10 +29,11 @@ export type Versions =
   | '124.0.6367.91' // Puppeteer v22.8.0
   | '124.0.6367.207' // Puppeteer v22.8.2
   | '125.0.6422.60' // Puppeteer v22.9.0
-  | '125.0.6422.78'; // Puppeteer v22.10.0
+  | '125.0.6422.78' // Puppeteer v22.10.0
+  | '126.0.6478.55'; // Puppeteer v22.11.0
 
 export class VersionProvider {
-  public currentPuppeteerVersion: Versions = '123.0.6312.58';
+  public currentPuppeteerVersion: Versions = '126.0.6478.55';
   public puppeteerInstance: any = puppeteer;
   public puppeteer = {
     '123.0.6312.58': puppeteer, // Puppeteer v22.6.0
@@ -40,6 +43,7 @@ export class VersionProvider {
     '124.0.6367.207': puppeteer5, // Puppeteer v22.8.2
     '125.0.6422.60': puppeteer6, // Puppeteer v22.9.0
     '125.0.6422.78': puppeteer7, // Puppeteer v22.10.0
+    "126.0.6478.55": puppeteer8, // Puppeteer v22.11.0
   };
 
   public static singleton: VersionProvider;

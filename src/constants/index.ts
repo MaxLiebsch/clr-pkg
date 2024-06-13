@@ -14,6 +14,7 @@ export const ACCESS_DENIED_FREQUENCE = 10000;
 export const STANDARD_FREQUENCE = 10000;
 
 export const CHROME_VERSIONS: Versions[] = [
+  '126.0.6478.55', // Puppeteer v22.11.0
   '125.0.6422.78', // Puppeteer v22.10.0
   '123.0.6312.58', // Puppeteer v22.6.0
   '125.0.6422.60', // Puppeteer v22.9.0

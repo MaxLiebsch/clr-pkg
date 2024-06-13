@@ -3,6 +3,7 @@ import { QueryKeys } from "./query";
 export type ActionType =
   | 'button'
   | 'element'
+  | 'scroll'
   | 'input'
   | 'select'
   | 'shadowroot-button'
