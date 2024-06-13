@@ -52,10 +52,7 @@ export async function browseProductpages(
         );
       }
       if (action.type === 'scroll') {
-        console.log('scrolling....');
-
-        const res = await humanScroll(page);
-        console.log('res:', res);
+        await humanScroll(page);
       }
     }
   }
