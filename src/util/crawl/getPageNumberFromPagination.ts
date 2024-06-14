@@ -9,6 +9,27 @@ import {
 import { getNumber, getNumbers } from '../matching/compare_helper';
 import { PaginationElement } from '../../types/paginationElement';
 
+/**
+ * Retrieves the page numbers from a pagination element.
+ *
+ * @param page - The page object.
+ * @param shop - The shop object.
+ * @param paginationEl - The pagination element.
+ * @param productCount - The number of products (optional).
+ * @returns An object containing the array of page numbers and the number of found pages.
+
+
+  Possible Options:
+  - button: The page numbers are buttons.
+  - first_last: The page numbers are the first and last page numbers.
+  - count: The page numbers are are retrievedfrom the element with the highest number in their text.
+  - match_text: The page numbers match a specific text then add exactly 1 page.
+  - find_highest: The page numbers are the highest number found in button/elements text
+  - estimate: The page numbers are estimated from the researched number of products per page.
+  - product_count: The page numbers are calculated from the product count element .
+
+*/
+
 export const getPageNumberFromPagination = async (
   page: Page,
   shop: ShopObject,

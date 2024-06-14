@@ -11,7 +11,6 @@ describe('Pagination Builder', () => {
   //           type: 'pagination',
   //           sel: 'div.div.PageLinksNavi',
   //           nav: '.html?ACTION=2&GROUPID=<groupid>&START=<page>&OFFSET=30&nbc=1',
-  //           scrollToBottom: true,
   //           paginationUrlSchema: {
   //             replace: '\\.html',
   //             parseAndReplace: { regexp: '\\d+', replace: '<groupid>' },
@@ -43,7 +42,6 @@ describe('Pagination Builder', () => {
   //           type: 'pagination',
   //           sel: 'ul.reptile_paging.reptile_paging--bottom',
   //           nav: '?l=gp&o=<page>',
-  //           scrollToBottom: true,
   //           paginationUrlSchema: {
   //             replace: 'attach_end',
   //             withQuery: false,
@@ -76,7 +74,6 @@ describe('Pagination Builder', () => {
             type: 'pagination',
             sel: 'button.button-secondary.loadmoreBtn',
             nav: '&typesorting=0&sdirection=ascending&skippos=<skip>&takenum=24',
-            scrollToBottom: true,
             paginationUrlSchema: {
               replace: '',
               withQuery: false,

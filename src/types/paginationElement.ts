@@ -7,7 +7,6 @@ export interface PaginationElement {
       type: string;
       regexp: string;
     };
-    scrollToBottom: boolean;
     paginationUrlSchema?: PaginationUrlSchema;
     calculation: Calculation;
   }
