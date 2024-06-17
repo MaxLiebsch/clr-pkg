@@ -32,6 +32,7 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
+    "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
     "convert-units": "^2.3.4",
     "dotenv": "^16.4.5",
