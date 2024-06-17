@@ -18,6 +18,11 @@ export interface IAttributeDetail extends DetailBase {
   regexp?: string;
 }
 
+export interface IParseJSONElementDetail extends DetailBase {
+  path: string;
+  multiple: boolean;
+}
+
 export interface IParseJSONDetail extends DetailBase {
   attr: string;
   key: string;

@@ -1,4 +1,4 @@
-import {  Page } from 'puppeteer1';
+import { Page } from 'puppeteer1';
 import {
   AttributeDetailExtractor,
   ExctractorClasses,
@@ -6,6 +6,7 @@ import {
   NestedDetailExtractor,
   ParseJSONDetailExtractor,
   TextDetailExtractor,
+  ParseJSONFromElementExtractor,
 } from './productDetail.services';
 import { Details } from '../../types/productInfoDetails';
 import { waitForSelector } from '../helpers';
@@ -15,6 +16,13 @@ const detailExtractorRegistry = {
   href: AttributeDetailExtractor,
   src: AttributeDetailExtractor,
   srcset: AttributeDetailExtractor,
+  content: AttributeDetailExtractor,
+  'data-srcset': AttributeDetailExtractor,
+  'data-src': AttributeDetailExtractor,
+  alt: AttributeDetailExtractor,
+  'data-llsrc': AttributeDetailExtractor,
+  'data-original': AttributeDetailExtractor,
+  parse_json_element: ParseJSONFromElementExtractor,
   parse_json: ParseJSONDetailExtractor,
   nested: NestedDetailExtractor,
   exist: ExistDetailExtractor,

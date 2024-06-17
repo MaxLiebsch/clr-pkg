@@ -21,6 +21,7 @@ import {
 import { get } from 'lodash';
 import { safeJSONParse } from '../extract/saveParseJSON';
 import { safeParsePrice } from '../safeParsePrice';
+import { eanRegex } from '../../constants';
 
 export const crawlProducts = async (
   page: Page,
@@ -61,7 +62,11 @@ export const crawlProducts = async (
         shop: shop.d,
         category,
         name: '',
+        asin: [],
         van: '',
+        sku: '',
+        mku: '',
+        ean: '',
         vendor: '',
         mnfctr: '',
         hasMnfctr: false,
@@ -195,7 +200,7 @@ export const crawlProducts = async (
         }
       }
       if (product.price !== 0) {
-        product.price = safeParsePrice(product.price); 
+        product.price = safeParsePrice(product.price);
       }
 
       if (product.promoPrice !== 0) {
@@ -208,6 +213,13 @@ export const crawlProducts = async (
           shop.ece,
         );
       }
+      // Parse ean from link
+      if (shop.ean) {
+        const ean = (product.link as string).match(new RegExp(shop.ean, 'g'));
+        if (ean) {
+          product.ean = ean[0].replaceAll(/\D/g, '');
+        }
+      }
       // Add proprietary products to the name
       if (proprietaryProducts) {
         product.name = proprietaryProducts + ' ' + product.name;
@@ -216,6 +228,7 @@ export const crawlProducts = async (
       if (product.mnfctr) {
         product.hasMnfctr = true;
       }
+
       await addProductCb(product);
     }
   }

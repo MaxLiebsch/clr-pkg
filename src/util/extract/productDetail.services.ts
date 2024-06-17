@@ -4,10 +4,23 @@ import {
   ExistDetail,
   IAttributeDetail,
   IParseJSONDetail,
+  IParseJSONElementDetail,
   ITextDetail,
   NestedNameDetail,
 } from '../../types/productInfoDetails';
-import { cleanUpHTML, extractPart, nestedProductName } from '../helpers';
+import {
+  cleanUpHTML,
+  extractPart,
+  getElementHandleInnerText,
+  myQuerySelectorAll,
+  myQuerySelectorAllElementHandle,
+  nestedProductName,
+} from '../helpers';
+import { extractTextFromElementHandle } from './extractTextFromHandle';
+import { attrFromEleInEleHandle } from './extractAttributeFromHandle';
+import { safeJSONParse } from './saveParseJSON';
+import { get } from 'lodash';
+import { findProperty } from './findProperty';
 
 export abstract class ExtractProductDetail {
   constructor() {}
@@ -19,17 +32,7 @@ export abstract class ExtractProductDetail {
 export class TextDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITextDetail) {
     const { sel, type, content } = detail;
-    const el = await element
-    .$eval(sel, (i) => {
-      const innerText = (i as HTMLElement).innerText.trim();
-      if (innerText !== '') {
-        return innerText;
-      } else {
-        const innerHTML = (i as HTMLElement).innerHTML;
-        return innerHTML;
-      }
-    })
-    .catch((e) => {});
+    const el = await extractTextFromElementHandle(element, sel);
     if (el) {
       let foundEl = el;
       if (content === 'price') {
@@ -48,26 +51,60 @@ export class TextDetailExtractor implements ExtractProductDetail {
     }
   }
 }
+
+export class ParseJSONFromElementExtractor implements ExtractProductDetail {
+  async extractDetail(element: ElementHandle, detail: IParseJSONElementDetail) {
+    const { path, sel } = detail;
+    try {
+      if (detail?.multiple) {
+        const elements = await myQuerySelectorAllElementHandle(element, sel);
+        if (elements) {
+          for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const el = await getElementHandleInnerText(element);
+            if (!el) continue;
+            const parsed = safeJSONParse(el);
+            if (!parsed) continue;
+            const value =  findProperty(parsed, path);
+            if (value) return value;
+          }
+        }
+      } else {
+        const el = await getElementHandleInnerText(element);
+        if (!el) return null;
+        const parsed = safeJSONParse(el);
+        if (!parsed) return null;
+        const value =  findProperty(parsed, path);
+        return value;
+      }
+    } catch (error) {
+      console.error('error:', error);
+      return null;
+    }
+  }
+}
+
 export class ParseJSONDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONDetail) {
     const { key, attr, urls, redirect_regex, sel } = detail;
     try {
-      const el = await element
-        .$eval(sel, (i, attr) => i.getAttribute(attr!), attr)
-        .catch((e) => {});
+      const el = await attrFromEleInEleHandle(element, sel, attr);
+      if (!el) return null;
 
-      if (el) {
-        const parsed = JSON.parse(el);
-        const value = parsed[key!];
-        if (value) {
-          const redirect = new RegExp(redirect_regex!);
-          if (redirect.test(value)) {
-            return urls.redirect.replace('<key>', value);
-          } else {
-            return urls.default + value;
-          }
+      const parsed = safeJSONParse(el);
+      if (!parsed) return null;
+
+      const value = get(parsed, key, null);
+
+      if (value) {
+        const redirect = new RegExp(redirect_regex!);
+        if (redirect.test(value)) {
+          return urls.redirect.replace('<key>', value);
+        } else {
+          return urls.default + value;
         }
       }
+
       return null;
     } catch (error) {
       console.error('error:', error);
@@ -78,9 +115,7 @@ export class ParseJSONDetailExtractor implements ExtractProductDetail {
 export class AttributeDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IAttributeDetail) {
     const { baseUrl, sel, type, regexp } = detail;
-    const el = await element
-    .$eval(sel, (i, type) => i.getAttribute(type), type)
-    .catch((e) => {});
+    const el = await attrFromEleInEleHandle(element, sel, type);
     if (el) {
       let foundAttr = el;
       if (type === 'href' || type === 'src' || type === 'srcset') {

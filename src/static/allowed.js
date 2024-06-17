@@ -21,6 +21,7 @@ export const allowed = [
   'www.aponeo.de',
   "cdn.idealo.com",
   "www.alternate.de",
+  "alternate.de",
   "www.actionsports.de",
   "www.bergfreunde.de",
   "www.action.com",

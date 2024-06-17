@@ -96,6 +96,8 @@ export interface Candidate {
   a: string;
   p: string;
   ean: string;
+  mku: string;
+  sku: string;
   n: string;
   l: string;
   f?: string;

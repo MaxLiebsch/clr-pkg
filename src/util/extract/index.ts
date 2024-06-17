@@ -27,6 +27,7 @@ import { TimeoutError } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { closePage } from '../browser/closePage';
 import { getPage } from '../browser/getPage';
+import { extractFromVariousLocations } from './extractFromVariousLocations';
 
 const collectInternalLinks = (
   $: CheerioAPI,
@@ -116,7 +117,7 @@ const imageLinks = (
   return imageSources;
 };
 
-const extractInfoFromScript = (
+export const extractInfoFromScript = (
   $: CheerioAPI,
   raw_selector: string,
 ): string | undefined => {
@@ -169,68 +170,13 @@ const extractInfoFromScript = (
   return value;
 };
 
-const extractRegexFromString = (str: string, regex: RegExp) => {
+export const extractRegexFromString = (str: string, regex: RegExp) => {
   const match = str.match(regex);
   if (match) {
     return match[0];
   } else {
     return null;
   }
-};
-
-const extractFromVariousLocations = (
-  $: CheerioAPI,
-  raw_selector: string,
-  regex?: RegExp,
-) => {
-  let result: null | string = null;
-  if (raw_selector.includes('meta')) {
-    const elem = $(raw_selector);
-    if (elem.length > 0) {
-      const content = elem.attr('content');
-      if (regex && content) {
-        const match = extractRegexFromString(content, regex);
-        if (match) {
-          return match;
-        }
-      }
-      if (content) {
-        return content;
-      }
-    }
-  }
-  if (raw_selector.includes('script') || raw_selector.includes('NEXT_DATA')) {
-    const value = extractInfoFromScript($, raw_selector);
-    if (value) {
-      return value;
-    }
-  }
-
-  if (regex) {
-    const elem = $(raw_selector);
-    if (elem.length > 0) {
-      let match = elem.text().match(regex);
-      if (match) {
-        return match[0];
-      } else {
-        const dataRegex = raw_selector.match(/(?<=\[).+?(?=\])/gi);
-        const attributes = elem.attr();
-        if (dataRegex && attributes) {
-          return attributes[dataRegex[0]];
-        }
-      }
-    }
-  } else {
-    const elem = $(raw_selector);
-    if (elem.length > 0) {
-      const _text = elem.text();
-      const text = elem.first().text();
-      if (raw_selector.includes('data-content')) {
-      }
-      result = text;
-    }
-  }
-  return result;
 };
 
 export const findProductInfo = (
@@ -251,6 +197,8 @@ export const findProductInfo = (
   let pzn = '';
   let ean = '';
   let m = '';
+  let sku = '';
+  let mku = '';
   let ps = '';
   let img: string[] = [];
   let f = '';
@@ -268,41 +216,70 @@ export const findProductInfo = (
     }
   }
   //price
-  shop.p.map((selector) => {
-    const pResult = extractFromVariousLocations($, selector, regexp);
-    if (pResult) {
-      p = pResult.toString();
-    }
-  });
+  if (shop.p !== undefined && shop.p.length === 0) {
+    shop.p.map((selector) => {
+      const pResult = extractFromVariousLocations($, selector, regexp);
+      if (pResult) {
+        p = pResult.toString();
+      }
+    });
+  }
   //name
-  const nResult = extractFromVariousLocations($, shop.n);
-  if (nResult) {
-    n = nResult;
+  if (shop.n !== undefined) {
+    const nResult = extractFromVariousLocations($, shop.n);
+    if (nResult) {
+      n = nResult;
+    }
   }
   //availability
-  const aResult = extractFromVariousLocations($, shop.a);
-  if (aResult) {
-    a = deliveryTime(aResult);
+  if (shop.a !== undefined) {
+    const aResult = extractFromVariousLocations($, shop.a);
+    if (aResult) {
+      a = deliveryTime(aResult);
+    }
   }
   //manufactuerer
-  const mResult = extractFromVariousLocations($, shop.m);
-  if (mResult) {
-    m = mResult;
+  if (shop.m !== undefined) {
+    const mResult = extractFromVariousLocations($, shop.m);
+    if (mResult) {
+      m = mResult;
+    }
   }
   //package size
-  const psResult = extractFromVariousLocations($, shop.ps);
-  if (psResult) {
-    ps = psResult;
+  if (shop.ps !== undefined) {
+    const psResult = extractFromVariousLocations($, shop.ps);
+    if (psResult) {
+      ps = psResult;
+    }
   }
+
   //ean
-  const eanResult = extractFromVariousLocations($, shop.ean, eanRegex);
-  if (eanResult) {
-    ean = eanResult;
+  if (shop.ean !== undefined) {
+    const eanResult = extractFromVariousLocations($, shop.ean, eanRegex);
+    if (eanResult) {
+      ean = eanResult;
+    }
+  }
+  //sku
+  if (shop.sku !== undefined) {
+    const skuResult = extractFromVariousLocations($, shop.sku, eanRegex);
+    if (skuResult) {
+      sku = skuResult;
+    }
+  }
+  //mku
+  if (shop.mku !== undefined) {
+    const skuResult = extractFromVariousLocations($, shop.mku, eanRegex);
+    if (skuResult) {
+      mku = skuResult;
+    }
   }
   //pzn
-  const pznResult = extractFromVariousLocations($, shop.pzn, pznRegex);
-  if (pznResult) {
-    pzn = pznResult;
+  if (shop.pzn !== undefined) {
+    const pznResult = extractFromVariousLocations($, shop.pzn, pznRegex);
+    if (pznResult) {
+      pzn = pznResult;
+    }
   }
 
   if (a === undefined) {
@@ -322,16 +299,18 @@ export const findProductInfo = (
 
   return {
     l: '',
+    sku,
+    mku,
+    ean,
     pzn: pzn !== '' ? pzn.padStart(8, '0') : '',
     a: a.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
     n: n.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
     p: p.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
-    m: m,
+    m,
     img,
     f,
-    ean: ean,
     ps: ps.replace(regex, '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(),
-    ls: ls,
+    ls,
   };
 };
 
@@ -394,7 +373,6 @@ export const searchProductWithPZN = async (
     const id = setTimeout(() => controller.abort(), timeout);
     const userAgent = _.sample(userAgentList);
     if (proxy && userAgent) {
-
       const myURL = new URL('http://' + _proxy);
       const options = url.urlToHttpOptions(myURL);
       if (passwordAuth) options.auth = '23oj7wi7uj:89x51dmfs0-country-DE';
@@ -418,32 +396,6 @@ export const searchProductWithPZN = async (
   } catch (error) {
     console.log('error:', error);
     return { url: _url, err: true, status: 0 };
-  }
-};
-export const getProductInfoWithFetch = async (
-  _url: string,
-  shop: ShopObject,
-): Promise<Candidate | FailedPage> => {
-  const proxy = _.sample(proxies);
-  const userAgent = _.sample(userAgentList);
-  try {
-    if (proxy && userAgent) {
-      const myURL = new URL('http://' + proxy);
-      const options = url.urlToHttpOptions(myURL);
-      const proxyAgent = new HttpsProxyAgent(options as string);
-      const res = await fetch(_url, {
-        agent: proxyAgent,
-        headers: { 'User-Agent': userAgent.agent },
-      });
-      const body = await res.text();
-      const newCandidate = findProductInfo(load(body), shop, _url);
-      if (body !== '') return { ...newCandidate, l: _url };
-      else return { url: _url, err: true };
-    } else {
-      return { url: _url, err: true };
-    }
-  } catch (error) {
-    return { url: _url, err: true };
   }
 };
 
@@ -485,6 +437,8 @@ export const getProductInfoWithBrowser = async (
     ps: '',
     pzn: '',
     ls: [],
+    mku: '',
+    sku: ''
   };
 
   const page = await getPage(
@@ -497,9 +451,7 @@ export const getProductInfoWithBrowser = async (
 
   try {
     await page.goto(url, {
-      waitUntil: shop?.waitUntil
-        ? shop.waitUntil.entryPoint
-        : 'networkidle2',
+      waitUntil: shop?.waitUntil ? shop.waitUntil.entryPoint : 'networkidle2',
       timeout: 60000,
     });
 

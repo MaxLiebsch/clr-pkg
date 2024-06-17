@@ -62,8 +62,10 @@ export const deliveryTime = (status: string): string | undefined => {
     if (nArr.length === 1) {
       return `in ${nArr[0]} Tagen lieferbar`;
     }
+    return ''
   }
   if (zeitnahRegex && !numberRegex) {
     return 'in 1-3 Tagen lieferbar';
   }
+
 };

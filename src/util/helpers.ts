@@ -48,6 +48,17 @@ export const myQuerySelectorAll = async (page: Page, sel: string) => {
   }
 };
 
+export const myQuerySelectorAllElementHandle = async (
+  elementHandle: ElementHandle,
+  sel: string,
+) => {
+  try {
+    return await elementHandle.$$(sel);
+  } catch (error) {
+    return null;
+  }
+};
+
 export const myQuerySelectorAll2 = async (page: Page, sel: string) =>
   page
     .evaluate((sel) => {

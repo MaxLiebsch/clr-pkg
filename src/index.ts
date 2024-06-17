@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getProductInfoWithFetch } from './util/extract/getProductInfoWithFetch';
 
 export * from './constants/index';
 
@@ -43,6 +44,7 @@ export * from './util.services/query/queryShop';
 export * from './util.services/query/queryShopQueue';
 export * from './util.services/query/queryTargetShop';
 export * from './util/query/lookupProductQueue';
+export * from './util/query/queryProductPageQueue';
 export * from './util/query/matchTargetShopProdsWithRawProd';
 
 //QUEUE
@@ -60,5 +62,6 @@ export * from './util/crawl/getPageNumberFromPagination';
 export * from './util/crawl/findPagination';
 export * from './util/crawl/crawlProducts';
 export * from './util/crawl/browseProductPagesQueue';
+export * from './util/extract/getProductInfoWithFetch'
 
 export const mg = { mongoose };

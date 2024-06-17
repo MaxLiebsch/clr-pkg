@@ -1,7 +1,7 @@
 import { PuppeteerLifeCycleEvent } from "puppeteer1";
 import { QueryAction } from "./queryActions";
 import { QueryURLSchema } from "./query";
-import { ProductList } from "./productList";
+import { Detail, ProductList } from "./productList";
 import { Categories } from "./categories";
 import { CrawlAction } from "./crawlActions";
 import { ICategory } from "../util/crawl/getCategories";
@@ -31,6 +31,7 @@ export interface Shop {
   kws: string[]; // keywords
   ap: string[]; // anti pattern
   ece: string[]; // escape characters
+  proxyType: "mix" | 'de'
   active: boolean; // shop is active
   lastCrawlAt: string;
   lastSelectorTestAt: string;
@@ -53,14 +54,19 @@ export interface Shop {
   pauseOnProductPage?: { pause: boolean; max: number; min: number };
   paginationEl: PaginationElement[];
   imgMeta: ImgMeta;
-
+  
+  /*               PRODUCT DETAIL LOOKUP                    */
+  
+  product: Detail[]
   /*                  PRODUCT DETAILS                       */
-
+  hasEan: boolean;
   f?: string;
   n: string; // product name
   p: string[]; // price
   a: string; // availability
   ean: string; //  EAN
+  sku: string; // SKU
+  mku: string; // MKU
   img: string[]; // image
   s: {
     gp: number; // Grundpreis Versand
