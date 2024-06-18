@@ -28,7 +28,7 @@ import {
 } from '../../constants';
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
-import { sample } from 'underscore';
+import { sample, shuffle } from 'underscore';
 import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 
@@ -460,7 +460,7 @@ export abstract class BaseQueue<
 
         isDomainAllowed(pageInfo.link) &&
           this.pushTask(task, { ...request, retries: retries + 1 });
-          
+
         return { details: `${error}`, status: 'error-handled', retries };
       }
     } finally {
@@ -499,7 +499,9 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    this.queue = this.queue;
+    if (this.queueTask.type === 'LOOKUP_EAN') {
+      this.queue = shuffle(this.queue);
+    }
     const nextRequest = this.queue.shift();
     if (nextRequest) {
       const timeoutTime =
