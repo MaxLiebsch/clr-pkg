@@ -64,9 +64,6 @@ export const crawlProducts = async (
         name: '',
         asin: [],
         van: '',
-        sku: '',
-        mku: '',
-        ean: '',
         vendor: '',
         mnfctr: '',
         hasMnfctr: false,
@@ -199,11 +196,11 @@ export const crawlProducts = async (
           }
         }
       }
-      if (product.price !== 0) {
+      if (product.price && product.price !== 0) {
         product.price = safeParsePrice(product.price);
       }
 
-      if (product.promoPrice !== 0) {
+      if (product.promoPrice && product.promoPrice !== 0) {
         product.promoPrice = safeParsePrice(product.promoPrice);
       }
       // Remove random keywords from the URL
@@ -217,7 +214,7 @@ export const crawlProducts = async (
       if (shop.ean) {
         const ean = (product.link as string).match(new RegExp(shop.ean, 'g'));
         if (ean) {
-          product.ean = ean[0].replaceAll(/\D/g, '');
+          product['ean'] = ean[0].replaceAll(/\D/g, '');
         }
       }
       // Add proprietary products to the name
