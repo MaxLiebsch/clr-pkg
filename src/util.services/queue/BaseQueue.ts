@@ -18,6 +18,8 @@ import { createLabeledTimeout } from './createLabeledTimeout';
 import crypto from 'crypto';
 import {
   ACCESS_DENIED_FREQUENCE,
+  DEFAULT_PAGE_TIMEOUT,
+  EAN_PAGE_TIMEOUT,
   MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
   MAX_RETRIES_NOT_FOUND,
@@ -356,7 +358,10 @@ export abstract class BaseQueue<
 
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-        timeout: 60000,
+        timeout:
+          this.queueTask.type === 'LOOKUP_EAN'
+            ? EAN_PAGE_TIMEOUT
+            : DEFAULT_PAGE_TIMEOUT,
       });
 
       if (response) {

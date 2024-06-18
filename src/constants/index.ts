@@ -8,6 +8,8 @@ export const RANDOM_TIMEOUT_MIN = 3000;
 export const RANDOM_TIMEOUT_MAX = 8000;
 export const RECURSIVE_BUTTON_SAFEGUARD = 10; // 10 * 16 = 160 shops should be enough...
 export const MAX_CRITICAL_ERRORS = 7;
+export const DEFAULT_PAGE_TIMEOUT = 60000;
+export const EAN_PAGE_TIMEOUT = 120000;
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;
