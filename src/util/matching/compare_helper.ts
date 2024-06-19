@@ -14,6 +14,8 @@ const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
 const dimensionRegex =
   /(Ø|)(\d+\s*[xX-a]|)\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|Stück|St|kapseln|pixel|)/gi;
 const inOperatorRegex = /(\d+)\s*(in|from|of|von)\s*(\d+)/gi;
+const packRegex = /\d+\s*[-_]?\s*er\s*[-_]?\s*(pack|packung|package)/gi;
+
 
 export const excludeCharsAndSplit = (name: string) =>
   cleanString(name)
@@ -166,6 +168,15 @@ export const getDimensions = (str: string) => {
     dimension.push(unit[0]);
   });
   return dimension;
+};
+
+export const getPacks = (str: string) => {
+  const pack: string[] = [];
+  const matches = [...str.matchAll(packRegex)];
+  matches.forEach((unit) => {
+    pack.push(unit[0]);
+  });
+  return pack;
 };
 
 export const getSIUints = (str: string) => {

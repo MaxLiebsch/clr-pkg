@@ -62,8 +62,6 @@ export const crawlProducts = async (
         shop: shop.d,
         category,
         name: '',
-        asin: [],
-        van: '',
         vendor: '',
         mnfctr: '',
         hasMnfctr: false,
