@@ -2,11 +2,24 @@ import { Page } from 'puppeteer1';
 import { closePage } from '../browser/closePage';
 import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
+import { runActions } from './runActions';
 
 export async function queryProductPageQueue(page: Page, request: QueryRequest) {
   const { addProductInfo, shop } = request;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
+
+  // // slow done
+  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
+    const { min, max } = shop.pauseOnProductPage;
+    let pause = Math.floor(Math.random() * max) + min;
+    await new Promise((r) => setTimeout(r, pause));
+  }
+
+  if(shop.crawlActions && shop.crawlActions.length) {
+    await runActions(page, shop, 'crawl')
+  }
+
   if (product) {
     const pageParser = new PageParser(shop.d, []);
     product.forEach((detail: any) => {
@@ -17,10 +30,6 @@ export async function queryProductPageQueue(page: Page, request: QueryRequest) {
       rawProductInfos.push({ key, value });
     });
   }
-
-  // // slow done
-  // const pause = Math.floor(Math.random() * 3000) + 1500;
-  // await new Promise((r) => setTimeout(r, pause));
 
   const url = page.url();
   if (rawProductInfos.length) {
