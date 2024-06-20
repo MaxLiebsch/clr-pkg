@@ -3,9 +3,22 @@ import { ShopObject } from '../../types';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
 
-export async function runActions(page: Page, shop: ShopObject) {
-  const { actions, waitUntil } = shop;
-  if (shop.actions) {
+export async function runActions(
+  page: Page,
+  shop: ShopObject,
+  type: 'query' | 'crawl' | 'standard' = 'standard',
+) {
+  const { waitUntil } = shop;
+
+  const actionTypeMap = {
+    standard: shop?.actions,
+    crawl: shop?.crawlActions,
+    query: shop?.queryActions,
+  };
+
+  const actions = actionTypeMap[type];
+
+  if (actions) {
     for (const action of actions) {
       const { sel, type } = action;
       const selector = await waitForSelector(
@@ -17,13 +30,13 @@ export async function runActions(page: Page, shop: ShopObject) {
       if (!selector) {
         continue;
       }
-      if (type === 'button' && 'wait' in action && 'waitDuration' in action) {
+      if (type === 'button' && 'wait' in action) {
         await clickBtn(
           page,
           sel,
           action.wait ?? false,
           waitUntil,
-          action.waitDuration,
+          'waitDuration' in action ? action.waitDuration : undefined,
         );
       }
       if (type === 'shadowroot-button' && 'btn_sel' in action) {
