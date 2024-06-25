@@ -32,7 +32,6 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     if (unexpectedError?.includes(aznUnexpectedErrorText)) {
       clearInterval(timeout);
       if (retries < 5) {
-        console.log('retring unexpectedError');
         queue.pushTask(querySellerInfosQueue, {
           ...request,
           retries: request.retries + 1,
@@ -40,7 +39,6 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
         await closePage(page);
         return;
       } else {
-        console.log('finally unexpectedError');
         await closePage(page);
         return;
       }
