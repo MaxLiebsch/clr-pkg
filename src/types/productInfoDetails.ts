@@ -5,6 +5,8 @@ export interface DetailBase {
   parent?: string;
   sel: string;
   type: string;
+  shadowRoot?: boolean;
+  timeout?: number;
   proprietaryProducts?: string;
 }
 
@@ -19,7 +21,7 @@ export interface IAttributeDetail extends DetailBase {
 }
 
 export interface IParseJSONElementDetail extends DetailBase {
-  path: string;
+  path: string | string[];
   multiple: boolean;
 }
 

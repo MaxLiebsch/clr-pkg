@@ -65,8 +65,11 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
             if (!el) continue;
             const parsed = safeJSONParse(el);
             if (!parsed) continue;
-            const value =  findProperty(parsed, path);
-            if (value) return value;
+            if (path instanceof Array) {
+            } else {
+              const value = findProperty(parsed, path);
+              if (value) return value;
+            }
           }
         }
       } else {
@@ -74,8 +77,15 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
         if (!el) return null;
         const parsed = safeJSONParse(el);
         if (!parsed) return null;
-        const value =  findProperty(parsed, path);
-        return value;
+        if (path instanceof Array) {
+          for (let j = 0; j < path.length; j++) {
+            const value = findProperty(parsed, path[j]);
+            if (value) return value;
+          }
+        } else {
+          const value = findProperty(parsed, path);
+          if (value) return value;
+        }
       }
     } catch (error) {
       console.error('error:', error);

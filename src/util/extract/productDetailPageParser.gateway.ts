@@ -9,24 +9,34 @@ import {
   ParseJSONFromElementExtractor,
 } from './productDetail.services';
 import { Details } from '../../types/productInfoDetails';
-import { waitForSelector } from '../helpers';
+import { shadowRootSelector, waitForSelector } from '../helpers';
 
-const detailExtractorRegistry = {
-  text: TextDetailExtractor,
-  href: AttributeDetailExtractor,
-  src: AttributeDetailExtractor,
-  srcset: AttributeDetailExtractor,
-  content: AttributeDetailExtractor,
-  'data-srcset': AttributeDetailExtractor,
-  'data-src': AttributeDetailExtractor,
-  alt: AttributeDetailExtractor,
-  'data-llsrc': AttributeDetailExtractor,
-  'data-original': AttributeDetailExtractor,
-  parse_json_element: ParseJSONFromElementExtractor,
-  parse_json: ParseJSONDetailExtractor,
-  nested: NestedDetailExtractor,
-  exist: ExistDetailExtractor,
-};
+const sharedExtractorTypes = [
+  'href',
+  'src',
+  'srcset',
+  'content',
+  'data-srcset',
+  'value',
+  'label',
+  'data-src',
+  'alt',
+  'data-llsrc',
+  'data-original',
+];
+const detailExtractorRegistry = sharedExtractorTypes.reduce(
+  (acc: { [key: string]: any }, type) => {
+    acc[type] = AttributeDetailExtractor;
+    return acc;
+  },
+  {
+    text: TextDetailExtractor,
+    parse_json_element: ParseJSONFromElementExtractor,
+    parse_json: ParseJSONDetailExtractor,
+    nested: NestedDetailExtractor,
+    exist: ExistDetailExtractor,
+  },
+);
 
 export class PageParser {
   public detailExtractors: { class: ExctractorClasses; detail: Details }[];
@@ -51,12 +61,12 @@ export class PageParser {
   async parse(page: Page) {
     const details: { [key: string]: any } = {};
     for (const extractor of this.detailExtractors) {
-      const elementHandle = await waitForSelector(
-        page,
-        extractor.detail.parent ?? extractor.detail.sel,
-        300,
-        false,
-      );
+      const { parent, sel, content, timeout } = extractor.detail;
+      let elementHandle = null;
+      if ('shadowRoot' in extractor.detail) {
+        elementHandle = await shadowRootSelector(page, parent ?? sel);
+      }
+      elementHandle = await waitForSelector(page, parent ?? sel, timeout??5000 , false);
       if (elementHandle) {
         const result = await extractor.class.extractDetail(
           elementHandle,

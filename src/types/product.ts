@@ -60,7 +60,6 @@ export interface DbProduct {
   ean: string;
   asin: string;
   lckd: boolean;
-  a_props: 'missing' | 'incomplete' | 'complete';
   taskId: string;
   bsr: [
     {
@@ -71,7 +70,6 @@ export interface DbProduct {
   ];
   anr: string; //article number
   pblsh: boolean;
-  vrfd: boolean;
   ctgry: string[];
   mnfctr: string;
   nm: string;
@@ -86,7 +84,6 @@ export interface DbProduct {
   e_nm: string;
   e_prc: number;
   e_mrgn: number;
-  e_fat: boolean;
   e_mrgn_pct: number;
   a_orgn: string;
   a_lnk: string;
@@ -95,6 +92,5 @@ export interface DbProduct {
   a_nm: string;
   a_prc: number;
   a_mrgn: number;
-  a_fat: boolean;
   a_mrgn_pct: number;
 }

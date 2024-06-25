@@ -26,6 +26,8 @@ export * from './util/fs/stats';
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';       
 export * from './util/matching/calculateArbitrage';       
+export * from './util/matching/calculateAznArbitrage'; 
+export * from './util/matching/generateUpdate'; 
 export * from './util/browser/yieldBrowserVersion';
 export * from './static/allowed';
 export * from './static/blocked';
@@ -45,6 +47,7 @@ export * from './util.services/query/queryShopQueue';
 export * from './util.services/query/queryTargetShop';
 export * from './util/query/lookupProductQueue';
 export * from './util/query/queryProductPageQueue';
+export * from './util/query/querySellerInfosQueue';
 export * from './util/query/matchTargetShopProdsWithRawProd';
 
 //QUEUE

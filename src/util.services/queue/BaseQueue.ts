@@ -330,7 +330,7 @@ export abstract class BaseQueue<
     }
 
     let { pageInfo, shop } = request;
-    pageInfo.link = prefixLink(pageInfo.link, shop.d);
+    pageInfo.link = prefixLink(pageInfo.link, shop.d, shop.leaveDomainAsIs);
 
     const { waitUntil, resourceTypes } = shop;
 
@@ -359,7 +359,7 @@ export abstract class BaseQueue<
       const response = await page.goto(pageInfo.link, {
         waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
         timeout:
-          this.queueTask.type === 'LOOKUP_EAN'
+          this.queueTask.type === 'CRAWL_EAN'
             ? EAN_PAGE_TIMEOUT
             : DEFAULT_PAGE_TIMEOUT,
       });
@@ -504,7 +504,10 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    if (this.queueTask.type === 'LOOKUP_EAN') {
+    if (
+      this.queueTask.type === 'CRAWL_EAN' ||
+      this.queueTask.type === 'LOOKUP_INFO'
+    ) {
       this.queue = shuffle(this.queue);
     }
     const nextRequest = this.queue.shift();

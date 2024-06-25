@@ -5,7 +5,7 @@ import {
   waitForSelector,
 } from '../helpers';
 import { closePage } from '../browser/closePage';
-import {  QueryRequest } from '../../types/query-request';
+import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { safeParsePrice } from '../safeParsePrice';
 
@@ -37,21 +37,7 @@ export function splitNumberAndCategory(input: string, lng: 'de' | 'en') {
 }
 export async function lookupProductQueue(page: Page, request: QueryRequest) {
   const { addProductInfo, shop } = request;
-
-  const productDetails = [
-    {
-      type: 'src',
-      parent: '#imgTagWrapperId',
-      sel: 'img',
-      content: 'a_img',
-    },
-    {
-      type: 'text',
-      parent: '#corePrice_feature_div',
-      sel: 'span.a-offscreen',
-      content: 'a_prc',
-    },
-  ];
+  const { product } = shop;
 
   const productInfos: any[] = [
     {
@@ -60,7 +46,6 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       timeout: 1500,
       listItem: '#detailBulletsWrapper_feature_div li span.a-list-item',
       seperator: ':',
-      productDetails,
     },
     {
       sel: '#productDetails_db_sections',
@@ -68,18 +53,20 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
       type: 'table',
       th: '#productDetails_db_sections tbody th.prodDetSectionEntry',
       td: '#productDetails_db_sections tbody td',
-      productDetails,
     },
   ];
   const rawProductInfos: { key: string; value: string }[] = [];
 
   // slow done
-  const pause = Math.floor(Math.random() * 3000) + 1500;
-  await new Promise((r) => setTimeout(r, pause));
+  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
+    const { min, max } = shop.pauseOnProductPage;
+    let pause = Math.floor(Math.random() * max) + min;
+    await new Promise((r) => setTimeout(r, pause));
+  }
 
   for (let index = 0; index < productInfos.length; index++) {
     const productInfo = productInfos[index];
-    const { sel, timeout, type, productDetails } = productInfo;
+    const { sel, timeout, type } = productInfo;
     const selector = await waitForSelector(page, sel, timeout ?? 5000, false);
     if (selector) {
       if (type === 'table' && 'th' in productInfo && 'td' in productInfo) {
@@ -130,17 +117,17 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
             }
           }
       }
-      if (productDetails) {
-        const pageParser = new PageParser(shop.d, []);
-        productDetails.forEach((detail: any) => {
-          pageParser.registerDetailExtractor(detail.type, detail);
-        });
-        const details = await pageParser.parse(page);
-        Object.entries(details).map(([key, value]) => {
-          rawProductInfos.push({ key, value });
-        });
-      }
     }
+  }
+  if (product) {
+    const pageParser = new PageParser(shop.d, []);
+    product.forEach((detail: any) => {
+      pageParser.registerDetailExtractor(detail.type, detail);
+    });
+    const details = await pageParser.parse(page);
+    Object.entries(details).map(([key, value]) => {
+      rawProductInfos.push({ key, value });
+    });
   }
   const url = page.url();
   if (rawProductInfos.length) {
@@ -156,15 +143,15 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
         return { key, value: safeParsePrice(value) as any };
       }
       if (key.toLowerCase().includes('asin')) {
-        return { key: key.toLowerCase(), value: value.replace(/\W/g, "") };
+        return { key: key.toLowerCase(), value: value.replace(/\W/g, '') };
       }
       return { key, value };
     });
     if (addProductInfo)
       addProductInfo({ productInfo: cleanedProductInfo, url });
-    await closePage(page);
+    // await closePage(page);
   } else {
     if (addProductInfo) addProductInfo({ productInfo: null, url });
-    await closePage(page);
+    // await closePage(page);
   }
 }

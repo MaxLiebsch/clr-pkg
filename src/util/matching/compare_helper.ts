@@ -16,7 +16,6 @@ const dimensionRegex =
 const inOperatorRegex = /(\d+)\s*(in|from|of|von)\s*(\d+)/gi;
 const packRegex = /\d+\s*[-_]?\s*er\s*[-_]?\s*(pack|packung|package)/gi;
 
-
 export const excludeCharsAndSplit = (name: string) =>
   cleanString(name)
     .split(' ')
@@ -74,7 +73,11 @@ export const segmentFoundProds = (candidates: Product[]) =>
     };
   });
 
-export function prefixLink(src: string, shopDomain: string) {
+export function prefixLink(
+  src: string,
+  shopDomain: string,
+  leaveDomainAsIs?: boolean,
+) {
   if (!src || src === '') return '';
 
   let newSrc = src;
@@ -88,7 +91,7 @@ export function prefixLink(src: string, shopDomain: string) {
   if (!newSrc.startsWith('https://')) {
     return 'https://www.' + shopDomain + newSrc;
   }
-  if (newSrc.startsWith('https://' + shopDomain)) {
+  if (newSrc.startsWith('https://' + shopDomain) && !leaveDomainAsIs) {
     return newSrc.replace(shopDomain, `www.${shopDomain}`);
   }
   return newSrc;
@@ -298,7 +301,6 @@ export function calculateArbitrage(
       const arbitrage = {
         prc: bm_prc,
         mrgn,
-        fat: mrgn > 0 ? true : false,
         mrgn_pct,
       };
       Object.entries(arbitrage).forEach(([key, value]) => {

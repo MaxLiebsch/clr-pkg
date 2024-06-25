@@ -10,6 +10,7 @@ import {
   TargetShopProducts,
   matchTargetShopProdsWithRawProd,
 } from '../../util/query/matchTargetShopProdsWithRawProd';
+import { Shop } from '../../types/shop';
 
 export const queryTargetShops = async (
   targetShops: TargetShop[],
@@ -18,6 +19,7 @@ export const queryTargetShops = async (
   query: Query,
   task: QueueTask,
   prodInfo: ProdInfo,
+  srcShop: Shop,
 ) =>
   targetShops.map(
     (targetShop) =>
@@ -63,6 +65,7 @@ export const queryTargetShops = async (
                 query,
                 task,
                 prodInfo,
+                srcShop,
               );
 
               const targetShopProducts = (await Promise.all(
@@ -97,9 +100,13 @@ export const queryTargetShops = async (
               resolve({ targetShop, procProd, candidates, path });
             } else {
               // WE FOUND A M A Z O N AND E B A Y IN I D E A L O
+              let origin: { [key: string]: any } = { a_orgn: 'i', e_orgn: 'i' };
+              if (srcShop.hasEan || srcShop.ean) {
+                origin = { e_orgn: 'i' };
+              }
               resolve({
                 targetShop,
-                procProd: { ...procProd, a_orgn: 'i', e_orgn: 'i' },
+                procProd: { ...procProd, ...origin },
                 candidates,
                 path,
               });
@@ -107,12 +114,20 @@ export const queryTargetShops = async (
           };
 
           const shop = shops[targetShop.d];
+          const { entryPoints, queryUrlSchema, d } = shop;
+
+          // this following turnery means if the source shop has Ean on their product page or is part of the url
+          const targetRetailerList =
+            srcShop.hasEan || srcShop.ean
+              ? [{ d: 'ebay.de', prefix: 'e_', name: 'ebay' }]
+              : undefined;
 
           queue.pushTask(queryShopQueue, {
             retries: 0,
             shop,
             addProduct,
             targetShop,
+            targetRetailerList,
             queue,
             query,
             prio: 0,
@@ -121,10 +136,10 @@ export const queryTargetShops = async (
             prodInfo,
             isFinished,
             pageInfo: {
-              link: shop.queryUrlSchema.length
+              link: queryUrlSchema.length
                 ? queryURLBuilder(shop.queryUrlSchema, query).url
-                : shop.entryPoints[0].url,
-              name: shop.d,
+                : entryPoints[0].url,
+              name: d,
             },
           });
         } catch (error) {

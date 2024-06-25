@@ -23,6 +23,7 @@ export type DetailType =
   | 'srcset'
   | 'content'
   | 'data-src'
+  | 'value'
   | 'href'
   | 'alt'
   | 'src'
@@ -37,6 +38,7 @@ export interface Detail {
   content: Content;
   sel: string;
   type: DetailType;
+  step?: number;
   baseUrl?: string;
   extractPart?: number;
   regexp?: string;

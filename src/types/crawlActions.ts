@@ -7,12 +7,17 @@ export type ActionType =
   | 'input'
   | 'select'
   | 'shadowroot-button'
+  | 'shadowroot-button-test'
+  | 'shadowroot-select'
+  | 'shadowroot-input'
+  | 'shadowroot-checkbox'
   | 'recursive-button';
 
 export interface BaseAction {
   type: ActionType;
   sel: string;
   name: string;
+  step?: number;
 }
 
 export interface RemoveAction extends BaseAction {

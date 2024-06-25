@@ -27,6 +27,7 @@ export interface Shop {
     crawl: ResourceTypes[];
   };
   entryPoints: EntryPoint[];
+  leaveDomainAsIs?: boolean;
   waitUntil: WaitUntil;
   kws: string[]; // keywords
   ap: string[]; // anti pattern

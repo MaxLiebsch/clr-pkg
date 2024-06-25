@@ -12,6 +12,7 @@ export interface BaseAction {
   type: ActionType;
   sel: string;
   name: string;
+  step?: number;
 }
 
 export interface RemoveAction extends BaseAction {

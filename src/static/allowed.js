@@ -72,6 +72,8 @@ export const allowed = [
   "www.zooplus.de",
   "www.idena.de",
   "www.amazon.de",
+  "d29zc3pk4tzg0k.cloudfront.ne",
+  "sellercentral.amazon.de",
   "www.ebay.de",
 ];
 

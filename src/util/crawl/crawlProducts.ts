@@ -67,12 +67,9 @@ export const crawlProducts = async (
         hasMnfctr: false,
         price: 0,
         promoPrice: 0,
-        year: '',
         prime: false,
         description: '',
         nameSub: '',
-        redirect_link: '',
-        vendorLink: '',
       };
 
       if (type === 'link') {

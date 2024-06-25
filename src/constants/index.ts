@@ -10,6 +10,7 @@ export const RECURSIVE_BUTTON_SAFEGUARD = 10; // 10 * 16 = 160 shops should be e
 export const MAX_CRITICAL_ERRORS = 7;
 export const DEFAULT_PAGE_TIMEOUT = 60000;
 export const EAN_PAGE_TIMEOUT = 120000;
+export const amazonTransportFee = 0.25;
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;
@@ -958,6 +959,9 @@ export const availability = [
   'sofort verfügbar',
   'verfügbar',
 ];
+
+export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben'
+export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten'
 
 export const regexp = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/g;
 export const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;

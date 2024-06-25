@@ -1,12 +1,15 @@
-import { Page } from 'puppeteer1';
+import { ElementHandle, Page } from 'puppeteer1';
 import { ShopObject } from '../../types';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
+import { Query } from '../../types/query';
 
 export async function runActions(
   page: Page,
   shop: ShopObject,
   type: 'query' | 'crawl' | 'standard' = 'standard',
+  query?: Query,
+  step?: number,
 ) {
   const { waitUntil } = shop;
 
@@ -16,7 +19,11 @@ export async function runActions(
     query: shop?.queryActions,
   };
 
-  const actions = actionTypeMap[type];
+  let actions = actionTypeMap[type];
+
+  if (step) {
+    actions = actions.filter((a) => a.step === step);
+  }
 
   if (actions) {
     for (const action of actions) {
@@ -73,6 +80,64 @@ export async function runActions(
             break;
           }
         }
+      }
+      if (query) {
+        if (type === 'shadowroot-input' && 'input_sel' in action) {
+          const { sel, input_sel } = action;
+          const inputHandle = await page.evaluateHandle(
+            (sel, input_sel) => {
+              // Find the element hosting the shadow root
+              const hostElement = document.querySelector(sel);
+
+              // Access the shadow root
+              if (!hostElement) return console.error('hostElement not found');
+              const shadowRoot = hostElement.shadowRoot;
+
+              // Find the input element within the shadow root
+              if (!shadowRoot) return console.error('shadowRoot not found');
+              const input = shadowRoot.querySelector(input_sel as string);
+              return input;
+
+              // Set the value of the input element7
+            },
+            sel,
+            input_sel,
+          );
+
+          if (!inputHandle) return console.error('inputHandle not found');
+
+          await (inputHandle as ElementHandle<HTMLInputElement>).focus();
+          await (inputHandle as ElementHandle<HTMLInputElement>).type(
+            query.product.value,
+            { delay: 50 },
+          );
+        }
+      }
+      if (type === 'shadowroot-button-test' && 'btn_sel' in action) {
+        const { sel, btn_sel } = action;
+        const btnHandle = await page.evaluateHandle(
+          (sel, btn_sel) => {
+            // Find the element hosting the shadow root
+            const hostElement = document.querySelector(sel as string);
+
+            // Access the shadow root
+            if (!hostElement) return console.error('hostElement not found');
+            const shadowRoot = hostElement.shadowRoot;
+
+            // Find the input element within the shadow root
+            if (!shadowRoot) return console.error('shadowRoot not found');
+            const btn = shadowRoot.querySelector(btn_sel as string);
+            return btn;
+
+            // Set the value of the input element7
+          },
+          sel,
+          btn_sel,
+        );
+        if (!btnHandle) return console.error('inputHandle not found');
+
+        await (btnHandle as ElementHandle<HTMLButtonElement>).focus();
+        await (btnHandle as ElementHandle<HTMLButtonElement>).click();
       }
     }
   }

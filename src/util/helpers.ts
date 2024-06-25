@@ -40,6 +40,8 @@ export async function filter(arr: any[], callback: Function) {
 
 //Puppeteer
 
+/*                 Selector                       */
+
 export const myQuerySelectorAll = async (page: Page, sel: string) => {
   try {
     return await page.$$(sel);
@@ -69,6 +71,28 @@ export const myQuerySelectorAll2 = async (page: Page, sel: string) =>
         return 'missing';
       }
     });
+
+export const shadowRootSelector = async (page: Page, sel: string) => {
+  try {
+    const shadowRoot = await page.evaluateHandle((sel) => {
+      // Find the element hosting the shadow root
+      const hostElement = document.querySelector(sel);
+
+      // Access the shadow root
+      if (!hostElement) return null;
+      const shadowRoot = hostElement.shadowRoot;
+
+      // Find the input element within the shadow root
+      if (!shadowRoot) return null;
+      return shadowRoot;
+
+      // Set the value of the input element7
+    }, sel);
+    return shadowRoot;
+  } catch (error) {
+    return null;
+  }
+};
 
 export function extractPart(str: string, pattern: string, part: number) {
   const regex = new RegExp(pattern);
@@ -160,7 +184,7 @@ export const getProductCount = async (
   }
   return 0;
 };
-
+/*                 Button                        */
 export const clickBtn = async (
   page: Page,
   sel: string,
@@ -320,13 +344,41 @@ export const extractAttributeElementhandle = async (
     return null;
   }
 };
+export const extractAttributePage = async (
+  page: Page,
+  sel: string,
+  type: string,
+) => {
+  try {
+    const attribute = await page.evaluate(
+      (sel, type) => {
+        const element = document.querySelector(sel);
+        if (!element) return null;
+        const attribute = element.getAttribute(type);
+        return attribute;
+      },
+      sel,
+      type,
+    );
+    return attribute;
+  } catch (error) {
+    return null;
+  }
+};
 
-export const contentMissing = async (page: Page, mimic: string) =>
-  await page
-    .evaluate((mimic) => {
+export function roundToTwoDecimals(num: number) {
+  return Math.round(num * 100) / 100;
+}
+
+export const contentMissing = async (page: Page, mimic: string) => {
+  try {
+    return page.evaluate((mimic) => {
       return document.querySelector(mimic) === null;
-    }, mimic)
-    .catch((e) => {});
+    }, mimic);
+  } catch (error) {
+    return null;
+  }
+};
 
 export function cleanUpHTML(html: string) {
   const $ = load(html);
