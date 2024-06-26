@@ -28,7 +28,7 @@ export const generateUpdate = (
   };
   const arbitrage = calculateAznArbitrage(srcPrice, a_prc, costs, tax);
   const update: { [key: string]: any } = {
-    a_lnk: 'https://www.amazon.de/gp/product/' + asin,
+    a_lnk: 'https://www.amazon.de/dp/product/' + asin,
     a_nm,
     asin,
     a_prc,
@@ -53,6 +53,7 @@ export const generateUpdate = (
     if (category && number) {
       update['bsr'] = [
         {
+          createdAt: new Date().toISOString(),
           category: category[0].replace(/[\\(\\)]/g, ''),
           number: safeParsePrice(number[0]),
         },

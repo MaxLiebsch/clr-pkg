@@ -86,8 +86,7 @@ export interface DbProduct {
   e_mrgn: number;
   e_mrgn_pct: number;
   a_orgn: string;
-  a_lnk: string;
-  a_bsr: string;
+  a_lnk: string; 
   a_img: string;
   a_nm: string;
   a_prc: number;

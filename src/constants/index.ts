@@ -1,4 +1,4 @@
-import { Versions } from '../util/versionProvider';
+import { Versions, puppeteerVersions } from '../util/versionProvider';
 
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
@@ -16,16 +16,9 @@ export const amazonTransportFee = 0.25;
 export const ACCESS_DENIED_FREQUENCE = 10000;
 export const STANDARD_FREQUENCE = 10000;
 
-export const CHROME_VERSIONS: Versions[] = [
-  '126.0.6478.55', // Puppeteer v22.11.0
-  '125.0.6422.78', // Puppeteer v22.10.0
-  '123.0.6312.122', // Puppeteer v22.6.4
-  '125.0.6422.60', // Puppeteer v22.9.0
-  '123.0.6312.105', // Puppeteer v22.6.3
-  '124.0.6367.207', // Puppeteer v22.8.2
-  '124.0.6367.60', // Puppeteer v22.7.0
-  '124.0.6367.91', // Puppeteer v22.8.0
-];
+export const CHROME_VERSIONS: Versions[] = Object.keys(
+  puppeteerVersions,
+) as Versions[];
 
 export const uuidRegex =
   /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/;
@@ -960,8 +953,8 @@ export const availability = [
   'verfügbar',
 ];
 
-export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben'
-export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten'
+export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
+export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten';
 
 export const regexp = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/g;
 export const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
