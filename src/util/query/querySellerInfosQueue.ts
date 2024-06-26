@@ -17,7 +17,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     request;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
-  console.time('total ' + query!.product.value);
+  console.time(query!.product.value);
 
   //  slow done
   if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
@@ -107,5 +107,5 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     query!.product.value,
     rawProductInfos.length > 0 ? ': success' : ': missing',
   );
-  console.timeEnd('total ' + query!.product.value);
+  console.timeEnd(query!.product.value);
 }
