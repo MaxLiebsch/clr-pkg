@@ -38,6 +38,9 @@ export async function runActions(
         continue;
       }
       if (type === 'button' && 'wait' in action) {
+        if (action?.action === 'waitBefore') {
+          await new Promise((r) => setTimeout(r, 600));
+        }
         await clickBtn(
           page,
           sel,

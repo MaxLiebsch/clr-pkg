@@ -18,6 +18,7 @@ export interface BaseAction {
   sel: string;
   name: string;
   step?: number;
+  action: string;
 }
 
 export interface RemoveAction extends BaseAction {
@@ -25,7 +26,6 @@ export interface RemoveAction extends BaseAction {
 }
 
 export interface ButtonAction extends BaseAction {
-  action: string;
   wait: boolean;
   waitDuration?: number;
   target?: string;
@@ -33,7 +33,6 @@ export interface ButtonAction extends BaseAction {
 }
 
 export interface recursiveButtonAction extends BaseAction {
-  action: string;
   wait: boolean;
   waitDuration?: number;
   target?: string;

@@ -10,6 +10,7 @@ export type ActionType =
 
 export interface BaseAction {
   type: ActionType;
+  action: string;
   sel: string;
   name: string;
   step?: number;
@@ -20,7 +21,6 @@ export interface RemoveAction extends BaseAction {
 }
 
 export interface ButtonAction extends BaseAction {
-  action: string;
   wait: boolean;
   waitDuration?: number;
   target?: string;

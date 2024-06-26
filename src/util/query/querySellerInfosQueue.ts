@@ -3,15 +3,23 @@ import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { runActions } from './runActions';
 import { extractAttributePage } from '../helpers';
-import { MAX_RETRIES_LOOKUP_EAN, aznNotFoundText, aznUnexpectedErrorText } from '../../constants';
+import {
+  DEFAULT_PAGE_TIMEOUT,
+  MAX_RETRIES_LOOKUP_EAN,
+  RANDOM_TIMEOUT_MIN,
+  aznNotFoundText,
+  aznUnexpectedErrorText,
+} from '../../constants';
 import { closePage } from '../browser/closePage';
 
 export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
-  const { addProductInfo, shop, query, onNotFound, queue, retries } = request;
+  const { addProductInfo, shop, query, onNotFound, queue, retries, pageInfo } =
+    request;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
+  console.time('total ' + query!.product.value);
 
-  // // slow done
+  //  slow done
   if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
     const { min, max } = shop.pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
@@ -22,28 +30,24 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     await runActions(page, shop, 'query', query, 1);
   }
 
-  const timeout = setInterval(async () => {
-    const unexpectedError = await extractAttributePage(
-      page,
-      'kat-alert[variant=warning]',
-      'description',
-    );
+  const unexpectedError = await extractAttributePage(
+    page,
+    'kat-alert[variant=warning]',
+    'description',
+  );
 
-    if (unexpectedError?.includes(aznUnexpectedErrorText)) {
-      clearInterval(timeout);
-      if (retries < MAX_RETRIES_LOOKUP_EAN) {
-        queue.pushTask(querySellerInfosQueue, {
-          ...request,
-          retries: request.retries + 1,
-        });
-        await closePage(page);
-        return;
-      } else {
-        await closePage(page);
-        return;
-      }
+  if (unexpectedError?.includes(aznUnexpectedErrorText)) {
+    if (retries < MAX_RETRIES_LOOKUP_EAN) {
+      queue.pushTask(querySellerInfosQueue, {
+        ...request,
+        retries: request.retries + 1,
+      });
+    } else {
+      onNotFound && (await onNotFound());
     }
-  }, 200);
+    await closePage(page);
+    return;
+  }
 
   const notFound = await extractAttributePage(
     page,
@@ -56,15 +60,11 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
         ...request,
         retries: request.retries + 1,
       });
-      await closePage(page);
-      return;
     } else {
-      if (onNotFound) {
-        await onNotFound();
-        await closePage(page);
-        return;
-      }
+      onNotFound && (await onNotFound());
     }
+    await closePage(page);
+    return;
   }
 
   if (product) {
@@ -103,4 +103,9 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
   } else {
     if (addProductInfo) await addProductInfo({ productInfo: null, url });
   }
+  console.log(
+    query!.product.value,
+    rawProductInfos.length > 0 ? ': success' : ': missing',
+  );
+  console.timeEnd('total ' + query!.product.value);
 }

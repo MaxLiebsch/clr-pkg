@@ -66,7 +66,7 @@ export class PageParser {
       if ('shadowRoot' in extractor.detail) {
         elementHandle = await shadowRootSelector(page, parent ?? sel);
       }
-      elementHandle = await waitForSelector(page, parent ?? sel, timeout??5000 , false);
+      elementHandle = await waitForSelector(page, parent ?? sel, timeout??500 , false);
       if (elementHandle) {
         const result = await extractor.class.extractDetail(
           elementHandle,
