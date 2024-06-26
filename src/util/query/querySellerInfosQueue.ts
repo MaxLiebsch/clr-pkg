@@ -3,7 +3,7 @@ import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { runActions } from './runActions';
 import { extractAttributePage } from '../helpers';
-import { aznNotFoundText, aznUnexpectedErrorText } from '../../constants';
+import { MAX_RETRIES_LOOKUP_EAN, aznNotFoundText, aznUnexpectedErrorText } from '../../constants';
 import { closePage } from '../browser/closePage';
 
 export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
@@ -31,7 +31,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
 
     if (unexpectedError?.includes(aznUnexpectedErrorText)) {
       clearInterval(timeout);
-      if (retries < 5) {
+      if (retries < MAX_RETRIES_LOOKUP_EAN) {
         queue.pushTask(querySellerInfosQueue, {
           ...request,
           retries: request.retries + 1,
@@ -51,7 +51,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     'description',
   );
   if (notFound?.includes(aznNotFoundText)) {
-    if (retries <= 1) {
+    if (retries <= MAX_RETRIES_LOOKUP_EAN) {
       queue.pushTask(querySellerInfosQueue, {
         ...request,
         retries: request.retries + 1,
