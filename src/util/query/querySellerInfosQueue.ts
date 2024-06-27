@@ -12,12 +12,26 @@ import {
 } from '../../constants';
 import { closePage } from '../browser/closePage';
 
-export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
+function timeoutPromise(timeout: number, ean: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      return reject(new Error(`Timeout: ${ean}`));
+    }, timeout);
+  });
+}
+
+async function querySellerInfos(page: Page, request: QueryRequest) {
+  const startTime = Date.now();
   const { addProductInfo, shop, query, onNotFound, queue, retries, pageInfo } =
     request;
+  const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
-  console.time(query!.product.value);
+  if (retries >= MAX_RETRIES_LOOKUP_EAN) {
+    await closePage(page);
+    onNotFound && (await onNotFound());
+    return `Finally missing: ${ean}`;
+  }
 
   //  slow done
   if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
@@ -38,10 +52,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
 
   if (unexpectedError?.includes(aznUnexpectedErrorText)) {
     if (retries < MAX_RETRIES_LOOKUP_EAN) {
-      queue.pushTask(querySellerInfosQueue, {
-        ...request,
-        retries: request.retries + 1,
-      });
+      throw new Error(`Unexpected Error: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
     }
@@ -56,10 +67,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
   );
   if (notFound?.includes(aznNotFoundText)) {
     if (retries <= MAX_RETRIES_LOOKUP_EAN) {
-      queue.pushTask(querySellerInfosQueue, {
-        ...request,
-        retries: request.retries + 1,
-      });
+      throw new Error(`Not found: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
     }
@@ -101,11 +109,21 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
     if (addProductInfo)
       await addProductInfo({ productInfo: rawProductInfos, url });
   } else {
-    if (addProductInfo) await addProductInfo({ productInfo: null, url });
+    throw new Error(`Product Info seems empty: ${ean}`); //Retry logic
   }
-  console.log(
-    query!.product.value,
-    rawProductInfos.length > 0 ? ': success' : ': missing',
-  );
-  console.timeEnd(query!.product.value);
+  const endTime = Date.now();
+  const elapsedTime = Math.round((endTime - startTime) / 1000);
+
+  return `${ean} took: ${elapsedTime} s`;
+}
+
+export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
+  const { query } = request;
+  const { value: ean } = query.product;
+  const timeoutTime = Math.random() * (25000 - 20000) + 20000;
+  const res = await Promise.race([
+    querySellerInfos(page, request),
+    timeoutPromise(timeoutTime, Number(ean)),
+  ]);
+  return res;
 }

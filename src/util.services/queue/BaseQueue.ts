@@ -34,7 +34,7 @@ import { sample, shuffle } from 'underscore';
 import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 
-type Task = (page: Page, request: any) => Promise<void>;
+type Task = (page: Page, request: any) => Promise<any>;
 
 export type WrapperFunctionResponse =
   | {
@@ -398,11 +398,15 @@ export abstract class BaseQueue<
       if (blocked) {
         throw new Error(ErrorType.AccessDenied);
       }
-      await task(page, request);
-      return { details: 'tippy-toppy', status: 'page-completed', retries };
+      const message = await task(page, request);
+      if (message && typeof message === 'string') {
+        return { details: message, status: 'page-completed', retries };
+      } else {
+        return { details: 'tippy-toppy', status: 'page-completed', retries };
+      }
     } catch (error) {
-      process.env.DEBUG === 'true' &&
-        console.log('WrapperFunction:Error:', error);
+      // process.env.DEBUG === 'true' &&
+      //   console.log('WrapperFunction:Error:', error);
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {

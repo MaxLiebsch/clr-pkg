@@ -22,6 +22,7 @@ export const errorTypeCount = {
   ServerError: 0,
   UnknowError: 0,
   RateLimit: 0,
+  Timeout: 0,
   NotFound: 0,
   ProtocolError: 0,
 };
@@ -36,6 +37,8 @@ export enum ErrorType {
   'ServerError' = 'ServerError',
   'UnknowError' = 'UnknowError',
   'RateLimit' = 'RateLimit',
+  'Timeout' = 'Timeout',
+  'Missing' = 'Missing',
   'NotFound' = 'NotFound',
   'ProtocolError' = 'ProtocolError',
 }

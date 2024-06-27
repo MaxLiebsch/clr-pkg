@@ -108,15 +108,18 @@ export async function runActions(
           );
 
           if (!inputHandle) return console.error('inputHandle not found');
-
+          const delay = Math.floor(Math.random() * 70) + 50;
           await (inputHandle as ElementHandle<HTMLInputElement>).focus();
           await (inputHandle as ElementHandle<HTMLInputElement>).type(
             query.product.value,
-            { delay: 50 },
+            { delay },
           );
         }
       }
       if (type === 'shadowroot-button-test' && 'btn_sel' in action) {
+        if (action?.action === 'waitBefore') {
+          await new Promise((r) => setTimeout(r, 600));
+        }
         const { sel, btn_sel } = action;
         const btnHandle = await page.evaluateHandle(
           (sel, btn_sel) => {
