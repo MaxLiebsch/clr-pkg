@@ -108,11 +108,10 @@ export async function runActions(
           );
 
           if (!inputHandle) return console.error('inputHandle not found');
-          const delay = Math.floor(Math.random() * 70) + 50;
           await (inputHandle as ElementHandle<HTMLInputElement>).focus();
           await (inputHandle as ElementHandle<HTMLInputElement>).type(
             query.product.value,
-            { delay },
+            { delay: 50 },
           );
         }
       }

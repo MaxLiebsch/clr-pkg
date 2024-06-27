@@ -24,10 +24,10 @@ export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
 export * from './util/fs/stats';
 export * from './util/matching/normalizeSIUnits';
-export * from './util/matching/compare_helper';       
-export * from './util/matching/calculateArbitrage';       
-export * from './util/matching/calculateAznArbitrage'; 
-export * from './util/matching/generateUpdate'; 
+export * from './util/matching/compare_helper';
+export * from './util/matching/calculateArbitrage';
+export * from './util/matching/calculateAznArbitrage';
+export * from './util/matching/generateUpdate';
 export * from './util/browser/yieldBrowserVersion';
 export * from './static/allowed';
 export * from './static/blocked';
@@ -53,6 +53,7 @@ export * from './util/query/matchTargetShopProdsWithRawProd';
 //QUEUE
 export * from './util.services/queue/CrawlerQueue';
 export * from './util.services/queue/QueryQueue';
+export * from './util.services/queue/yieldQueues';
 export * from './util.services/queue/checkForBlockingSignals';
 
 // CRAWL
@@ -65,6 +66,6 @@ export * from './util/crawl/getPageNumberFromPagination';
 export * from './util/crawl/findPagination';
 export * from './util/crawl/crawlProducts';
 export * from './util/crawl/browseProductPagesQueue';
-export * from './util/extract/getProductInfoWithFetch'
+export * from './util/extract/getProductInfoWithFetch';
 
 export const mg = { mongoose };
