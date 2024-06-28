@@ -6,5 +6,5 @@ TODO:
 - [x] rename tasks from LOOKUP_EAN to CRAWL_EAN(per proxyType) in the task colletion
 - [x] create new task LOOKUP_INFO
 - [x] rename tasks from LOOKUP_PRODUCTS to CRAWL_AZN_LISTINGS
-- [ ] update active shops again
-- [ ] add browserConcurrency to task lookup_info
+- [x] update active shops again
+- [x] add browserConcurrency to task lookup_info

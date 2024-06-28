@@ -55,7 +55,7 @@ export const generateUpdate = (
         {
           createdAt: new Date().toISOString(),
           category: category[0].replace(/[\\(\\)]/g, ''),
-          number: safeParsePrice(number[0]),
+          number: safeParsePrice(number.join('')),
         },
       ];
     }
