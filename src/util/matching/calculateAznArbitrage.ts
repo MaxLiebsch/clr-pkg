@@ -45,8 +45,6 @@ export const calculateAznArbitrage = (
   );
   const sellPrice = roundToTwoDecimals(targetPrice);
   // VK(sellPrice) - Kosten - Steuern - EK(buyPrice) / VK * 100
-  const { azn, tpt, varc, strg_1_hy, strg_2_hy } = costs;
-  const fixedCosts = azn + varc + tpt;
   const { margin: a_mrgn_pct, earning: a_mrgn } = calculateMargeAndEarning(
     sellPrice,
     buyPrice,
