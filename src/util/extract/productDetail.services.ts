@@ -5,6 +5,7 @@ import {
   IAttributeDetail,
   IParseJSONDetail,
   IParseJSONElementDetail,
+  ITableDetail,
   ITextDetail,
   NestedNameDetail,
 } from '../../types/productInfoDetails';
@@ -21,6 +22,7 @@ import { attrFromEleInEleHandle } from './extractAttributeFromHandle';
 import { safeJSONParse } from './saveParseJSON';
 import { get } from 'lodash';
 import { findProperty } from './findProperty';
+import { TableContent } from '../../types/table';
 
 export abstract class ExtractProductDetail {
   constructor() {}
@@ -29,6 +31,37 @@ export abstract class ExtractProductDetail {
     detail: Details,
   ): Promise<string | null>;
 }
+
+export class TableExtractor implements ExtractProductDetail {
+  async extractDetail(element: ElementHandle, detail: ITableDetail) {
+    const { head, row, content } = detail;
+    const keyHandles = await myQuerySelectorAllElementHandle(element, head);
+    const valueHandles = await myQuerySelectorAllElementHandle(element, row);
+    const table: TableContent[] = [];
+    if (keyHandles && valueHandles)
+      for (let i = 0; i < keyHandles.length; i++) {
+        let valueText = '';
+        const keyHandle = keyHandles[i];
+        const keyText = await getElementHandleInnerText(keyHandle);
+        if (keyText) {
+          const innerText = await getElementHandleInnerText(valueHandles[i]);
+          if (innerText) {
+            valueText = innerText;
+          }
+          const headerText = keyText.replaceAll(/\W/g, '').trim();
+          table.push({
+            key: headerText,
+            value: valueText.trim(),
+          });
+          if (headerText.toLowerCase().includes(content)) {
+            return valueText.trim();
+          }
+        }
+      }
+    return null;
+  }
+}
+
 export class TextDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITextDetail) {
     const { sel, type, content } = detail;

@@ -10,6 +10,11 @@ export interface DetailBase {
   proprietaryProducts?: string;
 }
 
+export interface ITableDetail extends DetailBase{
+  head: string,
+  row: string,
+}
+
 export interface ITextDetail extends DetailBase {
   extractPart?: number;
   regexp?: string;
@@ -43,6 +48,7 @@ export interface NestedNameDetail extends DetailBase {
 
 export type Details =
   | ITextDetail
+  | ITableDetail
   | IAttributeDetail
   | NestedNameDetail
   | ExistDetail

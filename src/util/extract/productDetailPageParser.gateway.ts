@@ -7,6 +7,7 @@ import {
   ParseJSONDetailExtractor,
   TextDetailExtractor,
   ParseJSONFromElementExtractor,
+  TableExtractor,
 } from './productDetail.services';
 import { Details } from '../../types/productInfoDetails';
 import { shadowRootSelector, waitForSelector } from '../helpers';
@@ -30,6 +31,7 @@ const detailExtractorRegistry = sharedExtractorTypes.reduce(
     return acc;
   },
   {
+    table: TableExtractor,
     text: TextDetailExtractor,
     parse_json_element: ParseJSONFromElementExtractor,
     parse_json: ParseJSONDetailExtractor,
@@ -66,7 +68,12 @@ export class PageParser {
       if ('shadowRoot' in extractor.detail) {
         elementHandle = await shadowRootSelector(page, parent ?? sel);
       }
-      elementHandle = await waitForSelector(page, parent ?? sel, timeout??500 , false);
+      elementHandle = await waitForSelector(
+        page,
+        parent ?? sel,
+        timeout ?? 500,
+        false,
+      );
       if (elementHandle) {
         const result = await extractor.class.extractDetail(
           elementHandle,
