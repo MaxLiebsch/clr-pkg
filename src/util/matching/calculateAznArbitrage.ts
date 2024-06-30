@@ -19,8 +19,17 @@ const calculateMargeAndEarning = (
 ) => {
   // VK - Kosten - Steuern - EK / VK * 100
   const taxCosts = Number((sellPrice - sellPrice / (1 + tax / 100)).toFixed(2));
-  let totalCosts =
-    costs.azn - costs.varc - costs.tpt - costs[period] - taxCosts - buyPrice;
+
+  let totalCosts = Number(
+    (
+      costs.azn +
+      costs.varc +
+      costs.tpt +
+      costs[period] +
+      buyPrice +
+      taxCosts
+    ).toFixed(2),
+  );
 
   if (program === 'none') {
     totalCosts += amazonTransportFee;
@@ -29,34 +38,33 @@ const calculateMargeAndEarning = (
   const earning = sellPrice - totalCosts;
   const margin = ((sellPrice - totalCosts) / sellPrice) * 100;
   return {
-    earning: Number(earning).toFixed(2),
-    margin: Number(margin).toFixed(2),
+    earning: Number(earning.toFixed(2)),
+    margin: Number(margin.toFixed(2)),
   };
 };
 
 export const calculateAznArbitrage = (
-  srcPrice: number,
-  targetPrice: number,
+  _buyPrice: number,
+  sellPrice: number,
   costs: Costs,
   tax?: number,
 ) => {
   const buyPrice = roundToTwoDecimals(
-    srcPrice / (tax ? 1 + Number(tax / 100) : 1.19),
+    _buyPrice / (tax ? 1 + Number(tax / 100) : 1.19),
   );
-  const sellPrice = roundToTwoDecimals(targetPrice);
   // VK(sellPrice) - Kosten - Steuern - EK(buyPrice) / VK * 100
   const { margin: a_mrgn_pct, earning: a_mrgn } = calculateMargeAndEarning(
     sellPrice,
     buyPrice,
     costs,
-    tax ?? 15,
+    tax ?? 19,
     'strg_1_hy',
   );
   const { margin: a_w_mrgn_pct, earning: a_w_mrgn } = calculateMargeAndEarning(
     sellPrice,
     buyPrice,
     costs,
-    tax ?? 15,
+    tax ?? 19,
     'strg_2_hy',
   );
 
@@ -65,7 +73,7 @@ export const calculateAznArbitrage = (
     sellPrice,
     buyPrice,
     costs,
-    tax ?? 15,
+    tax ?? 19,
     'strg_1_hy',
     'none',
   );
@@ -74,7 +82,7 @@ export const calculateAznArbitrage = (
       sellPrice,
       buyPrice,
       costs,
-      tax ?? 15,
+      tax ?? 19,
       'strg_2_hy',
       'none',
     );
