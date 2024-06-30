@@ -17,7 +17,7 @@ export const generateUpdate = (
   const totalOfferCount = infoMap.get('totalOfferCount');
   const a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
   const sellerRank = infoMap.get('sellerRank');
-  const image = infoMap.get('image');
+  const image = infoMap.get('a_img');
   const buyBoxIsAmazon = infoMap.get('buyBoxIsAmazon');
   const costs = {
     azn: safeParsePrice(infoMap.get('costs.azn') ?? '0'),
@@ -36,7 +36,7 @@ export const generateUpdate = (
     costs,
   };
   if (tax) {
-    update["tax"] = Number(tax);
+    update['tax'] = Number(tax);
   }
   if (totalOfferCount) {
     update['totalOfferCount'] = getNumber(totalOfferCount);
