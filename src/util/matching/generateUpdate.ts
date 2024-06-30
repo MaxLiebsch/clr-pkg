@@ -59,6 +59,8 @@ export const generateUpdate = (
         },
       ];
     }
+  } else {
+    update['bsr'] = [];
   }
   return update;
 };
