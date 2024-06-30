@@ -58,6 +58,8 @@ export const generateUpdate = (
           number: safeParsePrice(number.join('')),
         },
       ];
+    } else {
+      update['bsr'] = [];
     }
   } else {
     update['bsr'] = [];
