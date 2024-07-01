@@ -1,13 +1,27 @@
 import parsePrice from 'parse-price';
 
-const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})*(?:,\d+)/g
+const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})*(?:,\d+)/g;
 
 export const safeParsePrice = (
   priceStr: string | number | boolean | string[],
 ) => {
   const priceRegExp = new RegExp(priceRegexp);
 
-  if(typeof priceStr === 'string') {
+  if (typeof priceStr === 'string') {
+    if (
+      (priceStr.slice(priceStr.length - 1) === '€' || priceStr.slice(0,1) === '€') &&
+      priceStr.match(/\./g)?.length === 1 && !priceStr.includes(',') &&
+      priceStr.match(/\.\d{2}\s/g)  === null
+    ) {
+      console.log(priceStr)
+      console.log(
+        "priceStr.slice(priceStr.length - 1) === '€':",
+        priceStr.slice(priceStr.length - 1) === '€',
+      );
+      console.log('priceStr.match(/\./g)?.length === 1:', priceStr.match(/\./g)?.length === 1)
+
+      return Number(priceStr.match(/\d+/g)?.join('')) || 0;
+    }
     const match = priceStr.match(priceRegExp);
     if (match) {
       priceStr = match[0];
@@ -19,4 +33,3 @@ export const safeParsePrice = (
 
   return isNaN(parsedPrice) ? 0 : parsedPrice;
 };
-
