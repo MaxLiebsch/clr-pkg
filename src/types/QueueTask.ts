@@ -1,7 +1,8 @@
 export interface QueueTask {
   [key: string]: any;
+  id: string;
   productLimit: number;
-  proxyType?: 'gb'| 'request';
+  proxyType?: 'gb' | 'request';
   timezones?: string[];
   statistics: {
     errorTypeCount: {
@@ -9,14 +10,14 @@ export interface QueueTask {
     };
     estimatedProducts: number;
     statusHeuristic: {
-      "error-handled": number;
-      "page-completed": number;
+      'error-handled': number;
+      'page-completed': number;
       'not-found': number;
-      "limit-reached": number;
-      "total": number; 
-    }
+      'limit-reached': number;
+      total: number;
+    };
     retriesHeuristic: {
-      "0": number;
+      '0': number;
       '1-9': number;
       '10-49': number;
       '50-99': number;

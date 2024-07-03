@@ -42,6 +42,8 @@ export type WrapperFunctionResponse =
       status:
         | 'page-completed'
         | 'error-handled'
+        | 'error-handled-domain-not-allowed'
+        | 'error-handled-timeout-exceded'
         | 'limit-reached'
         | 'not-found';
       retries: number;
@@ -375,7 +377,7 @@ export abstract class BaseQueue<
           } else {
             // if the page is not found and the retries are more than the limit
             if ('onNotFound' in request && request?.onNotFound) {
-              request.onNotFound();
+              await request.onNotFound();
             }
             return { details: '', status: 'not-found', retries };
           }
@@ -404,7 +406,7 @@ export abstract class BaseQueue<
         return { details: message, status: 'page-completed', retries };
       } else {
         return {
-          details: `🆗 ${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
+          details: `🆗${' '}${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
           status: 'page-completed',
           retries,
         };
@@ -471,12 +473,40 @@ export abstract class BaseQueue<
             this.queueTask.statistics.errorTypeCount[errorType] += 1;
           }
         }
-
-        isDomainAllowed(pageInfo.link) &&
-          this.pushTask(task, { ...request, retries: retries + 1 });
+        const details = `⛔${' '} ${this.queueTask?.id ?? ''} - ${shop.d} - ${error} - ${createHash(pageInfo.link)}`;
+        if (isDomainAllowed(pageInfo.link)) {
+          if (error instanceof Error) {
+            if (
+              `${error}`.includes('TimeoutError: Navigation timeout') &&
+              retries < 1
+            ) {
+              this.pushTask(task, { ...request, retries: retries + 1 });
+            } else {
+              if ('onNotFound' in request && request?.onNotFound) {
+                request.onNotFound('timeout');
+              }
+              return {
+                details,
+                status: 'error-handled-timeout-exceded',
+                retries,
+              };
+            }
+          } else {
+            this.pushTask(task, { ...request, retries: retries + 1 });
+          }
+        } else {
+          if ('onNotFound' in request && request?.onNotFound) {
+            await request.onNotFound();
+          }
+          return {
+            details,
+            status: 'error-handled-domain-not-allowed',
+            retries,
+          };
+        }
 
         return {
-          details: `⛔ ${this.queueTask?.id ?? ''} - ${error} - ${createHash(pageInfo.link)}`,
+          details,
           status: 'error-handled',
           retries,
         };

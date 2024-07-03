@@ -63,7 +63,7 @@ export interface QueryRequest extends QRequest {
     productInfo: ProductInfo[] | null;
     url: string;
   }) => Promise<void>;
-  onNotFound?: () => Promise<void>;
+  onNotFound?: (cause?: string) => Promise<void>;
 }
 
 export interface CrawlerRequest extends QRequest {
