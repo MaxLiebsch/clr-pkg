@@ -406,7 +406,7 @@ export abstract class BaseQueue<
         return { details: message, status: 'page-completed', retries };
       } else {
         return {
-          details: `🆗${' '}${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
+          details: `🆗${' '} ${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
           status: 'page-completed',
           retries,
         };
@@ -476,20 +476,21 @@ export abstract class BaseQueue<
         const details = `⛔${' '} ${this.queueTask?.id ?? ''} - ${shop.d} - ${error} - ${createHash(pageInfo.link)}`;
         if (isDomainAllowed(pageInfo.link)) {
           if (error instanceof Error) {
-            if (
-              `${error}`.includes('TimeoutError: Navigation timeout') &&
-              retries < 1
-            ) {
-              this.pushTask(task, { ...request, retries: retries + 1 });
-            } else {
-              if ('onNotFound' in request && request?.onNotFound) {
-                request.onNotFound('timeout');
+            if (`${error}`.includes('TimeoutError: Navigation timeout')) {
+              if (retries < 1) {
+                this.pushTask(task, { ...request, retries: retries + 1 });
+              } else {
+                if ('onNotFound' in request && request?.onNotFound) {
+                  request.onNotFound('timeout');
+                }
+                return {
+                  details,
+                  status: 'error-handled-timeout-exceded',
+                  retries,
+                };
               }
-              return {
-                details,
-                status: 'error-handled-timeout-exceded',
-                retries,
-              };
+            } else {
+              this.pushTask(task, { ...request, retries: retries + 1 });
             }
           } else {
             this.pushTask(task, { ...request, retries: retries + 1 });
