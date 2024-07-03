@@ -2,6 +2,8 @@ export const allowed = [
   'prescience-data.github.io',
   "www.idealo.de",
   "www.alza.de",
+  "cdn.alza.cz",
+  '1603811301.rsc.cdn77.org',
   'www.proshop.de',
   'www.digitalo.de',
   'www.notebooksbilliger.de',

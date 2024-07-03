@@ -13,13 +13,6 @@ export const safeParsePrice = (
       priceStr.match(/\./g)?.length === 1 && !priceStr.includes(',') &&
       priceStr.match(/\.\d{2}\s/g)  === null
     ) {
-      console.log(priceStr)
-      console.log(
-        "priceStr.slice(priceStr.length - 1) === '€':",
-        priceStr.slice(priceStr.length - 1) === '€',
-      );
-      console.log('priceStr.match(/\./g)?.length === 1:', priceStr.match(/\./g)?.length === 1)
-
       return Number(priceStr.match(/\d+/g)?.join('')) || 0;
     }
     const match = priceStr.match(priceRegExp);

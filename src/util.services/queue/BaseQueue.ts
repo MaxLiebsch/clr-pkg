@@ -15,7 +15,6 @@ import { getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
-import crypto from 'crypto';
 import {
   ACCESS_DENIED_FREQUENCE,
   DEFAULT_PAGE_TIMEOUT,
@@ -33,6 +32,8 @@ import { Versions } from '../../util/versionProvider';
 import { sample, shuffle } from 'underscore';
 import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
+import { createHash } from '../../util/hash';
+import crypto from 'crypto';
 
 type Task = (page: Page, request: any) => Promise<any>;
 
@@ -402,7 +403,11 @@ export abstract class BaseQueue<
       if (message && typeof message === 'string') {
         return { details: message, status: 'page-completed', retries };
       } else {
-        return { details: 'tippy-toppy', status: 'page-completed', retries };
+        return {
+          details: `🆗 ${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
+          status: 'page-completed',
+          retries,
+        };
       }
     } catch (error) {
       // process.env.DEBUG === 'true' &&
@@ -470,7 +475,11 @@ export abstract class BaseQueue<
         isDomainAllowed(pageInfo.link) &&
           this.pushTask(task, { ...request, retries: retries + 1 });
 
-        return { details: `${error}`, status: 'error-handled', retries };
+        return {
+          details: `⛔ ${this.queueTask?.id ?? ''} - ${error} - ${createHash(pageInfo.link)}`,
+          status: 'error-handled',
+          retries,
+        };
       }
     } finally {
       this.clearTimeout(id);
