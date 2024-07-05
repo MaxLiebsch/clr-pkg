@@ -1,4 +1,4 @@
-import { Content } from "./product";
+import { Content } from './product';
 
 export interface DetailBase {
   content: Content;
@@ -10,9 +10,21 @@ export interface DetailBase {
   proprietaryProducts?: string;
 }
 
-export interface ITableDetail extends DetailBase{
-  head: string,
-  row: string,
+type Merge<X, Y> = {
+  [K in keyof X | keyof Y]:
+    | (K extends keyof X ? X[K] : never)
+    | (K extends keyof Y ? Y[K] : never);
+};
+
+export interface IListDetail extends Merge<ITextDetail, IAttributeDetail> {
+  seperator?: string;
+  listItemType: string;
+  listItemInnerSel: string;
+}
+
+export interface ITableDetail extends DetailBase {
+  head: string;
+  row: string;
 }
 
 export interface ITextDetail extends DetailBase {
@@ -28,6 +40,7 @@ export interface IAttributeDetail extends DetailBase {
 export interface IParseJSONElementDetail extends DetailBase {
   path: string | string[];
   multiple: boolean;
+  regex?: string;
 }
 
 export interface IParseJSONDetail extends DetailBase {

@@ -3,6 +3,7 @@ import {
   Details,
   ExistDetail,
   IAttributeDetail,
+  IListDetail,
   IParseJSONDetail,
   IParseJSONElementDetail,
   ITableDetail,
@@ -23,15 +24,38 @@ import { safeJSONParse } from './saveParseJSON';
 import { get } from 'lodash';
 import { findProperty } from './findProperty';
 import { TableContent } from '../../types/table';
+import { detailExtractorRegistry } from './productDetailPageParser.gateway';
 
 export abstract class ExtractProductDetail {
   constructor() {}
   abstract extractDetail(
     element: ElementHandle,
     detail: Details,
-  ): Promise<string | null>;
+  ): Promise<string | string[] | null>;
 }
+export class ListExtractor implements ExtractProductDetail {
+  async extractDetail(element: ElementHandle, detail: IListDetail) {
+    const { sel, listItemType, listItemInnerSel } = detail;
+    const list: string[] = [];
+    const listItemHandles = await myQuerySelectorAllElementHandle(element, sel);
+    if (listItemHandles) {
+      for (let i = 0; i < listItemHandles.length; i++) {
+        const listItemHandle = listItemHandles[i];
+        const ExtractorClass = detailExtractorRegistry[listItemType];
+        const extractorClass = new ExtractorClass();
+        const value = await extractorClass.extractDetail(listItemHandle, {
+          ...detail,
+          type: listItemType,
+          sel: listItemInnerSel,
+        });
+        if (value) list.push(value);
+      }
+      return list;
+    }
 
+    return null;
+  }
+}
 export class TableExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITableDetail) {
     const { head, row, content } = detail;
@@ -61,7 +85,6 @@ export class TableExtractor implements ExtractProductDetail {
     return null;
   }
 }
-
 export class TextDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITextDetail) {
     const { sel, type, content } = detail;
@@ -84,7 +107,6 @@ export class TextDetailExtractor implements ExtractProductDetail {
     }
   }
 }
-
 export class ParseJSONFromElementExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONElementDetail) {
     const { path, sel } = detail;
@@ -96,28 +118,48 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
             const element = elements[i];
             const el = await getElementHandleInnerText(element);
             if (!el) continue;
-            const parsed = safeJSONParse(el);
-            if (!parsed) continue;
-            if (path instanceof Array) {
+            if (detail?.regex) {
+              const regExp = new RegExp(detail.regex);
+              const match = el.match(regExp);
+              if (match && match[1]) {
+                return match[1];
+              }
             } else {
-              const value = findProperty(parsed, path);
-              if (value) return value;
+              const parsed = safeJSONParse(el);
+              if (!parsed) continue;
+              if (path instanceof Array) {
+                for (let j = 0; j < path.length; j++) {
+                  const value = findProperty(parsed, path[j]);
+                  if (value) return value;
+                }
+              } else {
+                const value = findProperty(parsed, path);
+                if (value) return value;
+              }
             }
           }
         }
       } else {
         const el = await getElementHandleInnerText(element);
         if (!el) return null;
-        const parsed = safeJSONParse(el);
-        if (!parsed) return null;
-        if (path instanceof Array) {
-          for (let j = 0; j < path.length; j++) {
-            const value = findProperty(parsed, path[j]);
-            if (value) return value;
+        if (detail?.regex) {
+          const regExp = new RegExp(detail.regex);
+          const match = el.match(regExp);
+          if (match && match[1]) {
+            return match[1];
           }
         } else {
-          const value = findProperty(parsed, path);
-          if (value) return value;
+          const parsed = safeJSONParse(el);
+          if (!parsed) return null;
+          if (path instanceof Array) {
+            for (let j = 0; j < path.length; j++) {
+              const value = findProperty(parsed, path[j]);
+              if (value) return value;
+            }
+          } else {
+            const value = findProperty(parsed, path);
+            if (value) return value;
+          }
         }
       }
     } catch (error) {
@@ -126,7 +168,6 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
     }
   }
 }
-
 export class ParseJSONDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONDetail) {
     const { key, attr, urls, redirect_regex, sel } = detail;
@@ -204,6 +245,8 @@ export class ExistDetailExtractor implements ExtractProductDetail {
 
 export type ExctractorClasses =
   | TextDetailExtractor
+  | TableExtractor
+  | ListExtractor
   | ParseJSONDetailExtractor
   | AttributeDetailExtractor
   | NestedDetailExtractor

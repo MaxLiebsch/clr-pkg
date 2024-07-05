@@ -8,6 +8,7 @@ import {
   TextDetailExtractor,
   ParseJSONFromElementExtractor,
   TableExtractor,
+  ListExtractor,
 } from './productDetail.services';
 import { Details } from '../../types/productInfoDetails';
 import { shadowRootSelector, waitForSelector } from '../helpers';
@@ -25,12 +26,13 @@ const sharedExtractorTypes = [
   'data-llsrc',
   'data-original',
 ];
-const detailExtractorRegistry = sharedExtractorTypes.reduce(
+export const detailExtractorRegistry = sharedExtractorTypes.reduce(
   (acc: { [key: string]: any }, type) => {
     acc[type] = AttributeDetailExtractor;
     return acc;
   },
   {
+    list: ListExtractor,
     table: TableExtractor,
     text: TextDetailExtractor,
     parse_json_element: ParseJSONFromElementExtractor,

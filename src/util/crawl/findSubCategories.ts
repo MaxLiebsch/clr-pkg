@@ -10,7 +10,7 @@ const findSubCategories = async (
 ) => {
   if (!subCategories.length || limit?.pages === 0)
     return {
-      subCategoryHandle: 'missing',
+      subCategoryHandle: null,
       subCategory: {} as SubCategoriesSel,
     };
   let subCategoryHandle: ElementHandle<Element> | null = null;
@@ -23,6 +23,7 @@ const findSubCategories = async (
 
     if (sel)
       subCategoryHandle = await waitForSelector(page, sel, 5000, visible);
+  
 
     if (subCategoryHandle) break;
   }

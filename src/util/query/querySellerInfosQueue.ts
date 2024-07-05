@@ -4,13 +4,12 @@ import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { runActions } from './runActions';
 import { extractAttributePage } from '../helpers';
 import {
-  DEFAULT_PAGE_TIMEOUT,
   MAX_RETRIES_LOOKUP_EAN,
-  RANDOM_TIMEOUT_MIN,
   aznNotFoundText,
   aznUnexpectedErrorText,
 } from '../../constants';
 import { closePage } from '../browser/closePage';
+import { join } from 'path';
 
 function timeoutPromise(timeout: number, ean: number): Promise<never> {
   return new Promise((_, reject) => {
@@ -22,22 +21,24 @@ function timeoutPromise(timeout: number, ean: number): Promise<never> {
 
 async function querySellerInfos(page: Page, request: QueryRequest) {
   const startTime = Date.now();
-  const { addProductInfo, shop, query, onNotFound, queue, retries, pageInfo } =
-    request;
+  const {
+    addProductInfo,
+    shop,
+    query,
+    onNotFound,
+    queue,
+    retries,
+    pageInfo,
+    targetShop,
+  } = request;
+  const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
-  if (retries >= MAX_RETRIES_LOOKUP_EAN) {
+  if (retries > MAX_RETRIES_LOOKUP_EAN) {
     await closePage(page);
     onNotFound && (await onNotFound());
     return `Finally missing: ${ean}`;
-  }
-
-  //  slow done
-  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
-    const { min, max } = shop.pauseOnProductPage;
-    let pause = Math.floor(Math.random() * max) + min;
-    await new Promise((r) => setTimeout(r, pause));
   }
 
   if (shop.queryActions && shop.queryActions.length) {
@@ -51,8 +52,8 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   );
 
   if (unexpectedError?.includes(aznUnexpectedErrorText)) {
-    if (retries < MAX_RETRIES_LOOKUP_EAN) {
-      throw new Error(`Unexpected Error: ${ean}`);
+    if (retries <= MAX_RETRIES_LOOKUP_EAN) {
+      throw new Error(`${targetShopId} - Unexpected Error: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
     }
@@ -67,12 +68,19 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   );
   if (notFound?.includes(aznNotFoundText)) {
     if (retries <= MAX_RETRIES_LOOKUP_EAN) {
-      throw new Error(`Not found: ${ean}`);
+      throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
     }
     await closePage(page);
     return;
+  }
+
+  //  slow done
+  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
+    const { min, max } = shop.pauseOnProductPage;
+    let pause = Math.floor(Math.random() * max) + min;
+    await new Promise((r) => setTimeout(r, pause));
   }
 
   if (product) {
@@ -109,12 +117,11 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (addProductInfo)
       await addProductInfo({ productInfo: rawProductInfos, url });
   } else {
-    throw new Error(`Product Info seems empty: ${ean}`); //Retry logic
+    throw new Error(`${targetShopId} - Product Info seems empty: ${ean}`); //Retry logic
   }
   const endTime = Date.now();
   const elapsedTime = Math.round((endTime - startTime) / 1000);
-
-  return `${ean} took: ${elapsedTime} s`;
+  return `${targetShopId} - ${ean} took: ${elapsedTime} s`;
 }
 
 export async function querySellerInfosQueue(page: Page, request: QueryRequest) {

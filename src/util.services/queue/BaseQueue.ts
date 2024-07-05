@@ -352,7 +352,11 @@ export abstract class BaseQueue<
         this.queueTask.timezones,
       );
 
-      if (retries === 0) {
+      if (
+        retries === 0 &&
+        this.queueTask.type !== 'LOOKUP_INFO' &&
+        this.queueTask.type !== 'WHOLESALE_SEARCH'
+      ) {
         const referer = sample(refererList) ?? refererList[0];
         await page.setExtraHTTPHeaders({
           referer,
@@ -403,17 +407,21 @@ export abstract class BaseQueue<
       }
       const message = await task(page, request);
       if (message && typeof message === 'string') {
-        return { details: message, status: 'page-completed', retries };
+        return {
+          details: `🆗${' '} ${message} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
+          status: 'page-completed',
+          retries,
+        };
       } else {
         return {
-          details: `🆗${' '} ${this.queueTask?.id ?? ''} - ${shop.d} - ${createHash(pageInfo.link)}`,
+          details: `🆗${' '} ${this.queueTask?.id ?? ''} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
           status: 'page-completed',
           retries,
         };
       }
     } catch (error) {
-      // process.env.DEBUG === 'true' &&
-      //   console.log('WrapperFunction:Error:', error);
+      process.env.DEBUG === 'true' &&
+        console.log('WrapperFunction:Error:', error);
       if (!this.taskFinished) {
         if (!this.repairing) {
           if (error instanceof Error) {
@@ -541,6 +549,7 @@ export abstract class BaseQueue<
   next(): void {
     if (
       this.pause ||
+      this.taskFinished ||
       this.repairing ||
       this.running >= this.concurrency ||
       this.queue.length === 0
@@ -550,7 +559,11 @@ export abstract class BaseQueue<
     this.running++;
     if (
       this.queueTask.type === 'CRAWL_EAN' ||
-      this.queueTask.type === 'LOOKUP_INFO'
+      this.queueTask.type === 'LOOKUP_INFO' ||
+      this.queueTask.type === 'CRAWL_EBY_LISTINGS' ||
+      this.queueTask.type === 'CRAWL_AZN_LISTINGS' ||
+      this.queueTask.type === 'QUERY_EANS_EBY' ||
+      this.queueTask.type === 'LOOKUP_CATEGORY'
     ) {
       this.queue = shuffle(this.queue);
     }
@@ -565,9 +578,8 @@ export abstract class BaseQueue<
         () =>
           this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
             (result: WrapperFunctionResponse) => {
-              console.log(
-                `details: ${result?.details}, status: ${result?.status}, retries: ${result?.retries}`,
-              );
+              this.running--;
+              this.next();
               if (result) {
                 const { retries, status } = result;
                 switch (true) {
@@ -608,8 +620,9 @@ export abstract class BaseQueue<
                     break;
                 }
               }
-              this.running--;
-              this.next();
+              console.log(
+                `Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries}`,
+              );
             },
           ),
         timeoutTime,

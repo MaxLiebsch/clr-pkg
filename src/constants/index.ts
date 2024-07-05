@@ -11,7 +11,7 @@ export const MAX_CRITICAL_ERRORS = 7;
 export const DEFAULT_PAGE_TIMEOUT = 60000;
 export const EAN_PAGE_TIMEOUT = 120000;
 export const amazonTransportFee = 0.25;
-export const MAX_RETRIES_LOOKUP_EAN = 2;
+export const MAX_RETRIES_LOOKUP_EAN = 1;
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;
@@ -955,6 +955,7 @@ export const availability = [
 ];
 
 export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
+export const ebyNotFoundText = 'Keine exakten Treffer gefunden';
 export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten';
 
 export const regexp = /\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/g;

@@ -38,7 +38,7 @@ export const getCategories = async (
       page,
       subCategories,
     );
-    if (subCategoryHandle !== 'missing' && subCategoryHandle) {
+    if (subCategoryHandle) {
       const { sel, type } = subCategory;
       const categories = await myQuerySelectorAll(page, sel);
       if (categories) {

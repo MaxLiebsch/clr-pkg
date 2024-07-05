@@ -21,7 +21,6 @@ import {
 import { get } from 'lodash';
 import { safeJSONParse } from '../extract/saveParseJSON';
 import { safeParsePrice } from '../safeParsePrice';
-import { eanRegex } from '../../constants';
 
 export const crawlProducts = async (
   page: Page,

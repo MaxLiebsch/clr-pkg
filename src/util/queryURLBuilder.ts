@@ -55,11 +55,7 @@ export const queryURLBuilder = (
       queryStr = encodeURIComponent(brandPart + ' ' + modelPart);
     }
     if (query.product) {
-      if (baseUrl.includes('https://www.ebay')) {
-        queryStr = encodeURIComponent(query.product.key);
-      } else {
-        queryStr = encodeURIComponent(query.product.value);
-      }
+      queryStr = encodeURIComponent(query.product.value);
     }
   }
 
