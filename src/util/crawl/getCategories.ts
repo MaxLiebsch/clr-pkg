@@ -38,129 +38,125 @@ export const getCategories = async (
       page,
       subCategories,
     );
-    if (subCategoryHandle) {
-      const { sel, type } = subCategory;
-      const categories = await myQuerySelectorAll(page, sel);
-      if (categories) {
-        switch (true) {
-          case categories.length === 0:
-            request.categoriesHeuristic.subCategories['0'] += 1;
-            break;
-          case categories.length >= 0 && categories.length < 10:
-            request.categoriesHeuristic.subCategories['1-9'] += 1;
-            break;
-          case categories.length >= 10 && categories.length < 20:
-            request.categoriesHeuristic.subCategories['10-19'] += 1;
-            break;
-          case categories.length >= 20 && categories.length < 30:
-            request.categoriesHeuristic.subCategories['20-29'] += 1;
-            break;
-          case categories.length >= 30 && categories.length < 40:
-            request.categoriesHeuristic.subCategories['30-39'] += 1;
-            break;
-          case categories.length >= 40 && categories.length < 50:
-            request.categoriesHeuristic.subCategories['40-49'] += 1;
-            break;
-          case categories.length >= 50:
-            request.categoriesHeuristic.subCategories['+50'] += 1;
-            break;
-        }
-        for (let index = 0; index < categories.length; index++) {
-          const categoryLink = await extractAttributeElementHandle(
-            categories[index],
-            type,
+    if (!subCategoryHandle) return null;
+
+    const { sel, type } = subCategory;
+    const categories = await myQuerySelectorAll(page, sel);
+    if (!categories) return null;
+    switch (true) {
+      case categories.length === 0:
+        request.categoriesHeuristic.subCategories['0'] += 1;
+        break;
+      case categories.length >= 0 && categories.length < 10:
+        request.categoriesHeuristic.subCategories['1-9'] += 1;
+        break;
+      case categories.length >= 10 && categories.length < 20:
+        request.categoriesHeuristic.subCategories['10-19'] += 1;
+        break;
+      case categories.length >= 20 && categories.length < 30:
+        request.categoriesHeuristic.subCategories['20-29'] += 1;
+        break;
+      case categories.length >= 30 && categories.length < 40:
+        request.categoriesHeuristic.subCategories['30-39'] += 1;
+        break;
+      case categories.length >= 40 && categories.length < 50:
+        request.categoriesHeuristic.subCategories['40-49'] += 1;
+        break;
+      case categories.length >= 50:
+        request.categoriesHeuristic.subCategories['+50'] += 1;
+        break;
+    }
+
+    for (let index = 0; index < categories.length; index++) {
+      const categoryHandle = categories[index];
+      const categoryLink = await extractAttributeElementHandle(
+        categoryHandle,
+        type,
+      );
+      const categoryName = await getElementHandleInnerText(categoryHandle);
+      if (
+        categoryLink &&
+        categoryName &&
+        new RegExp(/\w/g).test(categoryName)
+      ) {
+        testAndPushUrl(
+          queue,
+          categorieLinks,
+          categoryLink,
+          categoryName,
+          domain,
+          ece,
+          categorieEls?.exclude,
+        );
+      } else if (categoryLink) {
+        const categoryName = extractCategoryNameAndCapitalize(
+          categoryLink,
+          categorieEls.categoryNameSegmentPos ?? 1,
+          categorieEls.categoryRegexp,
+        );
+        if (categoryName) {
+          testAndPushUrl(
+            queue,
+            categorieLinks,
+            categoryLink,
+            categoryName,
+            domain,
+            ece,
+            categorieEls?.exclude,
           );
-          const categoryName = await getElementHandleInnerText(
-            categories[index],
-          );
-          if (
-            categoryLink &&
-            categoryName &&
-            new RegExp(/\w/g).test(categoryName)
-          ) {
-            testAndPushUrl(
-              queue,
-              categorieLinks,
-              categoryLink,
-              categoryName,
-              domain,
-              ece,
-              categorieEls?.exclude,
-            );
-          } else if (categoryLink) {
-            const categoryName = extractCategoryNameAndCapitalize(
-              categoryLink,
-              categorieEls.categoryNameSegmentPos ?? 1,
-              categorieEls.categoryRegexp,
-            );
-            if (categoryName) {
-              testAndPushUrl(
-                queue,
-                categorieLinks,
-                categoryLink,
-                categoryName,
-                domain,
-                ece,
-                categorieEls?.exclude,
-              );
-            }
-          }
         }
-        return categorieLinks;
       }
     }
+    return categorieLinks;
   } else {
     const { sel, type, visible, wait } = categorieEls;
     const handle = await waitForSelector(page, sel, wait ?? 5000, visible);
+    if (!handle) return null;
 
-    if (handle) {
-      const categories = await myQuerySelectorAll(page, sel);
-      if (categories) {
-        request.categoriesHeuristic.mainCategories = categories.length;
-        for (let index = 0; index < categories.length; index++) {
-          const categoryLink = await extractAttributeElementHandle(
-            categories[index],
-            type,
+    const categories = await myQuerySelectorAll(page, sel);
+    if (!categories) return null;
+
+    request.categoriesHeuristic.mainCategories = categories.length;
+    for (let index = 0; index < categories.length; index++) {
+      const categoryLink = await extractAttributeElementHandle(
+        categories[index],
+        type,
+      );
+      const categoryName = await getElementHandleInnerText(categories[index]);
+      if (
+        categoryLink &&
+        categoryName &&
+        new RegExp(/\w/g).test(categoryName)
+      ) {
+        testAndPushUrl(
+          queue,
+          categorieLinks,
+          categoryLink,
+          categoryName,
+          domain,
+          ece,
+          categorieEls?.exclude,
+        );
+      } else if (categoryLink) {
+        const categoryName = extractCategoryNameAndCapitalize(
+          categoryLink,
+          categorieEls.categoryNameSegmentPos ?? 1,
+          categorieEls.categoryRegexp,
+        );
+        if (categoryName) {
+          testAndPushUrl(
+            queue,
+            categorieLinks,
+            categoryLink,
+            categoryName,
+            domain,
+            ece,
+            categorieEls?.exclude,
           );
-          const categoryName = await getElementHandleInnerText(
-            categories[index],
-          );
-          if (
-            categoryLink &&
-            categoryName &&
-            new RegExp(/\w/g).test(categoryName)
-          ) {
-            testAndPushUrl(
-              queue,
-              categorieLinks,
-              categoryLink,
-              categoryName,
-              domain,
-              ece,
-              categorieEls?.exclude,
-            );
-          } else if (categoryLink) {
-            const categoryName = extractCategoryNameAndCapitalize(
-              categoryLink,
-              categorieEls.categoryNameSegmentPos ?? 1,
-              categorieEls.categoryRegexp,
-            );
-            if (categoryName) {
-              testAndPushUrl(
-                queue,
-                categorieLinks,
-                categoryLink,
-                categoryName,
-                domain,
-                ece,
-                categorieEls?.exclude,
-              );
-            }
-          }
         }
-        return categorieLinks;
       }
     }
+    return categorieLinks;
   }
 };
 
@@ -176,7 +172,6 @@ const testAndPushUrl = (
   const exclude = _exclude ? _exclude : [];
   const completeLink = prefixLink(categoryLink, domain);
   const categoryLinkExists = queue.doesCategoryLinkExist(completeLink);
-
   if (!categoryLinkExists) {
     queue.addCategoryLink(completeLink);
     if (

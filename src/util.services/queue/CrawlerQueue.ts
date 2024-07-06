@@ -37,15 +37,12 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   /*  QUEUE RELATED FUNCTIONS  */
   /* Placeholder  function for interoperability with BaseQueue class  */
   public clearQueue(event: string, infos: Infos) {
-    return super.clearQueue(event,infos);
+    return super.clearQueue(event, infos);
   }
   resumeQueue() {
     return super.resumeQueue();
   }
-  pauseQueue(
-    reason: 'error' | 'rate-limit' | 'blocked',
- 
-  ) {
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     return super.pauseQueue(reason);
   }
   public idle() {
@@ -60,9 +57,9 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   wrapperFunction(
     task: Task,
     request: CrawlerRequest,
-    id: string
+    id: string,
   ): Promise<WrapperFunctionResponse> {
-    return super.wrapperFunction(task, request,id);
+    return super.wrapperFunction(task, request, id);
   }
 
   /*  CRAWLR QUEUE RELATED FUNCTIONS  */

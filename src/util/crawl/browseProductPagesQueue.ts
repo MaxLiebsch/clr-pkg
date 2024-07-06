@@ -86,8 +86,8 @@ export async function browseProductPagesQueue(
         const limitPages = limit?.pages ? limit?.pages : 0;
 
         const noOfPages = limitPages
-          ? limitPages > noOfFoundPages
-            ? noOfFoundPages
+        ? limitPages > noOfFoundPages
+        ? noOfFoundPages
             : limitPages
           : noOfFoundPages;
 

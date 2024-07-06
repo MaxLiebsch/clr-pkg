@@ -15,7 +15,7 @@ export const crawlShop = async (page: Page, request: CrawlerRequest) => {
 
   const categLinks: ICategory[] = [];
 
-  let foundCategories: ICategory[] | undefined = undefined;
+  let foundCategories: ICategory[] | null = null;
   if (shop.manualCategories.length) {
     categLinks.push(...shop.manualCategories);
   }

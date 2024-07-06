@@ -14,7 +14,7 @@ export const scanShop = async (page: Page, request: ScanRequest) => {
 
   const categLinks: ICategory[] = [];
   
-  let foundCategories: ICategory[] | undefined = undefined;
+  let foundCategories: ICategory[] | null = null;
   if (shop.manualCategories.length) {
     categLinks.push(...shop.manualCategories);
   }
