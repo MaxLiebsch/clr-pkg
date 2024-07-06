@@ -44,7 +44,9 @@ export async function filter(arr: any[], callback: Function) {
 
 export const myQuerySelectorAll = async (page: Page, sel: string) => {
   try {
-    return await page.$$(sel);
+    const elements = await page.$$(sel);
+    if (elements.length) return elements;
+    return null;
   } catch (error) {
     return null;
   }
@@ -55,7 +57,9 @@ export const myQuerySelectorAllElementHandle = async (
   sel: string,
 ) => {
   try {
-    return await elementHandle.$$(sel);
+    const elements = await elementHandle.$$(sel);
+    if (elements.length) return elements;
+    return null;
   } catch (error) {
     return null;
   }
