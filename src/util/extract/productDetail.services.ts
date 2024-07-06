@@ -63,7 +63,7 @@ export class TableExtractor implements ExtractProductDetail {
     console.log('keyHandles:', keyHandles)
     const valueHandles = await myQuerySelectorAllElementHandle(element, row);
     const table: TableContent[] = [];
-    if (keyHandles && valueHandles.length)
+    if (keyHandles && valueHandles)
       for (let i = 0; i < keyHandles.length; i++) {
         let valueText = '';
         const keyHandle = keyHandles[i];
