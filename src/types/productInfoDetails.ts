@@ -24,7 +24,7 @@ export interface IListDetail extends Merge<ITextDetail, IAttributeDetail> {
 
 export interface ITableDetail extends DetailBase {
   head: string;
-  keys: string[];
+  keys?: string[];
   row: string;
 }
 

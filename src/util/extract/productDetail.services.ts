@@ -60,7 +60,6 @@ export class TableExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITableDetail) {
     const { head, row, content, keys } = detail;
     const keyHandles = await myQuerySelectorAllElementHandle(element, head);
-    console.log('keyHandles:', keyHandles)
     const valueHandles = await myQuerySelectorAllElementHandle(element, row);
     const table: TableContent[] = [];
     if (keyHandles && valueHandles)
@@ -78,7 +77,11 @@ export class TableExtractor implements ExtractProductDetail {
             key: headerText,
             value: valueText.trim(),
           });
-          if (keys.includes(headerText.toLowerCase().trim())) {
+          if (keys && keys.length > 0) {
+            if (keys.includes(headerText.toLowerCase().trim())) {
+              return valueText.trim();
+            }
+          } else if (headerText.toLowerCase().trim() === content) {
             return valueText.trim();
           }
         }
