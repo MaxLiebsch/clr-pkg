@@ -25,9 +25,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     shop,
     query,
     onNotFound,
-    queue,
     retries,
-    pageInfo,
     targetShop,
   } = request;
   const targetShopId = targetShop?.name;

@@ -3,7 +3,8 @@ import { browseProductpages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { QueryRequest } from '../../types/query-request';
 import { getInnerText } from '../../util/helpers';
-import { MAX_RETRIES_LOOKUP_EAN, ebyNotFoundText } from '../../constants';
+import { ebyNotFoundText, MAX_RETRIES_LOOKUP_EAN } from '../../constants';
+import { closePage } from '../../util/browser/closePage';
 
 export const queryEansOnEbyQueue = async (
   page: Page,
@@ -28,8 +29,13 @@ export const queryEansOnEbyQueue = async (
 
   const notFound = await getInnerText(page, 'h3.srp-save-null-search__heading');
   if (notFound?.includes(ebyNotFoundText)) {
-    onNotFound && (await onNotFound());
-    return `${targetShop?.name} - ${ean} not found on Eby`;
+    if (retries < MAX_RETRIES_LOOKUP_EAN) {
+      throw new Error(`${targetShop?.name} - ${ean} not found on Eby`);
+    } else {
+      onNotFound && (await onNotFound());
+    }
+    await closePage(page);
+    return;
   }
 
   const res = await browseProductpages(
