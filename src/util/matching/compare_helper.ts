@@ -1,6 +1,7 @@
 import { TargetShop } from '../../types';
 import { CandidateProduct, Product } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
+import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import {
   buildRegexForSiUnits,
@@ -12,10 +13,8 @@ import {
 export const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})/g;
 const regex = /[^A-Za-z0-9\s,.öäÖÄüÜ\-]/g;
 const dimensionRegex =
-  /(Ø|)(\d+\s*[xX-a]|)\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(mm|m|cm|meter|kg|Stück|St|kapseln|pixel|)/gi;
+  /(Ø|)(\d+\s*[xX-a]|)\s*\d+([.,]\d+)?\s*(mm|ml|m|cm|meter|kg|)\s*[xX-a]\s*\d+([.,]\d+)?\s*(meter|ml|mm|m|cm|kg|g|Stück|St|kapseln|pixel|)/gi;
 const inOperatorRegex = /(\d+)\s*(in|from|of|von)\s*(\d+)/gi;
-const packRegex = /\d+\s*[-_]?\s*er\s*[-_]?\s*(pack|packung|package)/gi;
-
 export const excludeCharsAndSplit = (name: string) =>
   cleanString(name)
     .split(' ')
@@ -173,15 +172,6 @@ export const getDimensions = (str: string) => {
   return dimension;
 };
 
-export const getPacks = (str: string) => {
-  const pack: string[] = [];
-  const matches = [...str.matchAll(packRegex)];
-  matches.forEach((unit) => {
-    pack.push(unit[0]);
-  });
-  return pack;
-};
-
 export const getSIUints = (str: string) => {
   const siUnits: string[] = [];
   const matches = [...str.matchAll(buildRegexForSiUnits())];
@@ -203,8 +193,8 @@ export const findBestMatch = (
 
   foundProds.forEach((product, index) => {
     const curr_prc = safeParsePrice(product.price);
-    const mrgn = Number((curr_prc - prc).toFixed(2));
-    const curr_mrgn_pct = Number(((mrgn / prc) * 100).toFixed(1));
+    const mrgn = roundToTwoDecimals(curr_prc - prc);
+    const curr_mrgn_pct = roundToTwoDecimals((mrgn / prc) * 100);
     let score = 0;
 
     // switch (true) {
@@ -296,8 +286,8 @@ export function calculateArbitrage(
     });
 
     if (bm_prc && srcPrice) {
-      const mrgn = Number((bm_prc - srcPrice).toFixed(2));
-      const mrgn_pct = Number(((mrgn / srcPrice) * 100).toFixed(1));
+      const mrgn = roundToTwoDecimals(bm_prc - srcPrice);
+      const mrgn_pct = roundToTwoDecimals((mrgn / srcPrice) * 100);
       const arbitrage = {
         prc: bm_prc,
         mrgn,

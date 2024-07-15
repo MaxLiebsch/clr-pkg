@@ -1,4 +1,5 @@
 import parsePrice from 'parse-price';
+import { roundToTwoDecimals } from './helpers';
 
 const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})*(?:,\d+)/g;
 
@@ -9,9 +10,11 @@ export const safeParsePrice = (
 
   if (typeof priceStr === 'string') {
     if (
-      (priceStr.slice(priceStr.length - 1) === '€' || priceStr.slice(0,1) === '€') &&
-      priceStr.match(/\./g)?.length === 1 && !priceStr.includes(',') &&
-      priceStr.match(/\.\d{2}\s/g)  === null
+      (priceStr.slice(priceStr.length - 1) === '€' ||
+        priceStr.slice(0, 1) === '€') &&
+      priceStr.match(/\./g)?.length === 1 &&
+      !priceStr.includes(',') &&
+      priceStr.match(/\.\d{2}\s/g) === null
     ) {
       return Number(priceStr.match(/\d+/g)?.join('')) || 0;
     }
@@ -22,7 +25,7 @@ export const safeParsePrice = (
   }
   const price = parsePrice(priceStr);
 
-  const parsedPrice = parseFloat(price.toFixed(2));
+  const parsedPrice = roundToTwoDecimals(price);
 
   return isNaN(parsedPrice) ? 0 : parsedPrice;
 };

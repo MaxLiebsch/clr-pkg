@@ -1,10 +1,15 @@
+interface Above {
+  above: number;
+  percentage: number;
+}
+interface UpTo {
+  up_to: number;
+  percentage: number;
+}
+
 export interface Tier {
-  no_shop:
-    | { up_to?: number; percentage: number }[]
-    | { above?: number; percentage: number }[];
-  shop:
-    | { up_to?: number; percentage: number }[]
-    | { above?: number; percentage: number }[];
+  no_shop: (Above | UpTo)[];
+  shop: (Above | UpTo)[];
 }
 export interface EbyCategory {
   id: number;

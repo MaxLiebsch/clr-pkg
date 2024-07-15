@@ -1,0 +1,211 @@
+
+{
+  "wreath": {
+    "unit": ["unit", "einheit", "einheiten"],
+    "tissue": ["Feuchttücher" ],
+    "caplse": ["Kapseln", "Dragees", "Kapsel", "Dragee", "Tabs"],
+    "piece": [
+      "pce",
+      "pcs",
+      "st.",
+      "Stk",
+      "Stk.",
+      "stück",
+      "stü",
+      "Stück",
+      "pieces",
+      "pieces",
+      "Stücke",
+      "St.",
+      "St",
+      "pie"
+    ],
+    "part": ["parts", "part", "teil", "teile"],
+    "package": ["Packungen", "package", "Packung", "Pack"],
+    "portion": ["Portion", "Port.", "port", "Getränk", "Getränke"],
+    "size": ["Gr.", "Größe", "size"],
+    "bag": ["bag", "bags", "Beutel", "Beutel", "Filterbeutel"]
+  }, 
+  "mass": {
+    "micorgram": [
+      "mcg",
+      "micorgrams",
+      "micorgram",
+      "micorgramme",
+      "micorgrammes"
+    ],
+    "milligram": [
+      "mg",
+      "milligrams",
+      "milligram",
+      "milligramme",
+      "milligrammes"
+    ],
+    "gram": ["g", "grams", "gram", "gramme", "grammes"],
+    "ounce": ["oz", "ounces", "ounce", "oz.", "ozs", "ozs."],
+    "pound": ["lb", "pounds", "pound", "lb.", "lbs", "lbs."],
+    "kilogram": [
+      "kg",
+      "kilograms",
+      "kilogram",
+      "kilogramme",
+      "kilogrammes",
+      "kilo",
+      "kilos"
+    ],
+    "metrictone": ["mt", "tonnes", "tonne"],
+    "ton": ["tn", "tons", "ton"]
+  },
+  "volume": {
+    "fl_oz": ["fl-oz", "fluid ounces", "fluid ounce", "fl ozs", "fl oz"],
+    "cup": ["cup", "cups"],
+    "gal": ["gal", "gallons", "gallon"],
+    "l": ["l", "liters", "liter", "ltr", "L"],
+    "dl": ["dl", "deziliters", "dliter"],
+    "ml": ["ml", "milliliters", "milliliter"],
+    "millimetercubed": [
+      "mm3",
+      "millimeterscubed",
+      "millimetercubed",
+      "millimeters cubed",
+      "millimeter cubed",
+      "mm³",
+      "mm^3",
+      "mmcubed",
+      "mmcubic"
+    ],
+    "centimetercubed": [
+      "cm3",
+      "centimeterscubed",
+      "centimetercubed",
+      "centimeters cubed",
+      "centimeter cubed",
+      "centimeter^3",
+      "centimeter3",
+      "cm³",
+      "cm^3",
+      "cmcubed"
+    ],
+    "metercubed": [
+      "m3",
+      "meterscubed",
+      "metercubed",
+      "meters cubed",
+      "meter cubed",
+      "m³",
+      "m^3",
+      "mcubed",
+      "mcubic"
+    ],
+    "inchcubed": [
+      "in3",
+      "inchescubed",
+      "inchescubed",
+      "inches cubed",
+      "inch cubed",
+      "in³",
+      "in^3",
+      "incubed"
+    ],
+    "footcubed": [
+      "ft3",
+      "feetcubed",
+      "footcubed",
+      "feet cubed",
+      "foot cubed",
+      "ft³",
+      "ft^3",
+      "ftcubed"
+    ],
+    "yd3": [
+      "yd3",
+      "yardscubed",
+      "yardcubed",
+      "yards cubed",
+      "yard cubed",
+      "yd³",
+      "yd^3",
+      "ydcubed"
+    ],
+    "kilometercubed": [
+      "km3",
+      "kilometerscubed",
+      "kilometercubed",
+      "kilometers cubed",
+      "kilometer cubed",
+      "km³",
+      "km^3",
+      "kmcubed"
+    ]
+  },
+  "area": {
+    "millimetersquared": [
+      "mm2",
+      "millimeterssquared",
+      "millimetersquared",
+      "millimeters squared",
+      "millimeters quared",
+      "millimetersq",
+      "mm^2",
+      "mm²"
+    ],
+    "centimetersquared": [
+      "cm2",
+      "centimeterssquared",
+      "centimetersquared",
+      "centimeters squared",
+      "centimeter squared",
+      "centimetersq",
+      "cm^2",
+      "cm²"
+    ],
+    "metersquared": [
+      "m2",
+      "meterssquared",
+      "metersquared",
+      "meters squared",
+      "meter squared",
+      "metersq",
+      "m^2",
+      "m²"
+    ],
+    "kilometersquared": [
+      "km2",
+      "kilometerssquared",
+      "kilometersquared",
+      "kilometers squared",
+      "kilometer squared",
+      "km²",
+      "km^2"
+    ],
+    "inchsquared": [
+      "in2",
+      "inchessquared",
+      "inchesquared",
+      "inches squared",
+      "inche squared",
+      "in²",
+      "in^2"
+    ],
+    "footsquared": [
+      "ft2",
+      "feetsquared",
+      "footsquared",
+      "feet squared",
+      "foot squared",
+      "ft²",
+      "ft^2"
+    ],
+    "yardsquared": [
+      "yd2",
+      "yardssquared",
+      "yardsquared",
+      "yards squared",
+      "yard squared",
+      "yd²",
+      "yd^2"
+    ],
+    "acre": ["acres", "acre", "ac"],
+    "hectare": ["hectares", "hectare", "ha"]
+  }
+}

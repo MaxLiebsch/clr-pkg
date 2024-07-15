@@ -370,6 +370,15 @@ export const extractAttributePage = async (
   }
 };
 
+export function replaceAllHiddenCharacters(str: string) {
+  // Define a regular expression for all possible hidden characters
+  // This includes control characters, invisible characters, and non-printing characters
+  const hiddenCharactersRegex = /[^\x20-\x7E]+/g;
+
+  // Replace hidden characters with an empty string
+  return str.replace(hiddenCharactersRegex, "");
+}
+
 export function roundToTwoDecimals(num: number) {
   return Math.round(num * 100) / 100;
 }

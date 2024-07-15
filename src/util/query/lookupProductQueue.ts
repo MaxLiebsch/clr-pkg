@@ -149,9 +149,9 @@ export async function lookupProductQueue(page: Page, request: QueryRequest) {
     });
     if (addProductInfo)
       addProductInfo({ productInfo: cleanedProductInfo, url });
-    // await closePage(page);
+    await closePage(page);
   } else {
     if (addProductInfo) addProductInfo({ productInfo: null, url });
-    // await closePage(page);
+    await closePage(page);
   }
 }

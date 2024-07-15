@@ -59,8 +59,6 @@ export interface DbProduct {
   s: string;
   ean: string;
   asin: string;
-  lckd: boolean;
-  taskId: string;
   bsr: [
     {
       number: number;

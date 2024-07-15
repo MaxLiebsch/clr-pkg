@@ -25,8 +25,13 @@ TODO:
 - [x] create eby listings task for all shops
 - [x] update shops on live
 
-<!-- - [ ] copy ean spotter to ean in crawldata -->
-- [ ] reset ean_prop fressnapf
-- [ ] reset ean_locked, ean_taskId in all dbs
-- [ ] reset info_prop where costs exists and a_prc === 0 in all dbs
+- [x] Add costs incl. mltr (multiplication coeffient) to asin table
+- [x] detect Package in crawl
+- [x] detect Package in query eans on eby
+- [x] detect Package in lookup info
+- [x] Save only valid eBay category in product
 
+
+- [ ] Reset lookup category from before the 6.07, 12:30
+- [x] Calculate eBay categories
+- [x] extend all azn tasks concurrency , browserconcurrency

@@ -4,6 +4,7 @@ import { roundToTwoDecimals } from '../helpers';
 interface Costs {
   azn: number;
   varc: number;
+  mltr?: number;
   tpt: number;
   strg_1_hy: number;
   strg_2_hy: number;
@@ -18,17 +19,10 @@ const calculateMargeAndEarning = (
   program: 'europe' | 'none' = 'europe',
 ) => {
   // VK - Kosten - Steuern - EK / VK * 100
-  const taxCosts = Number((sellPrice - sellPrice / (1 + tax / 100)).toFixed(2));
+  const taxCosts = roundToTwoDecimals(sellPrice - sellPrice / (1 + tax / 100));
 
-  let totalCosts = Number(
-    (
-      costs.azn +
-      costs.varc +
-      costs.tpt +
-      costs[period] +
-      buyPrice +
-      taxCosts
-    ).toFixed(2),
+  let totalCosts = roundToTwoDecimals(
+    costs.azn + costs.varc + costs.tpt + costs[period] + buyPrice + taxCosts,
   );
 
   if (program === 'none') {
@@ -38,8 +32,8 @@ const calculateMargeAndEarning = (
   const earning = sellPrice - totalCosts;
   const margin = ((sellPrice - totalCosts) / sellPrice) * 100;
   return {
-    earning: Number(earning.toFixed(2)),
-    margin: Number(margin.toFixed(2)),
+    earning: roundToTwoDecimals(earning),
+    margin: roundToTwoDecimals(margin),
   };
 };
 

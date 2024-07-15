@@ -1,0 +1,272 @@
+export const aznTier = [
+  {
+    category: 'Andere Produkte',
+    id: ['72921031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Auto und Motorsport',
+    id: ['78191031'],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 50, percentage: 0.15 },
+      { above: 50, percentage: 0.09 },
+    ],
+  },
+  {
+    category: 'Babyprodukte',
+    id: ['355007011'],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 10, percentage: 0.08 },
+      { above: 10, percentage: 0.15 },
+    ],
+  },
+  {
+    category: 'Beauty, Drogerie und Körperpflege',
+    id: ['64187031'],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 10, percentage: 0.08 },
+      { above: 10, percentage: 0.15 },
+    ],
+  },
+  {
+    category: 'Bekleidung und Accessoires',
+    id: ['11961464031'],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 15, percentage: 0.08 },
+      { up_to: 45, percentage: 0.15 },
+      { above: 45, percentage: 0.07 },
+    ],
+  },
+  {
+    category: 'Bier, Wein und Spirituosen',
+    id: ['358556031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.1 }],
+  },
+  {
+    category: 'Brillen',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Bücher',
+    id: ['186606'],
+    mSalesFee: 0,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+    additionalFee: 1.01,
+  },
+  {
+    category: 'Bürobedarf',
+    id: ['192416031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Computer',
+    id: ['340843031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.07 }],
+  },
+  {
+    category: 'Elektronik',
+    id: ['562066'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.07 }],
+  },
+  {
+    category: 'Elektronik-Zubehör',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 100, percentage: 0.15 },
+      { above: 100, percentage: 0.08 },
+    ],
+  },
+  {
+    category: 'Fahrradzubehör',
+    id: ['16435051'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.08 }],
+  },
+  {
+    category: 'Garten',
+    id: ['10925031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Geräte in Standardgröße',
+    id: ['908823031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.07 }],
+  },
+  {
+    category:
+      'Gewerbliches Elektronikzubehör und Zubehör für die Energieversorgung',
+    id: ['5866098031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.12 }],
+  },
+  {
+    category: 'Handmade',
+    id: ['9699311031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.12 }],
+  },
+  {
+    category: 'Haushalt & Küche',
+    id: ['3167641'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Haustierbedarf',
+    id: ['340852031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Koffer, Rucksäcke & Taschen',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Kompaktgeräte',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Lebensmittel & Feinkost',
+    id: ['340846031'],
+    mSalesFee: 0,
+    tier: [
+      { up_to: 10, percentage: 0.08 },
+      { above: 10, percentage: 0.15 },
+    ],
+  },
+  {
+    category: 'Matratzen',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Musik, Videos und DVDs',
+    id: ['255882','284266'],
+    mSalesFee: 0,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+    additionalFee: 0.81,
+  },
+  {
+    category: 'Musikinstrumente & DJ-Equipment sowie AV-Produktion',
+    id: ['340849031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.12 }],
+  },
+  {
+    category: 'Möbel',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 200, percentage: 0.15 },
+      { above: 200, percentage: 0.1 },
+    ],
+  },
+  {
+    category: 'Reifen',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.07 }],
+  },
+  {
+    category: 'Rucksäcke und Handtaschen',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Schmuck',
+    id: ['5846354031'],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 250, percentage: 0.2 },
+      { above: 250, percentage: 0.05 },
+    ],
+  },
+  {
+    category: 'Schuhe',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Software',
+    id: ['301927'],
+    mSalesFee: 0,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+    additionalFee: 0.81,
+  },
+  {
+    category: 'Spielzeug',
+    id: ['12950651'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Sport & Freizeit',
+    id: ['16435051'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+  {
+    category: 'Uhren',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [
+      { up_to: 250, percentage: 0.15 },
+      { above: 250, percentage: 0.05 },
+    ],
+  },
+  {
+    category: 'Videospiele und Zubehör',
+    id: ['300992'],
+    mSalesFee: 0,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+    additionalFee: 0.81,
+  },
+  {
+    category: 'Videospielkonsolen',
+    id: [],
+    mSalesFee: 0,
+    tier: [{ up_to: 'any', percentage: 0.08 }],
+    additionalFee: 0.81,
+  },
+  {
+    category: 'Werkzeuge und Baumarkt',
+    id: ['80084031'],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.13 }],
+  },
+  {
+    category: 'Zubehör für Amazon-Geräte',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.45 }],
+  },
+  {
+    category: 'Zubehör für Industrie & Wissenschaft',
+    id: [],
+    mSalesFee: 0.3,
+    tier: [{ up_to: 'any', percentage: 0.15 }],
+  },
+];
+
+

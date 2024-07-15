@@ -6,6 +6,7 @@ import {
   myQuerySelectorAll,
   nestedProductName,
   removeNestedElementAndReturnText,
+  replaceAllHiddenCharacters,
   waitForSelector,
 } from '../helpers';
 import { ProductRecord } from '../../types/product';
@@ -190,6 +191,10 @@ export const crawlProducts = async (
           }
         }
       }
+      if (product.name) {
+        product.name = replaceAllHiddenCharacters(product.name as string);
+      }
+
       if (product.price && product.price !== 0) {
         product.price = safeParsePrice(product.price);
       }

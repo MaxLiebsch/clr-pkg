@@ -9,9 +9,8 @@ import {
   aznUnexpectedErrorText,
 } from '../../constants';
 import { closePage } from '../browser/closePage';
-import { join } from 'path';
 
-function timeoutPromise(timeout: number, ean: number): Promise<never> {
+function timeoutPromise(timeout: number, ean: string): Promise<never> {
   return new Promise((_, reject) => {
     setTimeout(() => {
       return reject(new Error(`Timeout: ${ean}`));
@@ -130,7 +129,7 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
   const timeoutTime = Math.random() * (25000 - 20000) + 20000;
   const res = await Promise.race([
     querySellerInfos(page, request),
-    timeoutPromise(timeoutTime, Number(ean)),
+    timeoutPromise(timeoutTime, ean),
   ]);
   return res;
 }

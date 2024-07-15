@@ -1,11 +1,25 @@
 {
   "wreath": {
     "unit": ["unit", "einheit", "einheiten"],
-    "piece": ["pce","st.","Stk","stück","stü","Stück", "pieces", "pieces", "Stücke", "St.", "St","pie" ],
-    "part": ["parts", "part","teil", "teile"],
-    "package":["Packungen", "package", "Packung","Pack"],
+    "piece": [
+      "pce",
+      "st.",
+      "Stk",
+      "stück",
+      "stü",
+      "Stück",
+      "pieces",
+      "pieces",
+      "Stücke",
+      "St.",
+      "St",
+      "pie"
+    ],
+    "part": ["parts", "part", "teil", "teile"],
+    "package": ["Packungen", "package", "Packung", "Pack"],
     "portion": ["Portion", "Port.", "port"],
-    "size": ["Gr.", "Größe", "size"]
+    "size": ["Gr.", "Größe", "size"],
+    "bag": ["bag", "bags", "Beutel", "Beutel", "Filterbeutel"]
   },
   "temperature": {
     "celsius": [
@@ -107,7 +121,7 @@
     "day": ["d", "days", "day", "Tage", "Tag"],
     "week": ["week", "weeks", "Woche", "Wochen"],
     "month": ["month", "months", "Monate", "Monat"],
-    "years": ["year", "years", "y", "yr", "yrs","Jahren" ,"Jahre", "Jahr"]
+    "years": ["year", "years", "y", "yr", "yrs", "Jahren", "Jahre", "Jahr"]
   },
   "massFlowRate": {
     "kilogrampersecond": ["kg/s"],
@@ -170,7 +184,18 @@
       "centimetres",
       "centimetre"
     ],
-    "inch": ["in", "inches", "inch", "\"", "''", "″", "″", "in.", "zoll", "Zoll"],
+    "inch": [
+      "in",
+      "inches",
+      "inch",
+      "\"",
+      "''",
+      "″",
+      "″",
+      "in.",
+      "zoll",
+      "Zoll"
+    ],
     "foot": ["ft", "feet", "foot", "'", "''", "′", "′", "ft."],
     "yard": ["yd", "yards", "yard", "yds", "y", "yd."],
     "meter": ["m", "meters", "meter", "metres", "metre", "met"],
@@ -217,7 +242,7 @@
       "kilos"
     ],
     "metrictone": ["mt", "tonnes", "tonne"],
-    "ton": [ "tn", "tons", "ton"]
+    "ton": ["tn", "tons", "ton"]
   },
   "angle": {
     "degree": ["deg", "°"],
@@ -286,10 +311,10 @@
     "gigavolt": ["gV", "gv", "gigavolt"]
   },
   "frequency": {
-    "millihertz": ["mHz","mhz", "hertz"],
+    "millihertz": ["mHz", "mhz", "hertz"],
     "hertz": ["Hz", "hz", "hertz"],
     "kilohertz": ["kHz", "khz", "kilohertz"],
-    "megahertz": ["MHz","Mhz", "megahertz"],
+    "megahertz": ["MHz", "Mhz", "megahertz"],
     "gigahertz": ["GHz", "ghz", "gigahertz"],
     "terahertz": ["THz", "thz", "terahertz"]
   },

@@ -1207,39 +1207,3 @@ export const ebayTier = [
     },
   },
 ];
-// console.log(ebayTier.length)
-// ebayTier.forEach((item) => {
-//   const category = typeof item.category === 'string';
-//   const id = typeof item.id === 'number';
-//   const tier = typeof item.tier === 'object';
-//   const no_shop = item.tier.no_shop instanceof Array;
-//   const no_shopLength = (no_shop.length = 2);
-//   const shop = item.tier.shop instanceof Array;
-//   const shopLength = (shop.length = 2);
-
-//   if (
-//     category &&
-//     id &&
-//     tier &&
-//     no_shop &&
-//     no_shopLength &&
-//     shop &&
-//     shopLength
-//   ) {
-//     const no_shop = typeof item.tier.no_shop.every(
-//       (item) => typeof item.above === 'number' && typeof item.up_to === 'number',
-//     );
-//     const shop = typeof item.tier.shop.every(
-//       (item) => {
-//         typeof item.above === 'number' && typeof item.up_to === 'number'},
-//     );
-//     if(!shop){
-//       console.log('Shop is not valid', item.id);
-//     }
-//     if(!no_shop){
-//       console.log('No shop is not valid', item.id);
-//     }
-//   } else {
-//     console.log('All properties are not valid', item.id);
-//   }
-// });

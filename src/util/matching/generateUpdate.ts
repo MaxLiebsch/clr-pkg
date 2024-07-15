@@ -6,6 +6,7 @@ import { getNumber } from './compare_helper';
 export const generateUpdate = (
   productInfo: ProductInfo[],
   srcPrice: number,
+  a_qty: number,
 ) => {
   const infoMap = new Map();
   productInfo.forEach((info) => {
@@ -13,9 +14,11 @@ export const generateUpdate = (
   });
   const asin = infoMap.get('asin');
   const a_nm = infoMap.get('name');
+
   const tax = infoMap.get('tax');
   const totalOfferCount = infoMap.get('totalOfferCount');
-  const a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
+  let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
+  let a_uprc = a_prc / a_qty;
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');
   const buyBoxIsAmazon = infoMap.get('buyBoxIsAmazon');
@@ -26,15 +29,19 @@ export const generateUpdate = (
     strg_2_hy: safeParsePrice(infoMap.get('costs.strg.2_hy') ?? '0'),
     tpt: safeParsePrice(infoMap.get('costs.tpt') ?? '0'),
   };
-  const arbitrage = calculateAznArbitrage(srcPrice, a_prc, costs, tax);
+
+  const arbitrage = calculateAznArbitrage(srcPrice, a_uprc, costs, tax);
   const update: { [key: string]: any } = {
     a_lnk: 'https://www.amazon.de/dp/product/' + asin,
     a_nm,
     asin,
     a_prc,
+    a_uprc,
+    a_qty,
     ...arbitrage,
     costs,
   };
+
   if (tax) {
     update['tax'] = Number(tax);
   }
