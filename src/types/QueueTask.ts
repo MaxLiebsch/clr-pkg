@@ -2,7 +2,7 @@ export interface QueueTask {
   [key: string]: any;
   id: string;
   productLimit: number;
-  proxyType?: 'gb' | 'request';
+  proxyType?: 'de' | 'mix';
   timezones?: string[];
   statistics: {
     errorTypeCount: {
