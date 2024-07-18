@@ -5,8 +5,9 @@ import { getNumber } from './compare_helper';
 
 export const generateUpdate = (
   productInfo: ProductInfo[],
-  srcPrice: number,
+  buyPrice: number,
   a_qty: number,
+  qty: number,
 ) => {
   const infoMap = new Map();
   productInfo.forEach((info) => {
@@ -29,8 +30,14 @@ export const generateUpdate = (
     strg_2_hy: safeParsePrice(infoMap.get('costs.strg.2_hy') ?? '0'),
     tpt: safeParsePrice(infoMap.get('costs.tpt') ?? '0'),
   };
-
-  const arbitrage = calculateAznArbitrage(srcPrice, a_uprc, costs, tax);
+  // prc * (a_qty / qty) //EK  //QTY Zielshop/QTY Herkunftsshop
+  // a_prc VK
+  const arbitrage = calculateAznArbitrage(
+    buyPrice * (a_qty / qty),
+    a_prc,
+    costs,
+    tax,
+  );
   const update: { [key: string]: any } = {
     a_lnk: 'https://www.amazon.de/dp/product/' + asin,
     a_nm,

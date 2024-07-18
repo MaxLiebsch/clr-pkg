@@ -5,7 +5,7 @@ import { roundToTwoDecimals } from '../helpers';
 export const calculateEbyArbitrage = (
   mappedCategory: EbyCategory,
   sellPrice: number,
-  bruttoBuyPrice: number,
+  bruttoBuyPrice: number, //EK  // p.prc * (p.e_qty/p.qty) Herkunftshoppreis * (QTY Zielshop/QTY Herkunftsshop)
 ) => {
   const nettoBuyPrice = bruttoBuyPrice / 1.19;
   const taxCosts = roundToTwoDecimals(sellPrice - sellPrice / (1 + 19 / 100));
@@ -15,19 +15,19 @@ export const calculateEbyArbitrage = (
 
   const ebyCosts = calculateFee(sellPrice, 'no_shop', mappedCategory);
   const ebyShpCosts = calculateFee(sellPrice, 'shop', mappedCategory);
-  const e_mrgn = roundToTwoDecimals(sellPrice - totalCosts - ebyShpCosts);
 
-  const e_mrgn_pct = roundToTwoDecimals(
-    ((sellPrice - totalCosts - ebyShpCosts) / sellPrice) * 100,
-  );
+  const e_mrgn = roundToTwoDecimals(sellPrice - totalCosts - ebyShpCosts);
+  const e_mrgn_pct = roundToTwoDecimals((e_mrgn / sellPrice) * 100);
+  
   const e_ns_mrgn = roundToTwoDecimals(sellPrice - totalCosts - ebyCosts);
-  const e_ns_mrgn_pct = roundToTwoDecimals(
-    ((sellPrice - totalCosts - ebyCosts) / sellPrice) * 100,
-  );
+  const e_ns_mrgn_pct = roundToTwoDecimals((e_ns_mrgn / sellPrice) * 100);
 
   return {
+    e_tax: taxCosts,
+    e_costs: ebyShpCosts,
     e_mrgn,
     e_mrgn_pct,
+    e_ns_costs: ebyCosts,
     e_ns_mrgn,
     e_ns_mrgn_pct,
   };
