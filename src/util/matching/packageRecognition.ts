@@ -1,4 +1,5 @@
 import bunches from '../../constants/bunch.json';
+import { replaceAllHiddenCharacters } from '../helpers';
 const bunchRegex =
   /((^\s| |)\d+\s*[xX])\s*\d+\s*(meter|ml|l|mm|m|cm|kg|g|Stück|St|kapseln|pixel)/gi;
 
@@ -7,13 +8,16 @@ const bunchRegex =
  * Matches patterns like: 123-pack, 456_packung, package, set, pcs, Stk, St, Stück, x (if not followed by a letter).
  */
 const packRegex =
-  /\d+\s*[-_]?\s*(er||Dreier)\s*[-_]?\s*(pack|packung|packungen|package|set|pcs)/gi;
+  /\d+\s*[-_]?\s*(er|)\s*[-_]?\s*(pack|packung|packungen|package|set|pcs|satz|pc s )/gi;
 
-const piecesRegex = /\d+\s*(Tabs|Counts|Beutel|Tabletten|Dosen|Windeln|Höschenwindeln|Babywindeln)/g;
+const piecesRegex =
+  /\d+\s*(Stk\.|Stück|St\.|Tabs|Stck\.(\b|$)|Stk|St\b|Fallen)/g;
+
+const xRegex = /\d+\s*x\s(?!\d)/gi;
 
 const sizeRegex = /\d+\s*x\d+/gi;
 
-const xTimesRegex = /^\d+\s*x/gi;
+const xTimesRegex = /^\d+\s*x /gi;
 
 export const getPieces = (str: string) => {
   const pack: string[] = [];
@@ -79,22 +83,26 @@ export function buildRegexForBunches() {
     )
     .join('|');
 
-  return new RegExp(`((^\\s| |)\\d+\\s*[xX])\\s*(\\d+|)\\s*(${pattern}|)`, 'g');
+  return new RegExp(`((^\\s| |)\\d+\\s*[xX])\\s*(\\d+|)\\s*(${pattern})`, 'g');
 }
 
 export const detectQuantity = (title: string) => {
-  process.env.DEBUG && console.log('Title: ', title);
-  const trimmed = title
-  .trim()
-  .replace(/[\\(\\)]/g, '')
-  .replace(/,/g, ' ');
-  
-  const packung = getPackung(trimmed);
-  process.env.DEBUG && console.log('packung:', packung);
-  if (packung) {
-    const match = packung[0].match(/\d+/g);
-    return match ? Number(match[0]) : null;
+  if (
+    title.includes(
+      'Smartkeeper CL04P1GN - Port Schloss, USB Typ C, 10 Stück, grün',
+    )
+  ){
+    process.env.DEBUG = 'true';
+
+  } else{
+    delete process.env.DEBUG;
   }
+  const trimmed = replaceAllHiddenCharacters(title)
+  .trim()
+  .replace(/[\\(\\)]/g, ' ')
+  .replace(/,/g, ' ');
+  process.env.DEBUG && console.log('Title: ', title, trimmed);
+
   if (xTimesRegex.test(trimmed)) {
     const match = trimmed.match(xTimesRegex);
     const bunch = parsePackQuantity(trimmed);
@@ -126,6 +134,12 @@ export const detectQuantity = (title: string) => {
     }
   }
 
+  const packung = getPackung(trimmed);
+  process.env.DEBUG && console.log('packung:', packung);
+  if (packung) {
+    const match = packung[0].match(/\d+/g);
+    return match ? Number(match[0]) : null;
+  }
 
   const packs = getPacks(trimmed);
   process.env.DEBUG && console.log('packs:', packs);
@@ -156,5 +170,12 @@ export const detectQuantity = (title: string) => {
     return match ? Number(match[0]) : null;
   }
 
+  if (xRegex.test(trimmed)) {
+    if (bunch) {
+      return null;
+    }
+    const match = trimmed.match(xRegex);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
   return null;
 };

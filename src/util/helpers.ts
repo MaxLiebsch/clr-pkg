@@ -373,7 +373,7 @@ export const extractAttributePage = async (
 export function replaceAllHiddenCharacters(str: string) {
   // Define a regular expression for all possible hidden characters
   // This includes control characters, invisible characters, and non-printing characters
-  const hiddenCharactersRegex = /[^\x20-\x7E]+/g;
+  const hiddenCharactersRegex = /[^\x20-\x7E\xA0-\xFF]+/g;
 
   // Replace hidden characters with an empty string
   return str.replace(hiddenCharactersRegex, "");
