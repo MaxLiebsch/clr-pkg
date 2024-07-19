@@ -2,6 +2,7 @@ import { ProductInfo } from '../../types/query-request';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
+import { detectQuantity } from './packageRecognition';
 
 export const generateUpdate = (
   productInfo: ProductInfo[],
@@ -19,6 +20,13 @@ export const generateUpdate = (
   const tax = infoMap.get('tax');
   const totalOfferCount = infoMap.get('totalOfferCount');
   let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
+
+  const detectedA_qty = detectQuantity(a_nm);
+
+  if (detectedA_qty) {
+    a_qty = detectedA_qty;
+  }
+  
   let a_uprc = a_prc / a_qty;
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');

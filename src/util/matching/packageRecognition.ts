@@ -1,27 +1,59 @@
 import bunches from '../../constants/bunch.json';
+import length from '../../constants/length.json';
 import { replaceAllHiddenCharacters } from '../helpers';
-const bunchRegex =
-  /((^\s| |)\d+\s*[xX])\s*\d+\s*(meter|ml|l|mm|m|cm|kg|g|Stück|St|kapseln|pixel)/gi;
+import {
+  exceptionsStrings,
+  packStrings,
+  piecesStrings,
+  xTimesNegations,
+} from '../../constants/packageRecognition';
 
 /**
  * Regular expression pattern for matching package-related strings.
  * Matches patterns like: 123-pack, 456_packung, package, set, pcs, Stk, St, Stück, x (if not followed by a letter).
  */
-const packRegex =
-  /\d+\s*[-_]?\s*(er|)\s*[-_]?\s*(pack|packung|packungen|package|set|pcs|satz|pc s )/gi;
 
-const piecesRegex =
-  /\d+\s*(Stk\.|Stück|St\.|Tabs|Stck\.(\b|$)|Stk|St\b|Fallen)/g;
+const createPackRegex = (packs: string[]) => {
+  return new RegExp(
+    `(\\(|^|\\s)\\d{1,2}\\s*[-_]?\\s*(er|)\\s*[-_]?\\s*(${packs.join('|')})`,
+    'g',
+  );
+};
 
-const xRegex = /\d+\s*x\s(?!\d)/gi;
+const orphanPackRegex = /\d+er($|\b(?!-))/g;
 
-const sizeRegex = /\d+\s*x\d+/gi;
+const createPiecesRegex = (pieces: string[]) => {
+  return new RegExp(
+    `((?<!für\\s)\\d+|\\d+\\.|)\\d+\\s*(${pieces.join('|')})`,
+    'g',
+  );
+};
+const createExceptionsRegex = (exceptions: string[]) => {
+  return new RegExp(
+    `((?<!für\\s)\\d+|\\d+\\.)\\d+\\s*(${exceptions.join('|')})`,
+    'g',
+  );
+};
+const setRegex = /\sSet\s*\d{1,2}(?!(-|\.))\b/g;
+
+const bracketRegex = /\(\d+\s*x\s*\d+/g;
+
+const xTimesPieces = /(?<!\+)(\d+\s*x\s*\d+\b(?!([Xx]|\s*[xX])))/g;
+
+const createXRegex = (xTimesNegation: string[]) => {
+  return new RegExp(
+    `\\b\\d{1,4}\\s*x\\s(?!(${xTimesNegation.join('|')}))`,
+    'g',
+  );
+};
+
+const sizeRegex = /\d+\s*x\d+/g;
 
 const xTimesRegex = /^\d+\s*x /gi;
 
 export const getPieces = (str: string) => {
   const pack: string[] = [];
-  const matches = [...str.matchAll(piecesRegex)];
+  const matches = [...str.matchAll(createPiecesRegex(piecesStrings))];
   matches.forEach((unit) => {
     pack.push(unit[0]);
   });
@@ -36,14 +68,14 @@ const regexps = [
 
 export const getPacks = (str: string) => {
   const pack: string[] = [];
-  const matches = [...str.matchAll(packRegex)];
+  const matches = [...str.matchAll(createPackRegex(packStrings))];
   matches.forEach((unit) => {
     pack.push(unit[0]);
   });
   return pack.length > 0 ? pack : null;
 };
 
-const packungRegex = /(\bPackung|\bSet)\s*(mit|with)\s*\d+/g;
+const packungRegex = /(\bPackung)\s*(mit|with)\s*\d+/g;
 
 export const getPackung = (str: string) => {
   const pack: string[] = [];
@@ -63,84 +95,82 @@ export const parsePackQuantity = (str: string) => {
   return pack.length > 0 ? pack : null;
 };
 
+export const parseDimensions = (str: string) => {
+  const pack: string[] = [];
+  const matches = [...str.matchAll(buildRegexForLength())];
+  matches.forEach((unit) => {
+    pack.push(unit[0]);
+  });
+  return pack.length > 0 ? pack : null;
+};
+
 export function buildRegexForBunches() {
   let pattern = Object.values(bunches)
     .map((units) =>
       Object.values(units)
         .flatMap((magintudeStrs) =>
-          magintudeStrs.map((unit) =>
-            unit
-              .replaceAll('/', '\\/')
-              .replaceAll('-', '\\-')
-              .replaceAll('"', '\\"')
-              .replaceAll("''", "\\'\\'")
-              .replaceAll('^', '\\^')
-              .replaceAll('.', '\\.')
-              .replaceAll('″', '\\″'),
+          magintudeStrs.map(
+            (unit) =>
+              unit
+                .replaceAll('/', '\\/')
+                .replaceAll('-', '\\-')
+                .replaceAll('"', '\\"')
+                .replaceAll("''", "\\'\\'")
+                .replaceAll('^', '\\^')
+                .replaceAll('.', '\\.')
+                .replaceAll('″', '\\″') + '\\b',
           ),
         )
         .join('|'),
     )
     .join('|');
 
-  return new RegExp(`((^\\s| |)\\d+\\s*[xX])\\s*(\\d+|)\\s*(${pattern})`, 'g');
+  return new RegExp(
+    `((^\\s| |)\\d+\\s*[xX])\\s*(\\d+([,.]\\d+)*|\\d+)\\s*(${pattern})`,
+    'g',
+  );
 }
 
-export const detectQuantity = (title: string) => {
-  if (
-    title.includes(
-      'Smartkeeper CL04P1GN - Port Schloss, USB Typ C, 10 Stück, grün',
+export function buildRegexForLength() {
+  let pattern = Object.values(length)
+    .map((units) =>
+      Object.values(units)
+        .flatMap((magintudeStrs) =>
+          magintudeStrs.map(
+            (unit) =>
+              unit
+                .replaceAll('/', '\\/')
+                .replaceAll('-', '\\-')
+                .replaceAll('"', '\\"')
+                .replaceAll("''", "\\'\\'")
+                .replaceAll('^', '\\^')
+                .replaceAll('.', '\\.')
+                .replaceAll('″', '\\″') + '\\b',
+          ),
+        )
+        .join('|'),
     )
-  ){
-    process.env.DEBUG = 'true';
+    .join('|');
 
-  } else{
+  return new RegExp(
+    `((^\\s| |)\\d+\\s*[xX])\\s*(\\d+([,.]\\d+)*|\\d+)\\s*(${pattern})`,
+    'g',
+  );
+}
+//((^\s| |)\d+\s*[xX])\s*(\d+([,.]\d+)*|\d+)\s*(cm\b)
+let _title = '';
+export const detectQuantity = (title: string) => {
+  if (title.includes(_title)) {
+    process.env.DEBUG = 'true';
+  } else {
     delete process.env.DEBUG;
   }
   const trimmed = replaceAllHiddenCharacters(title)
-  .trim()
-  .replace(/[\\(\\)]/g, ' ')
-  .replace(/,/g, ' ');
-  process.env.DEBUG && console.log('Title: ', title, trimmed);
-
-  if (xTimesRegex.test(trimmed)) {
-    const match = trimmed.match(xTimesRegex);
-    const bunch = parsePackQuantity(trimmed);
-    if (bunch && bunch.length > 0) {
-      const match = trimmed.match(xTimesRegex);
-      if (bunch[0].includes(match![0])) {
-        const split = bunch[0].toLocaleLowerCase().split('x');
-        const match = split[0].match(/\d+/g);
-        return match ? Number(match[0]) : null;
-      }
-    }
-    process.env.DEBUG && console.log('xTimesRegex bunch:', bunch);
-    if (sizeRegex.test(title)) {
-      return null;
-    }
-    return match ? Number(match[0].match(/\d+/g)) : null;
-  }
-
-  const pieces = getPieces(trimmed);
-  process.env.DEBUG && console.log('pieces:', pieces);
-  if (pieces) {
-    const bunch = parsePackQuantity(trimmed);
-    if (bunch) {
-      const match = bunch[0].match(/\d+/g);
-      return match ? Number(match[0]) : null;
-    } else {
-      const match = pieces[0].match(/\d+/g);
-      return match ? Number(match[0]) : null;
-    }
-  }
-
-  const packung = getPackung(trimmed);
-  process.env.DEBUG && console.log('packung:', packung);
-  if (packung) {
-    const match = packung[0].match(/\d+/g);
-    return match ? Number(match[0]) : null;
-  }
-
+    .trim()
+    .replace(/[?¿!]/g, '');
+  process.env.DEBUG && console.log('Title: ', title, '\n', trimmed);
+  const xRegex = createXRegex(xTimesNegations);
+  const exceptionsRegex = createExceptionsRegex(exceptionsStrings);
   const packs = getPacks(trimmed);
   process.env.DEBUG && console.log('packs:', packs);
   if (packs) {
@@ -163,6 +193,66 @@ export const detectQuantity = (title: string) => {
   }
 
   const bunch = parsePackQuantity(trimmed);
+  if (xTimesRegex.test(trimmed)) {
+    const match = trimmed.match(xTimesRegex);
+    process.env.DEBUG && console.log('xTimesRegex match:', match);
+    if (bunch && bunch.length > 0) {
+      const match = trimmed.match(xTimesRegex);
+      if (bunch[0].includes(match![0])) {
+        const split = bunch[0].toLocaleLowerCase().split('x');
+        const match = split[0].match(/\d+/g);
+        return match ? Number(match.join('')) : null;
+      }
+    }
+    process.env.DEBUG && console.log('xTimesRegex bunch:', bunch);
+    if (sizeRegex.test(title)) {
+      return null;
+    }
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+
+  const packung = getPackung(trimmed);
+  process.env.DEBUG && console.log('packung:', packung);
+  if (packung) {
+    const match = packung[0].match(/\d+/g);
+    return match ? Number(match[0]) : null;
+  }
+  const pieces = getPieces(trimmed);
+  process.env.DEBUG && console.log('pieces:', pieces);
+  if (pieces) {
+    if (bunch) {
+      const match = bunch[0].match(/\d+/g);
+      return match ? Number(match[0]) : null;
+    } else {
+      const match = pieces[0].match(/\d+/g);
+      process.env.DEBUG && console.log('pieces, no bunch, match:', match);
+      return match ? Number(match.join('')) : null;
+    }
+  }
+
+
+  const parsedDimensions = parseDimensions(trimmed);
+  if (xRegex.test(trimmed)) {
+    const match = trimmed.match(xRegex);
+    process.env.DEBUG && console.log('1. xRegex Match...');
+    if (bunch) {
+      process.env.DEBUG && console.log('1. xRegex Match: bunch:', bunch);
+      return null;
+    }
+    if (parsedDimensions) {
+      process.env.DEBUG &&
+        process.env.DEBUG &&
+        console.log('1. xRegex Match: parsedDimensions:', parsedDimensions);
+      process.env.DEBUG &&
+        console.log('1. xRegex Match: match![0]:', match![0]);
+      if (parsedDimensions[0].trim().includes(match![0].trim())) {
+        return null;
+      }
+    }
+    process.env.DEBUG && console.log('1. xRegex Match:', match);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+
   process.env.DEBUG && console.log('bunch:', bunch);
   if (bunch) {
     const split = bunch[0].toLocaleLowerCase().split('x');
@@ -171,11 +261,55 @@ export const detectQuantity = (title: string) => {
   }
 
   if (xRegex.test(trimmed)) {
+    process.env.DEBUG && console.log('2. xRegex Match...');
     if (bunch) {
+      process.env.DEBUG && console.log('2. xRegex Match: bunch:', bunch);
       return null;
     }
     const match = trimmed.match(xRegex);
+    process.env.DEBUG && console.log('2. xRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
+
+  if (setRegex.test(trimmed)) {
+    const match = trimmed.match(setRegex);
+    process.env.DEBUG && console.log('setRegex Match:', match);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+
+  if (bracketRegex.test(trimmed)) {
+    const match = trimmed.match(bracketRegex);
+
+    process.env.DEBUG && console.log('bracketRegex Match:', match);
+    const split = match![0].split('x');
+    return Number(split[0].match(/\d+/g));
+  }
+
+  if (xTimesPieces.test(trimmed)) {
+    process.env.DEBUG && console.log('parsedDimensions:', parsedDimensions);
+    if (parsedDimensions) {
+      return null;
+    }
+    const match = trimmed.match(xTimesPieces);
+    process.env.DEBUG && console.log('xTimesPieces Match:', match);
+    const split = match![0].split('x');
+    return match ? Number(split[0].match(/\d+/g)) : null;
+  }
+
+  if (orphanPackRegex.test(trimmed)) {
+    const match = trimmed.match(orphanPackRegex);
+    process.env.DEBUG && console.log('orphanPackRegex Match:', match);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+
+  if(exceptionsRegex.test(trimmed)) {
+    const match = trimmed.match(exceptionsRegex);
+    process.env.DEBUG && console.log('exceptionsRegex Match:', match);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+
+  process.env.DEBUG && console.log('No match found');
   return null;
 };
+
+_title = '';

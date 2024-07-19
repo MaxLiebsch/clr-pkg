@@ -1,8 +1,7 @@
-
 {
   "wreath": {
     "unit": ["unit", "einheit", "einheiten"],
-    "tissue": ["Feuchttücher" ],
+    "tissue": ["Feuchttücher"],
     "caplse": ["Kapseln", "Dragees", "Kapsel", "Dragee", "Tabs"],
     "piece": [
       "pce",
@@ -25,7 +24,7 @@
     "portion": ["Portion", "Port.", "port", "Getränk", "Getränke"],
     "size": ["Gr.", "Größe", "size"],
     "bag": ["bag", "bags", "Beutel", "Beutel", "Filterbeutel"]
-  }, 
+  },
   "mass": {
     "micorgram": [
       "mcg",
@@ -41,11 +40,12 @@
       "milligramme",
       "milligrammes"
     ],
-    "gram": ["g", "grams", "gram", "gramme", "grammes"],
+    "gram": ["g", "grams", "gram", "gramme", "grammes", "GR"],
     "ounce": ["oz", "ounces", "ounce", "oz.", "ozs", "ozs."],
     "pound": ["lb", "pounds", "pound", "lb.", "lbs", "lbs."],
     "kilogram": [
       "kg",
+      "KG",
       "kilograms",
       "kilogram",
       "kilogramme",
@@ -61,6 +61,7 @@
     "cup": ["cup", "cups"],
     "gal": ["gal", "gallons", "gallon"],
     "l": ["l", "liters", "liter", "ltr", "L"],
+    "cl": ["cl", "centiliters", "centiliter"],
     "dl": ["dl", "deziliters", "dliter"],
     "ml": ["ml", "milliliters", "milliliter"],
     "millimetercubed": [

@@ -1,0 +1,84 @@
+{
+  "length": {
+    "nanometer": [
+      "nm",
+      "nanometers",
+      "nanometer",
+      "nms",
+      "nanometres",
+      "nanometre",
+      "nanometres",
+      "nanometre",
+      "nanom"
+    ],
+    "micrometer": [
+      "μm",
+      "micrometers",
+      "micrometer",
+      "μms",
+      "micrometres",
+      "micrometre",
+      "micrometres",
+      "micrometre",
+      "microm"
+    ],
+    "millimeter": [
+      "mm",
+      "millimeters",
+      "millimeter",
+      "mms",
+      "millimetres",
+      "millimetre",
+      "millimetres",
+      "millimetre",
+      "millim"
+    ],
+    "centimeter": [
+      "cm",
+      "centimeters",
+      "centimeter",
+      "cms",
+      "centimetre",
+      "centimetres",
+      "centimetre"
+    ],
+    "inch": [
+      "in",
+      "inches",
+      "inch",
+      "\"",
+      "''",
+      "″",
+      "″",
+      "in.",
+      "zoll",
+      "Zoll"
+    ],
+    "foot": ["ft", "feet", "foot", "'", "''", "′", "′", "ft."],
+    "yard": ["yd", "yards", "yard", "yds", "y", "yd."],
+    "meter": ["m", "meters", "meter", "metres", "metre", "met"],
+    "kilometer": [
+      "km",
+      "kilometers",
+      "kilometer",
+      "kms",
+      "kilometre",
+      "kilometres",
+      "kilometre",
+      "kilo",
+      "kilos"
+    ],
+    "nauticmile": ["nMi"],
+    "mile": ["mil", "mi", "miles", "mile", "mi.", "miles."],
+    "lightyear": ["lightyears", "light years", "lightyear", "light year", "ly"]
+  },
+  "images": {
+    "pixel": ["px", "pixels", "Pixels", "Pixel"]
+  },
+  "voltage": {
+    "volt": ["V", "v", "volt", "Volt"],
+    "kilovolt": ["kV", "kv", "kilovolt"],
+    "megavolt": ["mV", "mv", "megavolt"],
+    "gigavolt": ["gV", "gv", "gigavolt"]
+  }
+}
