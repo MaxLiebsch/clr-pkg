@@ -4,16 +4,22 @@ export const piecesStrings = [
   'Stück',
   'St\\.',
   'Tabs',
+  "stck(\\b|$)",
+  'Stck(\\b|$)',
   'Stck\\.(\\b|$)',
   'Stk',
   'St\\b',
   'Dosen',
   'Kaffeepads',
+  'Dragrees',
+  'Ersatzklingen',
   'Riegel',
   'Teststreifen',
   'Fallen',
   'Windeln',
   'Höschenwindeln',
+  "Babywindeln",
+  "Pyjama Höschen",
 ];
 
 export const packStrings = [

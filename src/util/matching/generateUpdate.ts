@@ -1,4 +1,5 @@
 import { ProductInfo } from '../../types/query-request';
+import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
@@ -26,8 +27,8 @@ export const generateUpdate = (
   if (detectedA_qty) {
     a_qty = detectedA_qty;
   }
+  let a_uprc = roundToTwoDecimals(a_prc / a_qty);
   
-  let a_uprc = a_prc / a_qty;
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');
   const buyBoxIsAmazon = infoMap.get('buyBoxIsAmazon');

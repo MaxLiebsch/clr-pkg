@@ -13,6 +13,8 @@ import {
  * Matches patterns like: 123-pack, 456_packung, package, set, pcs, Stk, St, Stück, x (if not followed by a letter).
  */
 
+const dev = process.env.NODE_ENV === 'development';
+
 const createPackRegex = (packs: string[]) => {
   return new RegExp(
     `(\\(|^|\\s)\\d{1,2}\\s*[-_]?\\s*(er|)\\s*[-_]?\\s*(${packs.join('|')})`,
@@ -160,25 +162,28 @@ export function buildRegexForLength() {
 //((^\s| |)\d+\s*[xX])\s*(\d+([,.]\d+)*|\d+)\s*(cm\b)
 let _title = '';
 export const detectQuantity = (title: string) => {
-  if (title.includes(_title)) {
-    process.env.DEBUG = 'true';
-  } else {
-    delete process.env.DEBUG;
-  }
+  let debug = false;
+  if (dev)
+    if (title.includes(_title)) {
+      debug = true;
+    } else {
+      debug = false;
+    }
+    
   const trimmed = replaceAllHiddenCharacters(title)
     .trim()
     .replace(/[?¿!]/g, '');
-  process.env.DEBUG && console.log('Title: ', title, '\n', trimmed);
+  debug && console.log('Title: ', title, '\n', trimmed);
   const xRegex = createXRegex(xTimesNegations);
   const exceptionsRegex = createExceptionsRegex(exceptionsStrings);
   const packs = getPacks(trimmed);
-  process.env.DEBUG && console.log('packs:', packs);
+  debug && console.log('packs:', packs);
   if (packs) {
     const match = packs[0].match(/\d+/g);
     const matches = regexps.map((regex) => title.match(new RegExp(regex, 'g')));
-    process.env.DEBUG && console.log('matches:', matches);
+    debug && console.log('matches:', matches);
     const filteredMatches = matches.filter((m) => m && m.length > 0);
-    process.env.DEBUG && console.log('filteredMatches:', filteredMatches);
+    debug && console.log('filteredMatches:', filteredMatches);
     const packSeemsPartOfDimension = filteredMatches.some((match) => {
       if (match![0].includes(packs[0])) {
         return true;
@@ -195,7 +200,7 @@ export const detectQuantity = (title: string) => {
   const bunch = parsePackQuantity(trimmed);
   if (xTimesRegex.test(trimmed)) {
     const match = trimmed.match(xTimesRegex);
-    process.env.DEBUG && console.log('xTimesRegex match:', match);
+    debug && console.log('xTimesRegex match:', match);
     if (bunch && bunch.length > 0) {
       const match = trimmed.match(xTimesRegex);
       if (bunch[0].includes(match![0])) {
@@ -204,7 +209,7 @@ export const detectQuantity = (title: string) => {
         return match ? Number(match.join('')) : null;
       }
     }
-    process.env.DEBUG && console.log('xTimesRegex bunch:', bunch);
+    debug && console.log('xTimesRegex bunch:', bunch);
     if (sizeRegex.test(title)) {
       return null;
     }
@@ -212,48 +217,45 @@ export const detectQuantity = (title: string) => {
   }
 
   const packung = getPackung(trimmed);
-  process.env.DEBUG && console.log('packung:', packung);
+  debug && console.log('packung:', packung);
   if (packung) {
     const match = packung[0].match(/\d+/g);
     return match ? Number(match[0]) : null;
   }
   const pieces = getPieces(trimmed);
-  process.env.DEBUG && console.log('pieces:', pieces);
+  debug && console.log('pieces:', pieces);
   if (pieces) {
     if (bunch) {
       const match = bunch[0].match(/\d+/g);
       return match ? Number(match[0]) : null;
     } else {
       const match = pieces[0].match(/\d+/g);
-      process.env.DEBUG && console.log('pieces, no bunch, match:', match);
+      debug && console.log('pieces, no bunch, match:', match);
       return match ? Number(match.join('')) : null;
     }
   }
-
-
   const parsedDimensions = parseDimensions(trimmed);
   if (xRegex.test(trimmed)) {
     const match = trimmed.match(xRegex);
-    process.env.DEBUG && console.log('1. xRegex Match...');
+    debug && console.log('1. xRegex Match...');
     if (bunch) {
-      process.env.DEBUG && console.log('1. xRegex Match: bunch:', bunch);
+      debug && console.log('1. xRegex Match: bunch:', bunch);
       return null;
     }
     if (parsedDimensions) {
-      process.env.DEBUG &&
-        process.env.DEBUG &&
+      debug &&
+        debug &&
         console.log('1. xRegex Match: parsedDimensions:', parsedDimensions);
-      process.env.DEBUG &&
-        console.log('1. xRegex Match: match![0]:', match![0]);
+      debug && console.log('1. xRegex Match: match![0]:', match![0]);
       if (parsedDimensions[0].trim().includes(match![0].trim())) {
         return null;
       }
     }
-    process.env.DEBUG && console.log('1. xRegex Match:', match);
+    debug && console.log('1. xRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
-  process.env.DEBUG && console.log('bunch:', bunch);
+  debug && console.log('bunch:', bunch);
   if (bunch) {
     const split = bunch[0].toLocaleLowerCase().split('x');
     const match = split[0].match(/\d+/g);
@@ -261,54 +263,54 @@ export const detectQuantity = (title: string) => {
   }
 
   if (xRegex.test(trimmed)) {
-    process.env.DEBUG && console.log('2. xRegex Match...');
+    debug && console.log('2. xRegex Match...');
     if (bunch) {
-      process.env.DEBUG && console.log('2. xRegex Match: bunch:', bunch);
+      debug && console.log('2. xRegex Match: bunch:', bunch);
       return null;
     }
     const match = trimmed.match(xRegex);
-    process.env.DEBUG && console.log('2. xRegex Match:', match);
+    debug && console.log('2. xRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
   if (setRegex.test(trimmed)) {
     const match = trimmed.match(setRegex);
-    process.env.DEBUG && console.log('setRegex Match:', match);
+    debug && console.log('setRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
   if (bracketRegex.test(trimmed)) {
     const match = trimmed.match(bracketRegex);
 
-    process.env.DEBUG && console.log('bracketRegex Match:', match);
+    debug && console.log('bracketRegex Match:', match);
     const split = match![0].split('x');
     return Number(split[0].match(/\d+/g));
   }
 
   if (xTimesPieces.test(trimmed)) {
-    process.env.DEBUG && console.log('parsedDimensions:', parsedDimensions);
+    debug && console.log('parsedDimensions:', parsedDimensions);
     if (parsedDimensions) {
       return null;
     }
     const match = trimmed.match(xTimesPieces);
-    process.env.DEBUG && console.log('xTimesPieces Match:', match);
+    debug && console.log('xTimesPieces Match:', match);
     const split = match![0].split('x');
     return match ? Number(split[0].match(/\d+/g)) : null;
   }
 
   if (orphanPackRegex.test(trimmed)) {
     const match = trimmed.match(orphanPackRegex);
-    process.env.DEBUG && console.log('orphanPackRegex Match:', match);
+    debug && console.log('orphanPackRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
-  if(exceptionsRegex.test(trimmed)) {
+  if (exceptionsRegex.test(trimmed)) {
     const match = trimmed.match(exceptionsRegex);
-    process.env.DEBUG && console.log('exceptionsRegex Match:', match);
+    debug && console.log('exceptionsRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
-  process.env.DEBUG && console.log('No match found');
+  debug && console.log('No match found');
   return null;
 };
 
