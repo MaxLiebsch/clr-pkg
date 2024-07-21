@@ -73,7 +73,9 @@
     "lightyear": ["lightyears", "light years", "lightyear", "light year", "ly"]
   },
   "images": {
-    "pixel": ["px", "pixels", "Pixels", "Pixel"]
+    "pixel": ["px", "pixels", "Pixels", "Pixel"],
+    "megapixel": ["mp", "megapixels", "Megapixels", "Megapixel"],
+    "dpi": ["dpi", "DPI"]
   },
   "voltage": {
     "volt": ["V", "v", "volt", "Volt"],

@@ -82,6 +82,7 @@ export abstract class BaseQueue<
     this.queueTask = {
       ...task,
       statistics: {
+        visitedPages: [],
         estimatedProducts: task.productLimit,
         statusHeuristic: {
           'error-handled': 0,
@@ -337,7 +338,6 @@ export abstract class BaseQueue<
 
     const { waitUntil, resourceTypes } = shop;
 
-    this.uniqueLinks.push(pageInfo.link);
     this.queueTask.statistics.statusHeuristic['total'] += 1;
     let page: Page | undefined = undefined;
 
@@ -406,6 +406,12 @@ export abstract class BaseQueue<
         throw new Error(ErrorType.AccessDenied);
       }
       const message = await task(page, request);
+      if (
+        this.queueTask.type === 'CRAWL_SHOP' &&
+        this.queueTask.statistics.visitedPages.indexOf(pageInfo.link) === -1
+      ) {
+        this.queueTask.statistics.visitedPages.push(pageInfo.link);
+      }
       if (message && typeof message === 'string') {
         return {
           details: `🆗${' '} ${message} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,

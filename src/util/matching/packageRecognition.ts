@@ -3,8 +3,10 @@ import length from '../../constants/length.json';
 import { replaceAllHiddenCharacters } from '../helpers';
 import {
   exceptionsStrings,
+  packNegations,
   packStrings,
   piecesStrings,
+  specialKeywords,
   xTimesNegations,
 } from '../../constants/packageRecognition';
 
@@ -15,14 +17,18 @@ import {
 
 const dev = process.env.NODE_ENV === 'development';
 
+//Packs: (\(|^|\s)(?<!inkl\.\s)\d{1,2}\s*[-_]?\s*(er|)\s*[-_]?\s*(kameras)
+
 const createPackRegex = (packs: string[]) => {
   return new RegExp(
-    `(\\(|^|\\s)\\d{1,2}\\s*[-_]?\\s*(er|)\\s*[-_]?\\s*(${packs.join('|')})`,
+    `(\\(|^|\\s)(?<!${packNegations.join('|')})\\d{1,2}\\s*[-_]?\\s*(er|)\\s*[-_]?\\s*(${packs.join('|')})`,
     'g',
   );
 };
 
-const orphanPackRegex = /\d+er($|\b(?!-))/g;
+const VERegex = /\bVE\d+\b/g; //Verpackubgseinheit
+
+const orphanPackRegex = /\d+er($|\b(?!-|\sWelle|\sSet|\sset))/g;
 
 const createPiecesRegex = (pieces: string[]) => {
   return new RegExp(
@@ -40,7 +46,14 @@ const setRegex = /\sSet\s*\d{1,2}(?!(-|\.))\b/g;
 
 const bracketRegex = /\(\d+\s*x\s*\d+/g;
 
-const xTimesPieces = /(?<!\+)(\d+\s*x\s*\d+\b(?!([Xx]|\s*[xX])))/g;
+// /((?<!\+)\b\d{1,2}\s*x\s*\d+((?:[\d,.]*\d+)|(?!,|\.)))(?!([Xx]|\s*[xX]|\sGHz))/g;
+
+const createxTimesPiecesRegex = () => {
+  return new RegExp(
+    `((?<!\\+)\\b\\d{1,2}\\s*x\\s*\\d+((?:[\\d,.]*\\d+)|(?!,|\\.)))(?![Xx]|\\s*[xX]|${xTimesNegations.join('|')})`,
+    'g',
+  );
+};
 
 const createXRegex = (xTimesNegation: string[]) => {
   return new RegExp(
@@ -61,6 +74,9 @@ export const getPieces = (str: string) => {
   });
   return pack.length > 0 ? pack : null;
 };
+
+export const threeDimensionalRegex =
+  /H\s\d+\s[xX]\sB\s\d+\sx\sT\s\d+\s(mm|m\b|cm\b|$)/g;
 
 const regexps = [
   'ø\\s*\\d+\\s*x\\s*\\d+\\s*cm',
@@ -169,13 +185,14 @@ export const detectQuantity = (title: string) => {
     } else {
       debug = false;
     }
-    
+
   const trimmed = replaceAllHiddenCharacters(title)
     .trim()
     .replace(/[?¿!]/g, '');
   debug && console.log('Title: ', title, '\n', trimmed);
   const xRegex = createXRegex(xTimesNegations);
   const exceptionsRegex = createExceptionsRegex(exceptionsStrings);
+  const xTimesPieces = createxTimesPiecesRegex();
   const packs = getPacks(trimmed);
   debug && console.log('packs:', packs);
   if (packs) {
@@ -244,12 +261,20 @@ export const detectQuantity = (title: string) => {
     }
     if (parsedDimensions) {
       debug &&
-        debug &&
         console.log('1. xRegex Match: parsedDimensions:', parsedDimensions);
       debug && console.log('1. xRegex Match: match![0]:', match![0]);
       if (parsedDimensions[0].trim().includes(match![0].trim())) {
         return null;
       }
+    }
+    if (threeDimensionalRegex.test(trimmed)) {
+      const parsedThreeDimension = trimmed.match(threeDimensionalRegex);
+      if (
+        match?.some((m) => parsedThreeDimension?.some((p) => p.includes(m)))
+      ) {
+        return null;
+      }
+      console.log('match:', match);
     }
     debug && console.log('1. xRegex Match:', match);
     return match ? Number(match[0].match(/\d+/g)) : null;
@@ -310,8 +335,21 @@ export const detectQuantity = (title: string) => {
     return match ? Number(match[0].match(/\d+/g)) : null;
   }
 
+  if (VERegex.test(trimmed)) {
+    const match = trimmed.match(VERegex);
+    debug && console.log('VERegex Match:', match);
+    return match ? Number(match[0].match(/\d+/g)) : null;
+  }
+  const lowerCaseTrimmed = trimmed.toLowerCase();
+  for (const keyword of specialKeywords) {
+    if (lowerCaseTrimmed.includes(keyword.key)) {
+      debug && console.log('trimmed.toLowerCase(:', trimmed.toLowerCase(), keyword.key);
+      return keyword.size;
+    }
+  }
+
   debug && console.log('No match found');
   return null;
 };
 
-_title = '';
+_title = 'Polaroid Color Film für 600 - Doppelpack';

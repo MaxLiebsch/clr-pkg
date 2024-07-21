@@ -5,6 +5,7 @@ export interface QueueTask {
   proxyType?: 'de' | 'mix';
   timezones?: string[];
   statistics: {
+    visitedPages: string[];
     errorTypeCount: {
       [key: string]: number;
     };
