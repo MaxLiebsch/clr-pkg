@@ -12,6 +12,7 @@ export const DEFAULT_PAGE_TIMEOUT = 60000;
 export const EAN_PAGE_TIMEOUT = 120000;
 export const amazonTransportFee = 0.25;
 export const MAX_RETRIES_LOOKUP_EAN = 1;
+export const SAVE_USAGE_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;

@@ -24,6 +24,7 @@ export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
 export * from './util/fs/stats';
+export * from "./util/ProcessTImeTracker";
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';
 export * from "./util/matching/packageRecognition";
