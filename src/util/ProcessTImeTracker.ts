@@ -13,6 +13,7 @@ export class ProcessTimeTracker {
   private activityPeriods: Map<string, ActivityPeriod>;
   private taskType: string = 'DEFAULT';
   private mongoClient: Promise<MongoClient>;
+  private interval: NodeJS.Timeout | number = 0
 
   public static singelton: ProcessTimeTracker;
 
@@ -37,7 +38,6 @@ export class ProcessTimeTracker {
   }
 
   constructor(crawlerId: string, mongoClient: Promise<MongoClient>) {
-    this.intervalSave();
     this.crawlerId = crawlerId;
     this.activityPeriods = new Map();
     this.mongoClient = mongoClient;
@@ -49,6 +49,7 @@ export class ProcessTimeTracker {
 
   markActive(taskType: string) {
     if (!this.isActive) {
+      this.interval = this.intervalSave()
       this.taskType = taskType;
       const now = new Date();
       const currDate = this.getDate(this.currenDate);
@@ -61,7 +62,8 @@ export class ProcessTimeTracker {
     }
   }
 
-  markInactive() {
+  async markInactive() {
+    clearInterval(this.interval);
     if (this.isActive) {
       const now = new Date();
       const newDate = this.getDate(now);
@@ -98,7 +100,7 @@ export class ProcessTimeTracker {
           });
         }
       }
-
+      await this.saveToDb()
       this.lastActiveTime = now.getTime();
       this.isActive = false;
     }
@@ -135,7 +137,7 @@ export class ProcessTimeTracker {
   }
 
   intervalSave() {
-    setInterval(async () => {
+    return setInterval(async () => {
       if (this.isActive) {
         this.markInactive();
         this.markActive(this.taskType);
