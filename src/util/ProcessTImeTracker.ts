@@ -13,7 +13,9 @@ export class ProcessTimeTracker {
   private activityPeriods: Map<string, ActivityPeriod>;
   private taskType: string = 'DEFAULT';
   private mongoClient: Promise<MongoClient>;
-  private interval: NodeJS.Timeout | number = 0
+  private interval: NodeJS.Timeout | number = 0;
+  public initPromise: Promise<void>;
+  public initialized: boolean = false;
 
   public static singelton: ProcessTimeTracker;
 
@@ -30,26 +32,37 @@ export class ProcessTimeTracker {
     return ProcessTimeTracker.singelton;
   }
 
-  setToMidnightUTC(date: Date) {
+  
+  private setToMidnightUTC(date: Date) {
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth();
     const day = date.getUTCDate();
     return new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
   }
-
+  
   constructor(crawlerId: string, mongoClient: Promise<MongoClient>) {
     this.crawlerId = crawlerId;
     this.activityPeriods = new Map();
     this.mongoClient = mongoClient;
+    this.initPromise = this.init(); // Call init to load data from db
+  }
+  
+  private getDate(date: Date) {
+    return date.toISOString().split('T')[0];
+  }
+  
+  private async init() {
+    await this.loadFromDb();
+    this.initialized = true;
   }
 
-  getDate(date: Date) {
-    return date.toISOString().split('T')[0];
+  private async handleSaveUsage() {
+    await this.saveToDb();
   }
 
   markActive(taskType: string) {
     if (!this.isActive) {
-      this.interval = this.intervalSave()
+      this.interval = this.intervalSave();
       this.taskType = taskType;
       const now = new Date();
       const currDate = this.getDate(this.currenDate);
@@ -62,45 +75,49 @@ export class ProcessTimeTracker {
     }
   }
 
-  async markInactive() {
+  private handleUpdateUsage(now: Date){
+    const newDate = this.getDate(now);
+    const previousDate = this.getDate(this.currenDate);
+    const activeTime = now.getTime() - this.lastActiveTime;
+    if (newDate !== previousDate) {
+      const overlap = now.getTime() - this.currenDate.getTime();
+      const restOldDay = activeTime - overlap;
+      if (this.activityPeriods.has(previousDate)) {
+        const period = this.activityPeriods.get(previousDate);
+        if (period![this.taskType]) {
+          period![this.taskType].activeTime += restOldDay;
+        } else {
+          period![this.taskType] = { activeTime };
+        }
+        this.activityPeriods.set(previousDate, period!);
+      }
+      this.activityPeriods.set(newDate, {
+        [this.taskType]: { activeTime: overlap },
+      });
+      this.currenDate = now;
+    } else {
+      if (this.activityPeriods.has(newDate)) {
+        const period = this.activityPeriods.get(newDate);
+        if (period![this.taskType]) {
+          period![this.taskType].activeTime += activeTime;
+        } else {
+          period![this.taskType] = { activeTime };
+        }
+        this.activityPeriods.set(newDate, period!);
+      } else {
+        this.activityPeriods.set(newDate, {
+          [this.taskType]: { activeTime },
+        });
+      }
+    }
+  }
+
+  markInactive() {
     clearInterval(this.interval);
     if (this.isActive) {
       const now = new Date();
-      const newDate = this.getDate(now);
-      const previousDate = this.getDate(this.currenDate);
-      const activeTime = now.getTime() - this.lastActiveTime;
-      if (newDate !== previousDate) {
-        const overlap = now.getTime() - this.currenDate.getTime();
-        const restOldDay = activeTime - overlap;
-        if (this.activityPeriods.has(previousDate)) {
-          const period = this.activityPeriods.get(previousDate);
-          if (period![this.taskType]) {
-            period![this.taskType].activeTime += restOldDay;
-          } else {
-            period![this.taskType] = { activeTime };
-          }
-          this.activityPeriods.set(previousDate, period!);
-        }
-        this.activityPeriods.set(newDate, {
-          [this.taskType]: { activeTime: overlap },
-        });
-        this.currenDate = now;
-      } else {
-        if (this.activityPeriods.has(newDate)) {
-          const period = this.activityPeriods.get(newDate);
-          if (period![this.taskType]) {
-            period![this.taskType].activeTime += activeTime;
-          } else {
-            period![this.taskType] = { activeTime };
-          }
-          this.activityPeriods.set(newDate, period!);
-        } else {
-          this.activityPeriods.set(newDate, {
-            [this.taskType]: { activeTime },
-          });
-        }
-      }
-      await this.saveToDb()
+      this.handleUpdateUsage(now)
+      this.handleSaveUsage();
       this.lastActiveTime = now.getTime();
       this.isActive = false;
     }
@@ -121,7 +138,7 @@ export class ProcessTimeTracker {
     return this.activityPeriods;
   }
 
-  async loadFromDb() {
+  private async loadFromDb() {
     const db = (await this.mongoClient).db();
     const collection = db.collection('metadata');
     const data = await collection.findOne({ crawlerId: this.crawlerId });
@@ -136,17 +153,18 @@ export class ProcessTimeTracker {
     }
   }
 
-  intervalSave() {
+  private intervalSave() {
     return setInterval(async () => {
       if (this.isActive) {
-        this.markInactive();
-        this.markActive(this.taskType);
+        const now = new Date();
+        this.handleUpdateUsage(now);
+        this.lastActiveTime = now.getTime();
       }
       await this.saveToDb();
     }, SAVE_USAGE_INTERVAL);
   }
 
-  filterRecentActivityPeriods(): Map<string, ActivityPeriod> {
+  private filterRecentActivityPeriods(): Map<string, ActivityPeriod> {
     const now = new Date();
     const sevenDaysAgo = new Date(
       now.getTime() - 7 * 24 * 60 * 60 * 1000,
@@ -159,7 +177,7 @@ export class ProcessTimeTracker {
     );
   }
 
-  async saveToDb() {
+  private async saveToDb() {
     const db = (await this.mongoClient).db();
     const collection = db.collection('metadata');
     const filteredRecentActivityPeriods = this.filterRecentActivityPeriods();
