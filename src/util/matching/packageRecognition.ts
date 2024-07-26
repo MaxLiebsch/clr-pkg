@@ -192,6 +192,7 @@ export const detectQuantity = (title: string) => {
   debug && console.log('Title: ', title, '\n', trimmed);
   const xRegex = createXRegex(xTimesNegations);
   const exceptionsRegex = createExceptionsRegex(exceptionsStrings);
+  const pieces = getPieces(trimmed);
   const xTimesPieces = createxTimesPiecesRegex();
   const packs = getPacks(trimmed);
   debug && console.log('packs:', packs);
@@ -210,6 +211,11 @@ export const detectQuantity = (title: string) => {
     });
     if (match && packSeemsPartOfDimension) {
       return null;
+    }
+    if(pieces){
+      const match = pieces[0].match(/\d+/g);
+      debug && console.log('pieces, no bunch, match:', match);
+      return match ? Number(match.join('')) : null;
     }
     return match ? Number(match[0]) : null;
   }
@@ -239,7 +245,6 @@ export const detectQuantity = (title: string) => {
     const match = packung[0].match(/\d+/g);
     return match ? Number(match[0]) : null;
   }
-  const pieces = getPieces(trimmed);
   debug && console.log('pieces:', pieces);
   if (pieces) {
     if (bunch) {
@@ -343,7 +348,12 @@ export const detectQuantity = (title: string) => {
   const lowerCaseTrimmed = trimmed.toLowerCase();
   for (const keyword of specialKeywords) {
     if (lowerCaseTrimmed.includes(keyword.key)) {
-      debug && console.log('trimmed.toLowerCase(:', trimmed.toLowerCase(), keyword.key);
+      debug &&
+        console.log(
+          'trimmed.toLowerCase(:',
+          trimmed.toLowerCase(),
+          keyword.key,
+        );
       return keyword.size;
     }
   }
@@ -352,4 +362,5 @@ export const detectQuantity = (title: string) => {
   return null;
 };
 
-_title = 'Polaroid Color Film für 600 - Doppelpack';
+_title =
+  'Pampers Windeln Größe 7 (15kg+) Baby-Dry, Extra Large, MONATSBOX, bis zu 12 Stunden Rundum-Auslaufschutz, (1er Pack) 132 Stück';

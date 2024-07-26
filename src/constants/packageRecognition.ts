@@ -1,7 +1,7 @@
 export const piecesStrings = [
   'Stk\\.',
   'Pck\\b',
-  'Stück',
+  'Stück(\\b|$)',
   'St\\.',
   'Tabs',
   'stck(\\b|$)',
