@@ -25,7 +25,7 @@ export const piecesStrings = [
 export const packStrings = [
   'Pack',
   'Sparpack',
-  // 'Set',
+  'Set(?!,)',
   'Packung',
   'Blister',
   'VE\\b',
