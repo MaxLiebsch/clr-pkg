@@ -32,6 +32,7 @@ export * from './util/matching/calculateArbitrage';
 export * from './util/matching/calculateAznArbitrage';
 export * from './util/matching/calculateEbyArbitrage';
 export * from './util/matching/parseEbyCategories';
+export * from './util/calculateMonthlySales'
 export * from './util/matching/generateUpdate';
 export * from './util/browser/yieldBrowserVersion';
 export * from './static/allowed';

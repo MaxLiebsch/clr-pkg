@@ -289,6 +289,28 @@ export abstract class BaseQueue<
     return this.queue.length;
   }
 
+  public addTasksToQueue(tasks: { task: Task; request: T }[]) {
+    if(!this.taskFinished){
+      this.queue.push(...tasks);
+    }else{
+      return 'task finished'
+    }
+
+  }
+
+  public pullTasksFromQueue() {
+    if(this.queue.length % 2){
+      //odd
+      const start = Math.floor(this.queue.length/2 + 1)
+      return this.queue.splice(start)
+  
+    }else{
+      //even
+      const start = this.queue.length/2
+      return this.queue.splice(start)
+    }
+  }
+
   private clearTimeout = (id: string) => {
     const timeout = this.timeouts.find((timeout) => timeout.id === id);
     if (timeout) {

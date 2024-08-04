@@ -34,6 +34,14 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   disconnect(taskFinished = false): Promise<void> {
     return super.disconnect(taskFinished);
   }
+  public addTasksToQueue(tasks: { task: Task; request: QueryRequest }[]) {
+    return super.addTasksToQueue(tasks);
+  }
+
+  public pullTasksFromQueue() {
+    return super.pullTasksFromQueue();
+  }
+  
   connected() {
     return super.connected();
   }

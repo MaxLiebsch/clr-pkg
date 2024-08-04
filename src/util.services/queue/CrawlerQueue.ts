@@ -45,6 +45,15 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     return super.pauseQueue(reason);
   }
+
+  public addTasksToQueue(tasks: { task: Task; request: CrawlerRequest }[]) {
+    return super.addTasksToQueue(tasks);
+  }
+
+  public pullTasksFromQueue() {
+    return super.pullTasksFromQueue();
+  }
+
   public idle() {
     return super.idle();
   }
