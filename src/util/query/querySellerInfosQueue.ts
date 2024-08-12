@@ -20,14 +20,8 @@ function timeoutPromise(timeout: number, ean: string): Promise<never> {
 
 async function querySellerInfos(page: Page, request: QueryRequest) {
   const startTime = Date.now();
-  const {
-    addProductInfo,
-    shop,
-    query,
-    onNotFound,
-    retries,
-    targetShop,
-  } = request;
+  const { addProductInfo, shop, query, onNotFound, retries, targetShop } =
+    request;
   const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
@@ -48,7 +42,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     'description',
   );
 
-  if (unexpectedError?.includes(aznUnexpectedErrorText)) {
+  if (unexpectedError && unexpectedError.includes(aznUnexpectedErrorText)) {
     if (retries <= MAX_RETRIES_LOOKUP_EAN) {
       throw new Error(`${targetShopId} - Unexpected Error: ${ean}`);
     } else {
@@ -63,7 +57,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     'kat-alert[variant=warning]',
     'description',
   );
-  if (notFound?.includes(aznNotFoundText)) {
+  if (notFound && notFound.includes(aznNotFoundText)) {
     if (retries <= MAX_RETRIES_LOOKUP_EAN) {
       throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {

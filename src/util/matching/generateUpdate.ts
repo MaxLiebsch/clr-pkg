@@ -3,7 +3,6 @@ import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
-import { detectQuantity } from './packageRecognition';
 
 export const generateUpdate = (
   productInfo: ProductInfo[],
@@ -22,7 +21,7 @@ export const generateUpdate = (
   const totalOfferCount = infoMap.get('totalOfferCount');
   let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
 
-  const detectedA_qty = detectQuantity(a_nm);
+  const detectedA_qty =1; 
 
   if (detectedA_qty) {
     a_qty = detectedA_qty;

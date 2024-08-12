@@ -50,7 +50,7 @@ const bracketRegex = /\(\d+\s*x\s*\d+/g;
 
 const createxTimesPiecesRegex = () => {
   return new RegExp(
-    `((?<!\\+)\\b\\d{1,2}\\s*x\\s*\\d+((?:[\\d,.]*\\d+)|(?!,|\\.)))(?![Xx]|\\s*[xX]|${xTimesNegations.join('|')})`,
+    `((?<!\\+|\\()\\b\\d{1,2}\\s*x\\s*\\d+((?:[\\d,.]*\\d+)|(?!,|\\.)))(?![Xx]|\\s*[xX]|${xTimesNegations.join('|')})`,
     'g',
   );
 };

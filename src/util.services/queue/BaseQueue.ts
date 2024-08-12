@@ -34,6 +34,7 @@ import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 import { createHash } from '../../util/hash';
 import crypto from 'crypto';
+import EventEmitter from 'events';
 
 type Task = (page: Page, request: any) => Promise<any>;
 
@@ -67,6 +68,7 @@ export abstract class BaseQueue<
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
   private pause: boolean = false;
+  public queueId: string;
   public taskFinished: boolean = false;
   /*
   if the timeouts need to be applied later
@@ -75,10 +77,12 @@ export abstract class BaseQueue<
   private errorLog: ErrorLog = errorTypes;
   private requestCount: number = 0;
   private criticalErrorCount: number = 0;
+  private eventEmitter: EventEmitter = new EventEmitter();
   private versionChooser: Generator<string, void, unknown> =
     yieldBrowserVersion();
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
+    this.queueId = crypto.randomUUID();
     this.queueTask = {
       ...task,
       statistics: {
@@ -104,6 +108,7 @@ export abstract class BaseQueue<
         browserStarts: 0,
       },
     };
+
     this.concurrency = concurrency; //new page
     this.proxyAuth = proxyAuth;
   }
@@ -290,24 +295,21 @@ export abstract class BaseQueue<
   }
 
   public addTasksToQueue(tasks: { task: Task; request: T }[]) {
-    if(!this.taskFinished){
-      this.queue.push(...tasks);
-    }else{
-      return 'task finished'
-    }
-
+    this.queue.push(...tasks);
+    this.next();
   }
 
   public pullTasksFromQueue() {
-    if(this.queue.length % 2){
+    if (this.queue.length < 8) return null;
+
+    if (this.queue.length % 2) {
       //odd
-      const start = Math.floor(this.queue.length/2 + 1)
-      return this.queue.splice(start)
-  
-    }else{
+      const start = Math.floor(this.queue.length / 2 + 1);
+      return this.queue.splice(start);
+    } else {
       //even
-      const start = this.queue.length/2
-      return this.queue.splice(start)
+      const start = this.queue.length / 2;
+      return this.queue.splice(start);
     }
   }
 
@@ -575,6 +577,10 @@ export abstract class BaseQueue<
   }
 
   next(): void {
+    if (this.queue.length === 0)
+      this.eventEmitter.emit(`${this.queueId}-finished`, {
+        queueId: this.queueId,
+      });
     if (
       this.pause ||
       this.taskFinished ||
