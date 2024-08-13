@@ -20,13 +20,25 @@ function timeoutPromise(timeout: number, ean: string): Promise<never> {
 
 async function querySellerInfos(page: Page, request: QueryRequest) {
   const startTime = Date.now();
-  const { addProductInfo, shop, query, onNotFound, retries, targetShop } =
-    request;
+  const {
+    addProductInfo,
+    shop,
+    query,
+    lookupRetryLimit,
+    onNotFound,
+    retries,
+    targetShop,
+  } = request;
+
+  const RETRY_LIMIT = lookupRetryLimit
+    ? lookupRetryLimit
+    : MAX_RETRIES_LOOKUP_EAN;
+    
   const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
-  
+
   if (retries > MAX_RETRIES_LOOKUP_EAN) {
     await closePage(page);
     onNotFound && (await onNotFound());
@@ -60,7 +72,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   );
 
   if (notFound && notFound.includes(aznNotFoundText)) {
-    if (retries < MAX_RETRIES_LOOKUP_EAN) {
+    if (retries < RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
@@ -110,7 +122,11 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (addProductInfo)
       await addProductInfo({ productInfo: rawProductInfos, url });
   } else {
-    throw new Error(`${targetShopId} - Product Info seems empty: ${ean}`); //Retry logic
+    if (retries < RETRY_LIMIT) {
+      throw new Error(`${targetShopId} - Product Info seems empty: ${ean}`); //Retry logic
+    } else {
+      onNotFound && (await onNotFound());
+    }
   }
   const endTime = Date.now();
   const elapsedTime = Math.round((endTime - startTime) / 1000);

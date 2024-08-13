@@ -54,6 +54,7 @@ export interface QueryRequest extends QRequest {
   targetShop?: TargetShop;
   prodInfo?: ProdInfo;
   limit?: Limit;
+  lookupRetryLimit?: number;
   query: Query;
   isFinished?: (interm?: IntermediateProdInfo) => Promise<void>;
   addProductInfo?: ({
