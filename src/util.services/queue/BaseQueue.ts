@@ -589,7 +589,12 @@ export abstract class BaseQueue<
     //   'current total: ',
     //   this.total,
     // );
-    const tasks = ['DAILY_DEALS', 'CRAWL_AZN_LISTINGS', 'LOOKUP_INFO'];
+    const tasks = [
+      'DAILY_DEALS',
+      'CRAWL_AZN_LISTINGS',
+      'LOOKUP_INFO',
+      'WHOLESALE_SEARCH',
+    ];
 
     if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {
       console.log('Multiple queue completed:', this.queueId);
