@@ -26,6 +26,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
   const { product } = shop;
+  
   if (retries > MAX_RETRIES_LOOKUP_EAN) {
     await closePage(page);
     onNotFound && (await onNotFound());
@@ -57,8 +58,9 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     'kat-alert[variant=warning]',
     'description',
   );
+
   if (notFound && notFound.includes(aznNotFoundText)) {
-    if (retries <= MAX_RETRIES_LOOKUP_EAN) {
+    if (retries < MAX_RETRIES_LOOKUP_EAN) {
       throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {
       onNotFound && (await onNotFound());

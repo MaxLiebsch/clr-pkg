@@ -35,7 +35,7 @@ import { isDomainAllowed } from '../../util/isDomainAllowed';
 import { createHash } from '../../util/hash';
 import crypto from 'crypto';
 import EventEmitter from 'events';
-
+import { globalEventEmitter } from '../../util/events';
 type Task = (page: Page, request: any) => Promise<any>;
 
 export type WrapperFunctionResponse =
@@ -77,7 +77,10 @@ export abstract class BaseQueue<
   private errorLog: ErrorLog = errorTypes;
   private requestCount: number = 0;
   private criticalErrorCount: number = 0;
-  private eventEmitter: EventEmitter = new EventEmitter();
+  private eventEmitter: EventEmitter = globalEventEmitter;
+  public total = 0;
+  public actualProductLimit = 0;
+  private totalReached = false;
   private versionChooser: Generator<string, void, unknown> =
     yieldBrowserVersion();
 
@@ -108,7 +111,7 @@ export abstract class BaseQueue<
         browserStarts: 0,
       },
     };
-
+    this.actualProductLimit = task.actualProductLimit;
     this.concurrency = concurrency; //new page
     this.proxyAuth = proxyAuth;
   }
@@ -142,6 +145,7 @@ export abstract class BaseQueue<
   /*  BROWSER RELATED FUNCTIONS  */
   async connect(): Promise<void> {
     const currentVersion = this.versionChooser.next().value as Versions;
+    const listeners = this.eventEmitter.listeners(`${this.queueId}-finished`);
     this.queueTask.statistics.browserStarts += 1;
     try {
       this.browser = await mainBrowser(
@@ -300,7 +304,7 @@ export abstract class BaseQueue<
   }
 
   public pullTasksFromQueue() {
-    if (this.queue.length < 8) return null;
+    if (this.queue.length < 4) return null;
 
     if (this.queue.length % 2) {
       //odd
@@ -577,10 +581,30 @@ export abstract class BaseQueue<
   }
 
   next(): void {
-    if (this.queue.length === 0)
+    // console.log(
+    //   'task type: ',
+    //   this.queueTask.type,
+    //   'task length:',
+    //   this.queueTask.actualProductLimit,
+    //   'current total: ',
+    //   this.total,
+    // );
+    const tasks = ['DAILY_DEALS', 'CRAWL_AZN_LISTINGS', 'LOOKUP_INFO'];
+
+    if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {
+      console.log('Multiple queue completed:', this.queueId);
       this.eventEmitter.emit(`${this.queueId}-finished`, {
         queueId: this.queueId,
       });
+    } else {
+      if (!this.totalReached && this.total === this.actualProductLimit) {
+        this.totalReached = true;
+        console.log('Queue completed:', this.queueId);
+        this.eventEmitter.emit(`${this.queueId}-finished`, {
+          queueId: this.queueId,
+        });
+      }
+    }
     if (
       this.pause ||
       this.taskFinished ||
