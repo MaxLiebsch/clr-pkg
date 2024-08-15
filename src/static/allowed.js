@@ -31,6 +31,7 @@ export const allowed = [
   "www.dm.de",
   "product-search.services.dmtech.com",
   "assets.dm.de",
+  "products.dm.de",
   "content.services.dmtech.com",
   "www.fahrrad.de",
   "www.fressnapf.de",

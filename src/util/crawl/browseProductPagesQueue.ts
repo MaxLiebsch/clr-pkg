@@ -86,8 +86,8 @@ export async function browseProductPagesQueue(
         const limitPages = limit?.pages ? limit?.pages : 0;
 
         const noOfPages = limitPages
-        ? limitPages > noOfFoundPages
-        ? noOfFoundPages
+          ? limitPages > noOfFoundPages
+            ? noOfFoundPages
             : limitPages
           : noOfFoundPages;
 
@@ -116,6 +116,11 @@ export async function browseProductPagesQueue(
               },
             );
           } else {
+            if (initialpageurl.includes('?')) {
+              if (paginationEl.nav.includes('?')) {
+                paginationEl.nav = paginationEl.nav.replace('?', '&');
+              }
+            }
             let nextUrl = `${initialpageurl}${paginationEl.nav}${pageNo}`;
             if (paginationEl?.paginationUrlSchema) {
               nextUrl = paginationUrlBuilder(
