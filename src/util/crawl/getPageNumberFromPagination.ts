@@ -34,27 +34,27 @@ export const getPageNumberFromPagination = async (
   page: Page,
   shop: ShopObject,
   paginationEl: PaginationElement,
+  currentPage?: number,
   productCount?: number | null,
 ) => {
-  if (!Object.keys(paginationEl).length)
-    return { pages: [], noOfFoundPages: 0 };
+  let pageCount = 0;
+  if (!Object.keys(paginationEl).length) return pageCount;
 
-  let pages: number[] = [];
   const { calculation, type } = paginationEl;
   if (calculation.method === 'button') {
     const pageButtons = await myQuerySelectorAll(page, calculation.sel);
     if (pageButtons) {
-      pages = new Array(pageButtons.length);
+      pageCount = pageButtons.length;
     }
   }
   if (calculation.method === 'first_last') {
     const last = await getInnerText(page, calculation.last);
     if (last) {
-      pages = new Array(parseInt(last));
+      pageCount = parseInt(last);
     } else {
       const next = await getInnerText(page, calculation.sel);
       if (next) {
-        pages = new Array(parseInt(next));
+        pageCount = parseInt(next);
       }
     }
   }
@@ -72,7 +72,7 @@ export const getPageNumberFromPagination = async (
           }
         }
       }
-      pages = new Array(pagesCount);
+      pageCount = pagesCount;
     }
   }
 
@@ -85,10 +85,10 @@ export const getPageNumberFromPagination = async (
         const innerText = await getElementHandleInnerText(paginationEl);
         if (innerText) {
           if (innerText.trim().includes(calculation.textToMatch))
-            pagesCount = 1;
+            pagesCount = (currentPage ?? 0) + 1;
         }
       }
-      pages = new Array(pagesCount);
+      pageCount = pagesCount;
     }
   }
 
@@ -110,7 +110,7 @@ export const getPageNumberFromPagination = async (
           }
         }
       }
-      pages = new Array(pagesCount);
+      pageCount = pagesCount;
     }
   }
   if (
@@ -118,18 +118,17 @@ export const getPageNumberFromPagination = async (
     productCount &&
     calculation.productsPerPage
   ) {
-    pages = new Array(Math.floor(productCount / calculation.productsPerPage));
+    pageCount = Math.floor(productCount / calculation.productsPerPage);
   }
 
   if (calculation.method === 'product_count' && calculation.productsPerPage) {
-
     const count = await getProductCount(page, shop.productList);
     if (count) {
-      pages = new Array(Math.floor(count / calculation.productsPerPage));
+      pageCount = Math.floor(count / calculation.productsPerPage);
     }
   }
 
-  const noOfFoundPages = pages?.length ?? 0;
+  const noOfFoundPages = pageCount;
 
-  return { pages, noOfFoundPages };
+  return pageCount;
 };

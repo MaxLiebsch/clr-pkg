@@ -16,6 +16,7 @@ import { checkForBlockingSignals } from '../../util.services/queue/checkForBlock
 import { closePage } from '../browser/closePage';
 import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
+import { buildNextPageUrl } from './buildNextPageUrl';
 
 export async function browseProductpages(
   page: Page,
@@ -38,8 +39,9 @@ export async function browseProductpages(
   if (shop.crawlActions && shop.crawlActions.length > 0) {
     for (let i = 0; i < shop.crawlActions.length; i++) {
       const action = shop.crawlActions[i];
+      const { type } = action;
       if (
-        action.type === 'element' &&
+        type === 'element' &&
         'action' in action &&
         action.action === 'delete' &&
         'interval' in action
@@ -51,7 +53,7 @@ export async function browseProductpages(
           ),
         );
       }
-      if (action.type === 'scroll') {
+      if (type === 'scroll') {
         await humanScroll(page);
       }
     }
@@ -63,19 +65,19 @@ export async function browseProductpages(
     if (type === 'pagination') {
       const initialpageurl = page.url();
 
-      const { noOfFoundPages } = await getPageNumberFromPagination(
+      const pageCount = await getPageNumberFromPagination(
         page,
         shop,
         paginationEl,
       );
-      process.env.DEBUG && console.log('noOfFoundPages:', noOfFoundPages);
+      process.env.DEBUG && console.log('pageCount:', pageCount);
 
-      if (noOfFoundPages) {
+      if (pageCount) {
         const noOfPages = limitPages
-          ? limitPages > noOfFoundPages
-            ? noOfFoundPages
+          ? limitPages > pageCount
+            ? pageCount
             : limitPages
-          : noOfFoundPages;
+          : pageCount;
 
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
@@ -83,7 +85,11 @@ export async function browseProductpages(
           if (i === 0) {
             await crawlProducts(page, shop, addProductCb, pageInfo);
           } else {
-            let nextUrl = `${initialpageurl}${paginationEl.nav}${pageNo}`;
+            let nextUrl = buildNextPageUrl(
+              initialpageurl,
+              paginationEl.nav,
+              pageNo,
+            );
             if (paginationEl.paginationUrlSchema) {
               nextUrl = paginationUrlBuilder(
                 initialpageurl,

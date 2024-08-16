@@ -6,6 +6,8 @@ import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
 import { myQuerySelectorAll } from '../helpers';
+import { buildNextPageUrl } from './buildNextPageUrl';
+import { calculatePageCount } from './calculatePageCount';
 
 export const crawlProductsQueue = async (
   page: Page,
@@ -48,26 +50,22 @@ export const crawlProductsQueue = async (
       }
     }
     if (hasProducts) {
-      const { noOfFoundPages } = await getPageNumberFromPagination(
+      const pageCount = await getPageNumberFromPagination(
         page,
         shop,
         paginationEl,
+        noOfPages,
         productCount,
       );
-
-      if (noOfFoundPages && pageNo && initialProductPageUrl) {
-        const limitPages = limit?.pages ? limit?.pages : 0;
-
-        const noOfPages = limitPages
-          ? limitPages > noOfFoundPages
-            ? noOfFoundPages
-            : limitPages
-          : noOfFoundPages;
-
+      if (pageCount && pageNo && initialProductPageUrl) {
+        const noOfPages = calculatePageCount(limit, pageCount);
         for (let i = pageNo; i < noOfPages; i++) {
           const pageNo = i + 1;
-          console.log('new pages ', pageNo, ' of ', noOfPages);
-          let nextUrl = `${initialProductPageUrl}${paginationEl.nav}${pageNo}`;
+          let nextUrl = buildNextPageUrl(
+            initialProductPageUrl,
+            paginationEl.nav,
+            pageNo,
+          );
           if (paginationEl?.paginationUrlSchema) {
             nextUrl = paginationUrlBuilder(
               initialProductPageUrl,

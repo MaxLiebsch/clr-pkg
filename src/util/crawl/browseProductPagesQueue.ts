@@ -13,6 +13,8 @@ import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
+import { buildNextPageUrl } from './buildNextPageUrl';
+import { calculatePageCount } from './calculatePageCount';
 
 export async function browseProductPagesQueue(
   page: Page,
@@ -20,6 +22,7 @@ export async function browseProductPagesQueue(
 ) {
   const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
     request;
+  const {pages} = limit;
 
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
@@ -43,6 +46,18 @@ export async function browseProductPagesQueue(
       if (action.type === 'scroll') {
         await humanScroll(page);
       }
+      if (action.type === 'button' && 'wait' in action) {
+        if (action?.action === 'waitBefore') {
+          await new Promise((r) => setTimeout(r, 600));
+        }
+        await clickBtn(
+          page,
+          action.sel,
+          action.wait ?? false,
+          waitUntil,
+          'waitDuration' in action ? action.waitDuration : undefined,
+        );
+      }
     }
   }
 
@@ -53,55 +68,49 @@ export async function browseProductPagesQueue(
   );
 
   if (pagination) {
-    const { type, sel, wait } = paginationEl;
+    const { type, sel, wait, initialUrl } = paginationEl;
     if (type === 'pagination') {
-      let initialpageurl = page.url();
-      if (paginationEl.initialUrl) {
-        const urlObject = new URL(initialpageurl);
+      let initialPageUrl = page.url();
+      if (initialUrl) {
+        const urlObject = new URL(initialPageUrl);
         const content = await page.content().catch((e) => {});
         if (content) {
-          const regexp = new RegExp(paginationEl.initialUrl.regexp, 'g');
+          const regexp = new RegExp(initialUrl.regexp, 'g');
           if (regexp.test(content)) {
             const match = content.match(regexp);
             if (match) {
-              if (paginationEl.initialUrl.type === 'encoded') {
+              if (initialUrl.type === 'encoded') {
                 const pathname = decodeURIComponent(
                   match[0].replace(/\\u002F/g, '/'),
                 );
-                initialpageurl = urlObject.origin + pathname;
+                initialPageUrl = urlObject.origin + pathname;
               }
             }
           }
         }
       }
 
-      const { noOfFoundPages } = await getPageNumberFromPagination(
+      const pageCount = await getPageNumberFromPagination(
         page,
         shop,
         paginationEl,
+        1,
         productCount,
       );
 
-      if (noOfFoundPages) {
-        const limitPages = limit?.pages ? limit?.pages : 0;
-
-        const noOfPages = limitPages
-          ? limitPages > noOfFoundPages
-            ? noOfFoundPages
-            : limitPages
-          : noOfFoundPages;
-
+      if (pageCount) {
+        const noOfPages = calculatePageCount(limit, pageCount);
         switch (true) {
-          case noOfFoundPages === 0:
+          case pageCount === 0:
             request.productPageCountHeuristic['0'] += 1;
             break;
-          case noOfFoundPages >= 0 && noOfFoundPages < 10:
+          case pageCount >= 0 && pageCount < 10:
             request.productPageCountHeuristic['1-9'] += 1;
             break;
-          case noOfFoundPages >= 10 && noOfFoundPages < 50:
+          case pageCount >= 10 && pageCount < 50:
             request.productPageCountHeuristic['10-49'] += 1;
             break;
-          case noOfFoundPages >= 50:
+          case pageCount >= 50:
             request.productPageCountHeuristic['+50'] += 1;
             break;
         }
@@ -116,15 +125,14 @@ export async function browseProductPagesQueue(
               },
             );
           } else {
-            if (initialpageurl.includes('?')) {
-              if (paginationEl.nav.includes('?')) {
-                paginationEl.nav = paginationEl.nav.replace('?', '&');
-              }
-            }
-            let nextUrl = `${initialpageurl}${paginationEl.nav}${pageNo}`;
+            let nextUrl = buildNextPageUrl(
+              initialPageUrl,
+              paginationEl.nav,
+              pageNo,
+            );
             if (paginationEl?.paginationUrlSchema) {
               nextUrl = paginationUrlBuilder(
-                initialpageurl,
+                initialPageUrl,
                 paginationEls,
                 pageNo,
                 query?.product.value,
@@ -133,7 +141,7 @@ export async function browseProductPagesQueue(
             queue.pushTask(crawlProductsQueue, {
               ...request,
               retries: 0,
-              initialProductPageUrl: initialpageurl,
+              initialProductPageUrl: initialPageUrl,
               pageNo,
               paginationType: type,
               noOfPages,
