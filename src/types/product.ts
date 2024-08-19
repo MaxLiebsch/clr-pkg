@@ -73,6 +73,7 @@ export interface DbProduct {
   nm: string;
   img: string;
   lnk: string;
+  qty: number;
   prc: number;
   createdAt: string;
   updatedAt: string;

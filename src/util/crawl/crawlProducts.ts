@@ -59,7 +59,6 @@ export const crawlProducts = async (
       const product: ProductRecord = {
         link: '',
         image: '',
-        shop: shop.d,
         category,
         name: '',
         vendor: '',
@@ -67,7 +66,6 @@ export const crawlProducts = async (
         hasMnfctr: false,
         price: 0,
         promoPrice: 0,
-        prime: false,
         description: '',
         nameSub: '',
       };
