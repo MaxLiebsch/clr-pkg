@@ -31,3 +31,8 @@ export interface Coefficients {
   a: number;
   b: number;
 }
+
+export interface CategroyTree {
+  catId: number;
+  name: string;
+}
