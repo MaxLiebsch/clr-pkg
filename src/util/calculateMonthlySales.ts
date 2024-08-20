@@ -1,3 +1,4 @@
+import { P } from 'pino';
 import { getCoefficients } from '../static/aznMonthlySalesCoefficients';
 import { Categories, CategroyTree } from '../types/aznSalesRankCoefficients';
 import { AznCategoryMapper } from './AznCategoryMapper';
@@ -18,7 +19,7 @@ export function calculateMonthlySales(
   if (!salesRankAndCoefficients) return null;
   const { salesRank, coefficients } = salesRankAndCoefficients;
   const { a, b } = coefficients;
-  return Math.floor(a * Math.exp(b * salesRank));
+  return Math.min(5000, Math.floor(a * Math.exp(b * salesRank)));
 }
 
 const findSalesRankAndCoefficients = (
@@ -26,6 +27,24 @@ const findSalesRankAndCoefficients = (
   salesRanks: { [key: number]: number[] },
   categoryTree: CategroyTree[],
 ) => {
+  const category = categoryTree.find((c) =>
+    getCoefficients(c.name as Categories),
+  );
+
+  if (category) {
+    const salesRankArr = salesRanks[category.catId];
+    if (salesRankArr) {
+      const salesRank = salesRankArr[salesRankArr.length - 1];
+
+      if (salesRank !== -1) {
+        return {
+          salesRank,
+          coefficients: getCoefficients(category.name as Categories),
+        };
+      }
+    }
+  }
+
   const salesRanksKeys = Object.keys(salesRanks);
   const exisitingCategoryIds = categoryIds.filter((id) => {
     if (salesRanksKeys.includes(id.toString())) {
@@ -44,13 +63,15 @@ const findSalesRankAndCoefficients = (
       );
       if (categoryTreeItem) {
         const salesRankArr = salesRanks[categoryTreeItem.catId];
-        const salesRank = salesRankArr[salesRankArr.length - 1];
+        if (salesRankArr) {
+          const salesRank = salesRankArr[salesRankArr.length - 1];
 
-        if (salesRank === -1) continue;
-        return {
-          salesRank,
-          coefficients: getCoefficients(category as Categories),
-        };
+          if (salesRank === -1) continue;
+          return {
+            salesRank,
+            coefficients: getCoefficients(category as Categories),
+          };
+        }
       }
     }
   }
