@@ -1,5 +1,6 @@
 import pkg from 'mongoose';
 import { ShopObject } from '../types/index';
+import { UTCDate } from '@date-fns/utc';
 const { model, Schema } = pkg;
 
 const Shipping = new Schema({
@@ -65,8 +66,8 @@ const ShopSchema = new Schema<ShopObject>(
     ps: { type: String, default: '' }, // css selector packag size
     pzn: { type: String, default: '' }, // css selector pzn
     active: { type: Boolean, default: true },
-    lastCrawlAt: { type: String, default: new Date().toISOString() },
-    lastSelectorTestAt: { type: String, default: new Date().toISOString() },
+    lastCrawlAt: { type: String, default: new UTCDate().toISOString() },
+    lastSelectorTestAt: { type: String, default: new UTCDate().toISOString() },
     purlschema: { type: String, default: '' },
     kws: {
       //keywords to be escaped

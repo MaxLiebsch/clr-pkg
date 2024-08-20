@@ -1,3 +1,4 @@
+import { UTCDate } from '@date-fns/utc';
 import { ProductInfo } from '../../types/query-request';
 import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
@@ -69,7 +70,7 @@ export const generateUpdate = (
     if (category && number) {
       update['bsr'] = [
         {
-          createdAt: new Date().toISOString(),
+          createdAt: new UTCDate().toISOString(),
           category: category[0].replace(/[\\(\\)]/g, ''),
           number: safeParsePrice(number.join('')),
         },
