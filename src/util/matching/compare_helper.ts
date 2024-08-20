@@ -100,7 +100,7 @@ export function getManufacturer(src: string) {
   const split = src.split(' ');
   if (split.length > 1) {
     return {
-      mnfctr: split[0],
+      mnfctr: split[0].trim(),
       prodNm: src.replace(split[0], '').trim(),
     };
   } else {

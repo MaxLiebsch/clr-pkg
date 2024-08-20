@@ -20,12 +20,6 @@ export const generateUpdate = (
   const tax = infoMap.get('tax');
   const totalOfferCount = infoMap.get('totalOfferCount');
   let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
-
-  const detectedA_qty =1; 
-
-  if (detectedA_qty) {
-    a_qty = detectedA_qty;
-  }
   let a_uprc = roundToTwoDecimals(a_prc / a_qty);
   
   const sellerRank = infoMap.get('sellerRank');
