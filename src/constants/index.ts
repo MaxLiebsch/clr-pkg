@@ -957,6 +957,8 @@ export const availability = [
 ];
 
 export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
+export const aznNoFittingText =
+  'Keine passenden Produkte gefunden. Aktualisieren Sie die Seite oder versuchen Sie es später erneut.';
 export const ebyNotFoundText = 'Keine exakten Treffer gefunden';
 export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten';
 

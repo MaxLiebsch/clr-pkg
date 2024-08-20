@@ -5,6 +5,7 @@ import { runActions } from './runActions';
 import { extractAttributePage } from '../helpers';
 import {
   MAX_RETRIES_LOOKUP_EAN,
+  aznNoFittingText,
   aznNotFoundText,
   aznUnexpectedErrorText,
 } from '../../constants';
@@ -33,7 +34,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   const RETRY_LIMIT = lookupRetryLimit
     ? lookupRetryLimit
     : MAX_RETRIES_LOOKUP_EAN;
-    
+
   const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
   const rawProductInfos: { key: string; value: string }[] = [];
@@ -71,7 +72,10 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     'description',
   );
 
-  if (notFound && notFound.includes(aznNotFoundText)) {
+  if (
+    notFound &&
+    (notFound.includes(aznNotFoundText) || notFound.includes(aznNoFittingText))
+  ) {
     if (retries < RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {
