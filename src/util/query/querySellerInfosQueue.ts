@@ -31,9 +31,10 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     targetShop,
   } = request;
 
-  const RETRY_LIMIT = lookupRetryLimit
-    ? lookupRetryLimit
-    : MAX_RETRIES_LOOKUP_EAN;
+  const RETRY_LIMIT =
+    typeof lookupRetryLimit === 'number'
+      ? lookupRetryLimit
+      : MAX_RETRIES_LOOKUP_EAN;
 
   const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
@@ -57,7 +58,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
   );
 
   if (unexpectedError && unexpectedError.includes(aznUnexpectedErrorText)) {
-    if (retries <= MAX_RETRIES_LOOKUP_EAN) {
+    if (retries <= RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Unexpected Error: ${ean}`);
     } else {
       onNotFound && (await onNotFound());
