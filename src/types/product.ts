@@ -3,6 +3,7 @@ export type Content =
   | 'link'
   | 'price'
   | 'mnfctr'
+  | 'cur'
   | 'hasMnfctr'
   | 'promoPrice'
   | 'van'
@@ -59,6 +60,7 @@ export interface DbProduct {
   s: string;
   ean: string;
   asin: string;
+  curr: string;
   bsr: [
     {
       number: number;

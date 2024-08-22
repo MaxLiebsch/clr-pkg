@@ -16,24 +16,30 @@ export const generateUpdate = (
   productInfo.forEach((info) => {
     infoMap.set(info.key, info.value);
   });
+  let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
+
+  if (a_prc === 0) throw new Error('a_prc is 0');
+
+  const costs = {
+    azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
+    varc: safeParsePrice(infoMap.get('costs.varc') || '0'),
+    strg_1_hy: safeParsePrice(infoMap.get('costs.strg.1_hy') || '0'),
+    strg_2_hy: safeParsePrice(infoMap.get('costs.strg.2_hy') || '0'),
+    tpt: safeParsePrice(infoMap.get('costs.tpt') || '0'),
+  };
+
+  if (costs.azn <= 0.3) throw new Error('costs.azn is 0');
+
   const asin = infoMap.get('asin');
   const a_nm = infoMap.get('name');
 
   const tax = infoMap.get('tax');
   const totalOfferCount = infoMap.get('totalOfferCount');
-  let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
   let a_uprc = roundToTwoDecimals(a_prc / a_qty);
 
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');
   const buyBoxIsAmazon = infoMap.get('buyBoxIsAmazon');
-  const costs = {
-    azn: safeParsePrice(infoMap.get('costs.azn') ?? '0'),
-    varc: safeParsePrice(infoMap.get('costs.varc') ?? '0'),
-    strg_1_hy: safeParsePrice(infoMap.get('costs.strg.1_hy') ?? '0'),
-    strg_2_hy: safeParsePrice(infoMap.get('costs.strg.2_hy') ?? '0'),
-    tpt: safeParsePrice(infoMap.get('costs.tpt') ?? '0'),
-  };
   // prc * (a_qty / qty) //EK  //QTY Zielshop/QTY Herkunftsshop
   // a_prc VK
   const arbitrage = calculateAznArbitrage(
@@ -44,7 +50,7 @@ export const generateUpdate = (
   );
   const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
   const a_hash = createHash(a_lnk);
-  
+
   const update: { [key: string]: any } = {
     a_lnk,
     a_hash,
@@ -53,22 +59,16 @@ export const generateUpdate = (
     a_prc,
     a_uprc,
     a_qty,
+    ...(tax && { tax: Number(tax) }),
+    ...(totalOfferCount && { totalOfferCount: getNumber(totalOfferCount) }),
+    ...(image && { a_img: image }),
+    ...(buyBoxIsAmazon && {
+      buyBoxIsAmazon: buyBoxIsAmazon.toLowerCase().includes('amazon'),
+    }),
     ...arbitrage,
     costs,
   };
 
-  if (tax) {
-    update['tax'] = Number(tax);
-  }
-  if (totalOfferCount) {
-    update['totalOfferCount'] = getNumber(totalOfferCount);
-  }
-  if (buyBoxIsAmazon) {
-    update['buyBoxIsAmazon'] = buyBoxIsAmazon.toLowerCase().includes('amazon');
-  }
-  if (image) {
-    update['a_img'] = image;
-  }
   if (sellerRank) {
     const category = sellerRank.match(/\((.*?)\)/g);
     const number = sellerRank.match(/\d+/g);

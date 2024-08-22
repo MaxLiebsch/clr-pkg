@@ -21,7 +21,7 @@ import {
 } from '../extract/extractAttributeFromHandle';
 import { get } from 'lodash';
 import { safeJSONParse } from '../extract/saveParseJSON';
-import { safeParsePrice } from '../safeParsePrice';
+import { detectCurrency, safeParsePrice } from '../safeParsePrice';
 
 export const crawlProducts = async (
   page: Page,
@@ -194,10 +194,18 @@ export const crawlProducts = async (
       }
 
       if (product.price && product.price !== 0) {
+        const currency = detectCurrency(product.price as string);
+        if (currency) {
+          product["cur"] = currency;
+        }
         product.price = safeParsePrice(product.price);
       }
 
       if (product.promoPrice && product.promoPrice !== 0) {
+        const currency = detectCurrency(product.promoPrice as string);
+        if (currency) {
+          product["cur"] = currency;
+        }
         product.promoPrice = safeParsePrice(product.promoPrice);
       }
       // Remove random keywords from the URL

@@ -29,3 +29,112 @@ export const safeParsePrice = (
 
   return isNaN(parsedPrice) ? 0 : parsedPrice;
 };
+
+const currency = [
+  {
+    iso: 'USD',
+    symbol: '\\$',
+  },
+  {
+    iso: 'EUR',
+    symbol: '€',
+  },
+  {
+    iso: 'GBP',
+    symbol: '£',
+  },
+  {
+    iso: 'CHF',
+    symbol: 'Fr',
+  },
+  {
+    iso: 'TRY',
+    symbol: '₺',
+  },
+  {
+    iso: 'PLN',
+    symbol: 'zł',
+  },
+  {
+    iso: 'CZK',
+    symbol: 'Kč',
+  },
+  {
+    iso: 'DKK',
+    symbol: 'kr',
+  },
+  {
+    iso: 'NOK',
+    symbol: 'kr',
+  },
+  {
+    iso: 'SEK',
+    symbol: 'kr',
+  },
+  {
+    iso: 'ISK',
+    symbol: 'kr',
+  },
+  {
+    iso: 'RUB',
+    symbol: '₽',
+  },
+  {
+    iso: 'UAH',
+    symbol: '₴',
+  },
+  {
+    iso: 'RON',
+    symbol: 'lei',
+  },
+  {
+    iso: 'HUF',
+    symbol: 'Ft',
+  },
+  {
+    iso: 'BGN',
+    symbol: 'лв',
+  },
+  {
+    iso: 'HRK',
+    symbol: 'kn',
+  },
+  {
+    iso: 'RSD',
+    symbol: 'дин.',
+  },
+  {
+    iso: 'MKD',
+    symbol: 'ден.',
+  },
+  {
+    iso: 'BAM',
+    symbol: 'KM',
+  },
+  {
+    iso: 'GEL',
+    symbol: 'ლ',
+  },
+  {
+    iso: 'MDL',
+    symbol: 'lei',
+  },
+];
+
+const buildCurrencyRegex = () => {
+  const currencyRegex = currency.map((c) => c.symbol + '|' + c.iso).join('|');
+  return new RegExp(`(${currencyRegex})`, 'i');
+};
+
+export const detectCurrency = (input: string) => {
+  if(typeof input !== 'string') return null;
+  const currencyRegex = buildCurrencyRegex();
+  const match = input.match(currencyRegex);
+  if (match) {
+    const _currency = currency.find(
+      (c) => c.symbol === match[0] || c.iso === match[0],
+    );
+    return _currency?.iso || null; 
+  }
+  return null;
+};
