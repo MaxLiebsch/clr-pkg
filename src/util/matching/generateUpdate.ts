@@ -4,6 +4,7 @@ import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
+import { createHash } from '../hash';
 
 export const generateUpdate = (
   productInfo: ProductInfo[],
@@ -22,7 +23,7 @@ export const generateUpdate = (
   const totalOfferCount = infoMap.get('totalOfferCount');
   let a_prc = safeParsePrice(infoMap.get('a_prc') ?? '0');
   let a_uprc = roundToTwoDecimals(a_prc / a_qty);
-  
+
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');
   const buyBoxIsAmazon = infoMap.get('buyBoxIsAmazon');
@@ -41,8 +42,12 @@ export const generateUpdate = (
     costs,
     tax,
   );
+  const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
+  const a_hash = createHash(a_lnk);
+  
   const update: { [key: string]: any } = {
-    a_lnk: 'https://www.amazon.de/dp/product/' + asin,
+    a_lnk,
+    a_hash,
     a_nm,
     asin,
     a_prc,
