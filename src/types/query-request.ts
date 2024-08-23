@@ -11,6 +11,7 @@ import { Infos } from './Infos';
 export interface QRequest {
   prio: number;
   retries: number;
+  retriesOnFail?: number;
   shop: ShopObject;
   pageInfo: ICategory;
 }

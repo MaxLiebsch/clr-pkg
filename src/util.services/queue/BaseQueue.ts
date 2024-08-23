@@ -269,7 +269,6 @@ export abstract class BaseQueue<
       setTimeout(() => this.next(), index * 1000);
     }
   }
-
   pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
     if (this.pause) return;
     this.pause = true;
@@ -290,7 +289,6 @@ export abstract class BaseQueue<
       this.errorLog[errorType].lastOccurred = null;
     });
   }
-
   public idle() {
     return this.taskFinished;
   }
@@ -302,7 +300,6 @@ export abstract class BaseQueue<
     this.queue.push(...tasks);
     this.next();
   }
-
   public pullTasksFromQueue() {
     if (this.queue.length < 4) return null;
 
@@ -316,7 +313,6 @@ export abstract class BaseQueue<
       return this.queue.splice(start);
     }
   }
-
   private clearTimeout = (id: string) => {
     const timeout = this.timeouts.find((timeout) => timeout.id === id);
     if (timeout) {
@@ -324,7 +320,6 @@ export abstract class BaseQueue<
       this.timeouts = this.timeouts.filter((timeout) => timeout.id !== id);
     }
   };
-
   private resetCookies = async (page: Page) => {
     console.log('reseting session');
     this.queueTask.statistics.resetedSession += 1;
@@ -347,7 +342,6 @@ export abstract class BaseQueue<
         console.error('Failed to clear storage:', e?.message);
       });
   };
-
   async wrapperFunction(
     task: Task,
     request: T,
@@ -356,6 +350,11 @@ export abstract class BaseQueue<
     if (this.taskFinished) return;
 
     const { retries } = request;
+
+    if (request.retriesOnFail && retries >= request.retriesOnFail) {
+      return { details: 'retries exceeded', status: 'limit-reached', retries };
+    }
+
     if (retries > MAX_RETRIES) {
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
       return { details: 'retries exceeded', status: 'error-handled', retries };
@@ -559,7 +558,6 @@ export abstract class BaseQueue<
       if (page) await closePage(page);
     }
   }
-
   private parseError(error: Error) {
     switch (true) {
       case error.message.includes('Navigating frame was detached'):
@@ -574,12 +572,10 @@ export abstract class BaseQueue<
         return false;
     }
   }
-
   pushTask(task: Task, request: T) {
     this.queue.push({ task, request });
     this.next();
   }
-
   next(): void {
     // console.log(
     //   'task type: ',
