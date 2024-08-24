@@ -316,7 +316,7 @@ const setPageProperties = async (
 
   // }, viewPort);
 
-  await page.evaluateOnNewDocument(() => {
+  await page.evaluateOnNewDocument(() => { 
     const originalQuery = window.navigator.permissions.query;
     //@ts-ignore
     return (window.navigator.permissions.query = (parameters) => {
@@ -367,6 +367,8 @@ const setPageProperties = async (
 
   await page.evaluateOnNewDocument(() => {
     // We can mock this in as much depth as we need for the test.
+    //@ts-ignore
+    delete navigator.__proto__.webdriver;
     //@ts-ignore
     window.navigator.chrome = {
       //@ts-ignore

@@ -585,12 +585,7 @@ export abstract class BaseQueue<
     //   'current total: ',
     //   this.total,
     // );
-    const tasks = [
-      'DAILY_DEALS',
-      'CRAWL_AZN_LISTINGS',
-      'LOOKUP_INFO',
-      'WHOLESALE_SEARCH',
-    ];
+    const tasks = ['DAILY_DEALS', 'LOOKUP_INFO', 'WHOLESALE_SEARCH'];
 
     if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {
       console.log('Multiple queue completed:', this.queueId);
@@ -616,14 +611,17 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    if (
-      this.queueTask.type === 'CRAWL_EAN' ||
-      this.queueTask.type === 'LOOKUP_INFO' ||
-      this.queueTask.type === 'CRAWL_EBY_LISTINGS' ||
-      this.queueTask.type === 'CRAWL_AZN_LISTINGS' ||
-      this.queueTask.type === 'QUERY_EANS_EBY' ||
-      this.queueTask.type === 'LOOKUP_CATEGORY'
-    ) {
+    const shuffleTasks = [
+      'CRAWL_EAN',
+      'LOOKUP_INFO',
+      'DEALS_ON_EBY',
+      'DEALS_ON_AZN',
+      'CRAWL_EBY_LISTINGS',
+      'CRAWL_AZN_LISTINGS',
+      'QUERY_EANS_EBY',
+      'LOOKUP_CATEGORY',
+    ];
+    if (shuffleTasks.includes(this.queueTask.type)) {
       this.queue = shuffle(this.queue);
     }
     const nextRequest = this.queue.shift();

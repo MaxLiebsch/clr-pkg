@@ -109,6 +109,7 @@ export const mainBrowsers = async (
           '--disable-gpu',
           '--disable-setuid-sandbox',
           '--disable-web-security',
+          '--disable-blink-features=AutomationControlled',
           '--disable-webrtc',
           '--webrtc-ip-handling-policy=disable_non_proxied_udp',
           '--force-webrtc-ip-handling-policy',
@@ -163,6 +164,7 @@ export const mainBrowser = async (
     '--lang=de',
     '--disable-gpu',
     '--disable-webrtc',
+    '--disable-blink-features=AutomationControlled',
     '--webrtc-ip-handling-policy=disable_non_proxied_udp',
     '--force-webrtc-ip-handling-policy',
     '--disable-web-security',
@@ -183,29 +185,36 @@ export const mainBrowser = async (
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
   try {
+    const evavionStrings =[
+      'chrome.app',
+      'chrome.csi',
+      'chrome.loadTimes',
+      'chrome.runtime',
+      'defaultArgs',
+      'iframe.contentWindow',
+      'media.codecs',
+      'navigator.hardwareConcurrency',
+      'navigator.languages',
+      'navigator.permissions',
+      'navigator.plugins',
+      'navigator.webdriver',
+      'sourceurl',
+      'user-agent-override',
+      // 'webgl.vendor', set in the getPage function
+      'window.outerdimensions',
+    ] 
+    const evasions = new Set()
+    for (const evavionString of evavionStrings) {
+      evasions.add(evavionString)
+    }
     puppeteer.use(
       StealthPlugin({
-        enabledEvasions: new Set([
-          'chrome.app',
-          'chrome.csi',
-          'chrome.loadTimes',
-          'chrome.runtime',
-          'defaultArgs',
-          'iframe.contentWindow',
-          'media.codecs',
-          'navigator.hardwareConcurrency',
-          'navigator.languages',
-          'navigator.permissions',
-          'navigator.plugins',
-          'navigator.webdriver',
-          'sourceurl',
-          'user-agent-override',
-          // 'webgl.vendor', set in the getPage function
-          'window.outerdimensions',
-        ]),
+        //@ts-ignore
+        enabledEvasions: evasions,
       }),
     );
   } catch (error) {
+    console.log('error:', error);
     if (error instanceof Error)
       LoggerService.getSingleton().logger.info({
         location: `'StealthPluginCatch`,
