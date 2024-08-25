@@ -373,10 +373,16 @@ export abstract class BaseQueue<
     const { retries } = request;
 
     if (request.retriesOnFail && retries >= request.retriesOnFail) {
+      if ('onNotFound' in request && request?.onNotFound) {
+        await request.onNotFound();
+      }
       return { details: 'retries exceeded', status: 'limit-reached', retries };
     }
 
     if (retries > MAX_RETRIES) {
+      if ('onNotFound' in request && request?.onNotFound) {
+        await request.onNotFound();
+      }
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
       return { details: 'retries exceeded', status: 'error-handled', retries };
     }
