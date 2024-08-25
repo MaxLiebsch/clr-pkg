@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { HTTPResponse, Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
@@ -36,6 +36,8 @@ import { createHash } from '../../util/hash';
 import crypto from 'crypto';
 import EventEmitter from 'events';
 import { globalEventEmitter } from '../../util/events';
+import { ICategory } from '../../util/crawl/getCategories';
+import { WaitUntil } from '../../types/shop';
 type Task = (page: Page, request: any) => Promise<any>;
 
 export type WrapperFunctionResponse =
@@ -342,6 +344,25 @@ export abstract class BaseQueue<
         console.error('Failed to clear storage:', e?.message);
       });
   };
+
+  private visitPage = async (
+    page: Page,
+    pageInfo: ICategory,
+    waitUntil: WaitUntil,
+  ) => {
+    return page.goto(pageInfo.link, {
+      waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+      timeout:
+        this.queueTask.type === 'CRAWL_EAN'
+          ? EAN_PAGE_TIMEOUT
+          : DEFAULT_PAGE_TIMEOUT,
+    });
+  };
+
+  private async refreshPage(page: Page): Promise<HTTPResponse | null> {
+    return page.reload();
+  }
+
   async wrapperFunction(
     task: Task,
     request: T,
@@ -389,14 +410,8 @@ export abstract class BaseQueue<
           referer,
         });
       }
-
-      const response = await page.goto(pageInfo.link, {
-        waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-        timeout:
-          this.queueTask.type === 'CRAWL_EAN'
-            ? EAN_PAGE_TIMEOUT
-            : DEFAULT_PAGE_TIMEOUT,
-      });
+      const response = await this.visitPage(page, pageInfo, waitUntil);
+      const randomTimeout = this.randomTimeout(1000, 2000);
 
       if (response) {
         const status = response.status();
@@ -416,8 +431,19 @@ export abstract class BaseQueue<
         if (status === 429 && !this.taskFinished) {
           throw new Error(ErrorType.RateLimit);
         }
+        if (status === 403 && !this.taskFinished) {
+          const newResponse = await this.refreshPage(page);
+          const newStatus = newResponse?.status();
+          if (newStatus !== 200) {
+            throw new Error(ErrorType.AccessDenied);
+          }
+        }
         if (status >= 500 && !this.taskFinished) {
-          throw new Error(ErrorType.ServerError);
+          const newResponse = await this.refreshPage(page);
+          const newStatus = newResponse?.status();
+          if (newStatus !== 200) {
+            throw new Error(ErrorType.ServerError);
+          }
         }
       }
 
@@ -572,10 +598,15 @@ export abstract class BaseQueue<
         return false;
     }
   }
+  private randomTimeout(min: number, max: number) {
+    return Math.random() * (max - min) + min;
+  }
+
   pushTask(task: Task, request: T) {
     this.queue.push({ task, request });
     this.next();
   }
+
   next(): void {
     // console.log(
     //   'task type: ',
@@ -626,10 +657,10 @@ export abstract class BaseQueue<
     }
     const nextRequest = this.queue.shift();
     if (nextRequest) {
-      const timeoutTime =
-        Math.random() * (RANDOM_TIMEOUT_MAX - RANDOM_TIMEOUT_MIN) +
-        RANDOM_TIMEOUT_MIN;
-
+      const timeoutTime = this.randomTimeout(
+        RANDOM_TIMEOUT_MIN,
+        RANDOM_TIMEOUT_MAX,
+      );
       const id = crypto.randomBytes(8).toString('hex');
       const timeout = createLabeledTimeout(
         () =>

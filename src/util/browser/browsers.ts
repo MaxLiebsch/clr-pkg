@@ -177,15 +177,18 @@ export const mainBrowser = async (
     args.push(proxySetting);
   }
 
-  if (task.proxyType)
+  if (task.proxyType) {
     await fetch(
       `http://${proxyAuth.host}/change-proxy?proxy=${task.proxyType}`,
     );
+  } else {
+    await fetch(`http://${proxyAuth.host}/change-proxy?proxy=mix`);
+  }
 
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
   try {
-    const evavionStrings =[
+    const evasions = new Set([
       'chrome.app',
       'chrome.csi',
       'chrome.loadTimes',
@@ -202,11 +205,7 @@ export const mainBrowser = async (
       'user-agent-override',
       // 'webgl.vendor', set in the getPage function
       'window.outerdimensions',
-    ] 
-    const evasions = new Set()
-    for (const evavionString of evavionStrings) {
-      evasions.add(evavionString)
-    }
+    ]);
     puppeteer.use(
       StealthPlugin({
         //@ts-ignore
