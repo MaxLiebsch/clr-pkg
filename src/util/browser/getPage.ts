@@ -230,10 +230,9 @@ const setPageProperties = async (
   await page.setBypassCSP(true);
 
   const timezone = requestCount
-  ? _timezones[requestCount % _timezones.length]
-  : sample(_timezones) ?? 'America/New_York';
- 
-  
+    ? _timezones[requestCount % _timezones.length]
+    : sample(_timezones) ?? 'America/New_York';
+
   await page.emulateTimezone(timezone);
 
   const languages = requestCount
@@ -316,7 +315,7 @@ const setPageProperties = async (
 
   // }, viewPort);
 
-  await page.evaluateOnNewDocument(() => { 
+  await page.evaluateOnNewDocument(() => {
     const originalQuery = window.navigator.permissions.query;
     //@ts-ignore
     return (window.navigator.permissions.query = (parameters) => {
@@ -369,6 +368,14 @@ const setPageProperties = async (
     // We can mock this in as much depth as we need for the test.
     //@ts-ignore
     delete navigator.__proto__.webdriver;
+    console.log = function () {}; // Disable console.log temporarily
+    // Override the Error stack getter to prevent detection
+    Object.defineProperty(Error.prototype, 'stack', {
+      get: function () {
+        return ''; // Return an empty string or a custom stack
+      },
+    });
+
     //@ts-ignore
     window.navigator.chrome = {
       //@ts-ignore
@@ -488,7 +495,7 @@ export async function getPage(
     requestCount,
     disAllowedResourceTypes,
     rules,
-    timezones
+    timezones,
   );
 
   return page;
