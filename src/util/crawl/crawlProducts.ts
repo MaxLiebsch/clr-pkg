@@ -219,7 +219,9 @@ export const crawlProducts = async (
       if (shop.ean) {
         const ean = (product.link as string).match(new RegExp(shop.ean, 'g'));
         if (ean) {
-          product['ean'] = ean[0].replaceAll(/\D/g, '');
+          const cleanEan = ean[0].replaceAll(/\D/g, '');
+          product['ean'] = cleanEan
+          product['eanList']= [cleanEan]
         }
       }
       // Add proprietary products to the name

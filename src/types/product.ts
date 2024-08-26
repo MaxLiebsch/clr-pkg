@@ -11,6 +11,7 @@ export type Content =
   | 'sku'
   | 'mku'
   | 'ean'
+  | 'eanList'
   | 'vendor'
   | 'vendorLink'
   | 'name'
