@@ -1,5 +1,5 @@
 import { HTTPResponse, Page } from 'puppeteer1';
-import { ProxyAuth } from '../../types/proxyAuth';
+import { ProxyAuth, standardTimeZones } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueTask } from '../../types/QueueTask';
 import { LoggerService } from '../../util/logger';
@@ -396,15 +396,20 @@ export abstract class BaseQueue<
     let page: Page | undefined = undefined;
 
     try {
-      page = await getPage(
-        this.browser!,
+      let timezones = this.queueTask.timezones;
+      if (request.proxyType) {
+        timezones = [standardTimeZones[request.proxyType]];
+      }
+      page = await getPage({
+        browser: this.browser!,
         shop,
-        this.requestCount,
-        resourceTypes?.query,
-        shop.exceptions,
-        shop.rules,
-        this.queueTask.timezones,
-      );
+        requestCount: this.requestCount,
+        disAllowedResourceTypes: resourceTypes?.query,
+        exceptions: shop.exceptions,
+        rules: shop.rules,
+        timezones: this.queueTask.timezones,
+        proxyType: request.proxyType,
+      });
 
       if (
         retries === 0 &&
@@ -448,6 +453,8 @@ export abstract class BaseQueue<
           const newResponse = await this.refreshPage(page);
           const newStatus = newResponse?.status();
           if (newStatus !== 200) {
+            //switch to german!
+            request.proxyType = 'de';
             throw new Error(ErrorType.ServerError);
           }
         }

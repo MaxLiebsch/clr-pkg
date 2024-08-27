@@ -17,6 +17,7 @@ import { Rule } from '../../types/rules';
 import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
 import { ShopObject } from '../../types';
+import { ProxyType } from '../../types/proxyAuth';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -117,20 +118,37 @@ export const rotateGraphicUnit = (
   }
 };
 
-const setPageProperties = async (
-  page: Page,
-  shop: ShopObject,
-  exceptions: string[] = [],
-  requestCount: number | null,
-  disAllowedResourceTypes?: ResourceType[],
-  rules?: Rule[],
-  customTimezones?: string[],
-) => {
+interface PagePropertiesOptions {
+  page: Page;
+  shop: ShopObject;
+  exceptions?: string[];
+  requestCount: number | null;
+  disAllowedResourceTypes?: ResourceType[];
+  rules?: Rule[];
+  customTimezones?: string[];
+  proxyType?: ProxyType;
+}
+
+export async function changeRequestProxy(proxyType: ProxyType, link: string) {
+  const host = new URL(link).hostname;
+  await fetch(`http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}`);
+}
+
+const setPageProperties = async ({
+  page,
+  shop,
+  exceptions,
+  requestCount,
+  disAllowedResourceTypes,
+  rules,
+  customTimezones,
+  proxyType,
+}: PagePropertiesOptions) => {
   const { javascript } = shop;
   let _timezones = customTimezones ?? timezones;
 
   await page.setRequestInterception(true);
-  page.on('request', (request) => {
+  page.on('request', async (request) => {
     const resourceType = request.resourceType();
     const requestUrl = request.url();
     let defaultDisallowedResourcTypes: ResourceType[] = [
@@ -141,7 +159,11 @@ const setPageProperties = async (
     if (disAllowedResourceTypes?.length) {
       defaultDisallowedResourcTypes = disAllowedResourceTypes;
     }
-    if (exceptions.some((exception) => requestUrl.includes(exception))) {
+    if (
+      exceptions &&
+      exceptions.some((exception) => requestUrl.includes(exception))
+    ) {
+      if (proxyType) await changeRequestProxy(proxyType, requestUrl);
       return request.continue();
     }
 
@@ -151,6 +173,7 @@ const setPageProperties = async (
       if (shouldAbortRequest(requestUrl, rules)) {
         return request.abort();
       }
+      if (proxyType) await changeRequestProxy(proxyType, requestUrl);
       return request.continue();
     }
   });
@@ -179,7 +202,7 @@ const setPageProperties = async (
   const version =
     VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
 
-  const _agent = agent.replaceAll('<version>', version);
+  let _agent = agent.replaceAll('<version>', version);
 
   const agentMeta = {
     architecture,
@@ -477,26 +500,39 @@ const setPageProperties = async (
   });
 };
 
-export async function getPage(
-  browser: Browser,
-  shop: ShopObject,
-  requestCount: number | null,
-  disAllowedResourceTypes?: ResourceType[],
-  exceptions?: string[],
-  rules?: Rule[],
-  timezones?: string[],
-) {
+interface GetPageOptions {
+  browser: Browser;
+  shop: ShopObject;
+  requestCount: number | null;
+  disAllowedResourceTypes?: ResourceType[];
+  exceptions?: string[];
+  rules?: Rule[];
+  timezones?: string[];
+  proxyType?: ProxyType;
+}
+
+export async function getPage({
+  browser,
+  shop,
+  requestCount,
+  disAllowedResourceTypes,
+  exceptions,
+  rules,
+  timezones,
+  proxyType,
+}: GetPageOptions) {
   const page = await browser.newPage();
 
-  await setPageProperties(
+  await setPageProperties({
     page,
     shop,
     exceptions,
     requestCount,
     disAllowedResourceTypes,
     rules,
-    timezones,
-  );
+    customTimezones: timezones,
+    proxyType,
+  });
 
   return page;
 }

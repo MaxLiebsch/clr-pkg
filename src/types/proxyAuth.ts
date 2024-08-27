@@ -1,5 +1,14 @@
 export interface ProxyAuth {
-    host: string;
-    username: string;
-    password: string;
+  host: string;
+  username: string;
+  password: string;
 }
+
+export type ProxyType = 'de' | 'mix';
+
+export type StandardTimeZones = { [key in ProxyType]: string };
+
+export const standardTimeZones: StandardTimeZones = {
+  de: 'Europe/Berlin',
+  mix: 'America/New_York',
+};

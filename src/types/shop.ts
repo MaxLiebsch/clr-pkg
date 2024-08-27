@@ -1,13 +1,14 @@
-import { PuppeteerLifeCycleEvent } from "puppeteer1";
-import { QueryAction } from "./queryActions";
-import { QueryURLSchema } from "./query";
-import { Detail, ProductList } from "./productList";
-import { Categories } from "./categories";
-import { CrawlAction } from "./crawlActions";
-import { ICategory } from "../util/crawl/getCategories";
-import { Rule } from "./rules";
-import { PaginationElement } from "./paginationElement";
-import { ImgMeta } from ".";
+import { PuppeteerLifeCycleEvent } from 'puppeteer1';
+import { QueryAction } from './queryActions';
+import { QueryURLSchema } from './query';
+import { Detail, ProductList } from './productList';
+import { Categories } from './categories';
+import { CrawlAction } from './crawlActions';
+import { ICategory } from '../util/crawl/getCategories';
+import { Rule } from './rules';
+import { PaginationElement } from './paginationElement';
+import { ImgMeta } from '.';
+import { ProxyType } from './proxyAuth';
 
 export interface Shop {
   _id: string;
@@ -32,7 +33,7 @@ export interface Shop {
   kws: string[]; // keywords
   ap: string[]; // anti pattern
   ece: string[]; // escape characters
-  proxyType: "mix" | 'de'
+  proxyType: ProxyType;
   active: boolean; // shop is active
   lastCrawlAt: string;
   lastSelectorTestAt: string;
@@ -55,10 +56,10 @@ export interface Shop {
   pauseOnProductPage?: { pause: boolean; max: number; min: number };
   paginationEl: PaginationElement[];
   imgMeta: ImgMeta;
-  
+
   /*               PRODUCT DETAIL LOOKUP                    */
-  
-  product: Detail[]
+
+  product: Detail[];
   /*                  PRODUCT DETAILS                       */
   hasEan: boolean;
   f?: string;

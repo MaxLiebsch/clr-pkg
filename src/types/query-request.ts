@@ -7,11 +7,13 @@ import { ProductRecord } from './product';
 import { Query } from './query';
 import { ScanQueue } from '../util.services/queue/ScanQueue';
 import { Infos } from './Infos';
+import { ProxyType } from './proxyAuth';
 
 export interface QRequest {
   prio: number;
   retries: number;
   retriesOnFail?: number;
+  proxyType?: ProxyType
   shop: ShopObject;
   pageInfo: ICategory;
 }
