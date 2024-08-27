@@ -1,10 +1,29 @@
+import { ProxyType } from './proxyAuth';
+
+export type TaskTypes =
+  | 'DEALS_ON_EBY'
+  | 'DEALS_ON_AZN'
+  | 'DAILY_SALES'
+  | 'CRAWL_SHOP'
+  | 'WHOLESALE_SEARCH'
+  | 'SCAN_SHOP'
+  | 'MATCH_PRODUCTS'
+  | 'CRAWL_AZN_LISTINGS'
+  | 'CRAWL_EBY_LISTINGS'
+  | 'CRAWL_EAN'
+  | 'LOOKUP_INFO'
+  | 'QUERY_EANS_EBY'
+  | 'LOOKUP_CATEGORY';
+
 export interface QueueTask {
   [key: string]: any;
   id: string;
+  type: TaskTypes;
   productLimit: number;
-  proxyType?: 'de' | 'mix';
+  proxyType?: ProxyType;
   timezones?: string[];
   statistics: {
+    proxyTypes: { [key in ProxyType]: number };
     visitedPages: string[];
     errorTypeCount: {
       [key: string]: number;

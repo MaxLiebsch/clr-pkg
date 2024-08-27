@@ -1,7 +1,7 @@
 import { HTTPResponse, Page } from 'puppeteer1';
-import { ProxyAuth, standardTimeZones } from '../../types/proxyAuth';
+import { ProxyAuth, ProxyType, standardTimeZones } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
-import { QueueTask } from '../../types/QueueTask';
+import { QueueTask, TaskTypes } from '../../types/QueueTask';
 import { LoggerService } from '../../util/logger';
 import { mainBrowser } from '../../util/browser/browsers';
 import { closePage } from '../../util/browser/closePage';
@@ -40,6 +40,26 @@ import { ICategory } from '../../util/crawl/getCategories';
 import { WaitUntil } from '../../types/shop';
 type Task = (page: Page, request: any) => Promise<any>;
 
+const usePremiumProxyTasks: TaskTypes[] = [
+  'CRAWL_SHOP',
+  'CRAWL_EAN',
+  'DEALS_ON_EBY',
+  'DEALS_ON_AZN',
+  'DAILY_SALES',
+  'CRAWL_EBY_LISTINGS',
+  'CRAWL_AZN_LISTINGS',
+  'SCAN_SHOP',
+];
+const neverUsePremiumProxyDomains = ['amazon.de', 'ebay.de'];
+
+const eligableForPremium = (link: string, taskType: TaskTypes) => {
+  const url = new URL(link);
+  return (
+    usePremiumProxyTasks.includes(taskType) &&
+    !neverUsePremiumProxyDomains.some((domain) => url.hostname.includes(domain))
+  );
+};
+
 export type WrapperFunctionResponse =
   | {
       status:
@@ -50,6 +70,7 @@ export type WrapperFunctionResponse =
         | 'limit-reached'
         | 'not-found';
       retries: number;
+      proxyType: ProxyType;
       details: string;
     }
   | undefined;
@@ -92,6 +113,10 @@ export abstract class BaseQueue<
       ...task,
       statistics: {
         visitedPages: [],
+        proxyTypes: {
+          de: 0,
+          mix: 0,
+        },
         estimatedProducts: task.productLimit,
         statusHeuristic: {
           'error-handled': 0,
@@ -370,13 +395,18 @@ export abstract class BaseQueue<
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
 
-    const { retries } = request;
+    const { retries, proxyType } = request;
 
     if (request.retriesOnFail && retries >= request.retriesOnFail) {
       if ('onNotFound' in request && request?.onNotFound) {
         await request.onNotFound();
       }
-      return { details: 'retries exceeded', status: 'limit-reached', retries };
+      return {
+        details: 'retries exceeded',
+        status: 'limit-reached',
+        retries,
+        proxyType: proxyType || 'mix',
+      };
     }
 
     if (retries > MAX_RETRIES) {
@@ -384,11 +414,21 @@ export abstract class BaseQueue<
         await request.onNotFound();
       }
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
-      return { details: 'retries exceeded', status: 'error-handled', retries };
+      return {
+        details: 'retries exceeded',
+        status: 'error-handled',
+        retries,
+        proxyType: proxyType || 'mix',
+      };
     }
 
     let { pageInfo, shop } = request;
     pageInfo.link = prefixLink(pageInfo.link, shop.d, shop.leaveDomainAsIs);
+
+    const eligableForPremiumProxy = eligableForPremium(
+      pageInfo.link,
+      this.queueTask.type,
+    );
 
     const { waitUntil, resourceTypes } = shop;
 
@@ -397,8 +437,8 @@ export abstract class BaseQueue<
 
     try {
       let timezones = this.queueTask.timezones;
-      if (request.proxyType) {
-        timezones = [standardTimeZones[request.proxyType]];
+      if (proxyType) {
+        timezones = [standardTimeZones[proxyType]];
       }
       page = await getPage({
         browser: this.browser!,
@@ -407,8 +447,8 @@ export abstract class BaseQueue<
         disAllowedResourceTypes: resourceTypes?.query,
         exceptions: shop.exceptions,
         rules: shop.rules,
-        timezones: this.queueTask.timezones,
-        proxyType: request.proxyType,
+        timezones,
+        proxyType,
       });
 
       if (
@@ -422,7 +462,6 @@ export abstract class BaseQueue<
         });
       }
       const response = await this.visitPage(page, pageInfo, waitUntil);
-      const randomTimeout = this.randomTimeout(1000, 2000);
 
       if (response) {
         const status = response.status();
@@ -436,16 +475,27 @@ export abstract class BaseQueue<
             if ('onNotFound' in request && request?.onNotFound) {
               await request.onNotFound();
             }
-            return { details: '', status: 'not-found', retries };
+            return {
+              details: '',
+              status: 'not-found',
+              retries,
+              proxyType: proxyType || 'mix',
+            };
           }
         }
         if (status === 429 && !this.taskFinished) {
+          if (eligableForPremiumProxy) {
+            request.proxyType = 'de';
+          }
           throw new Error(ErrorType.RateLimit);
         }
         if (status === 403 && !this.taskFinished) {
           const newResponse = await this.refreshPage(page);
           const newStatus = newResponse?.status();
           if (newStatus !== 200) {
+            if (eligableForPremiumProxy) {
+              request.proxyType = 'de';
+            }
             throw new Error(ErrorType.AccessDenied);
           }
         }
@@ -453,8 +503,9 @@ export abstract class BaseQueue<
           const newResponse = await this.refreshPage(page);
           const newStatus = newResponse?.status();
           if (newStatus !== 200) {
-            //switch to german!
-            request.proxyType = 'de';
+            if (eligableForPremiumProxy) {
+              request.proxyType = 'de';
+            }
             throw new Error(ErrorType.ServerError);
           }
         }
@@ -469,6 +520,9 @@ export abstract class BaseQueue<
       );
 
       if (blocked) {
+        if (eligableForPremiumProxy) {
+          request.proxyType = 'de';
+        }
         throw new Error(ErrorType.AccessDenied);
       }
       const message = await task(page, request);
@@ -483,12 +537,14 @@ export abstract class BaseQueue<
           details: `🆗${' '} ${message} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
           status: 'page-completed',
           retries,
+          proxyType: proxyType || 'mix',
         };
       } else {
         return {
           details: `🆗${' '} ${this.queueTask?.id ?? ''} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
           status: 'page-completed',
           retries,
+          proxyType: proxyType || 'mix',
         };
       }
     } catch (error) {
@@ -567,6 +623,7 @@ export abstract class BaseQueue<
                   details,
                   status: 'error-handled-timeout-exceded',
                   retries,
+                  proxyType: proxyType || 'mix',
                 };
               }
             } else {
@@ -583,6 +640,7 @@ export abstract class BaseQueue<
             details,
             status: 'error-handled-domain-not-allowed',
             retries,
+            proxyType: proxyType || 'mix',
           };
         }
 
@@ -590,6 +648,7 @@ export abstract class BaseQueue<
           details,
           status: 'error-handled',
           retries,
+          proxyType: proxyType || 'mix',
         };
       }
     } finally {
@@ -682,7 +741,7 @@ export abstract class BaseQueue<
               this.running--;
               this.next();
               if (result) {
-                const { retries, status } = result;
+                const { retries, status, proxyType } = result;
                 switch (true) {
                   case status === 'not-found':
                     this.queueTask.statistics.statusHeuristic['not-found'] += 1;
@@ -693,6 +752,7 @@ export abstract class BaseQueue<
                     ] += 1;
                     break;
                   case status === 'page-completed':
+                    this.queueTask.statistics.proxyTypes[proxyType] += 1;
                     this.queueTask.statistics.statusHeuristic[
                       'page-completed'
                     ] += 1;
@@ -722,7 +782,7 @@ export abstract class BaseQueue<
                 }
               }
               console.log(
-                `Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries}`,
+                `Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
               );
             },
           ),
