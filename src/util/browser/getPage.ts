@@ -18,6 +18,7 @@ import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
 import { ShopObject } from '../../types';
 import { ProxyType } from '../../types/proxyAuth';
+import { allowed } from '../../static/allowed';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -131,7 +132,16 @@ interface PagePropertiesOptions {
 
 export async function changeRequestProxy(proxyType: ProxyType, link: string) {
   const host = new URL(link).hostname;
-  await fetch(`http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}`);
+  const response = await fetch(`http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}`);
+  if (response.status === 200) {
+    return response;
+  } else {
+    throw new Error(`Failed to notify proxy. Status code: ${response.status}`);
+  }
+}
+
+export function isHostAllowed(hostname: string) {
+  return allowed.some((domain) => hostname.includes(domain));
 }
 
 const setPageProperties = async ({
@@ -151,6 +161,7 @@ const setPageProperties = async ({
   page.on('request', async (request) => {
     const resourceType = request.resourceType();
     const requestUrl = request.url();
+    const url = new URL(requestUrl);
     let defaultDisallowedResourcTypes: ResourceType[] = [
       'image',
       'font',
@@ -173,8 +184,12 @@ const setPageProperties = async ({
       if (shouldAbortRequest(requestUrl, rules)) {
         return request.abort();
       }
-      if (proxyType) await changeRequestProxy(proxyType, requestUrl);
-      return request.continue();
+      if (isHostAllowed(url.hostname)) {
+        if (proxyType) await changeRequestProxy(proxyType, requestUrl);
+        return request.continue();
+      } else {
+        return request.abort();
+      }
     }
   });
 

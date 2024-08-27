@@ -50,6 +50,17 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'CRAWL_AZN_LISTINGS',
   'SCAN_SHOP',
 ];
+
+const shuffleTasks: TaskTypes[] = [
+  'CRAWL_EAN',
+  'LOOKUP_INFO',
+  'DEALS_ON_EBY',
+  'DEALS_ON_AZN',
+  'CRAWL_EBY_LISTINGS',
+  'CRAWL_AZN_LISTINGS',
+  'QUERY_EANS_EBY',
+  'LOOKUP_CATEGORY',
+];
 const neverUsePremiumProxyDomains = ['amazon.de', 'ebay.de'];
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
@@ -395,11 +406,11 @@ export abstract class BaseQueue<
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
 
-    const { retries, proxyType } = request;
+    const { retries, proxyType, pageInfo, shop } = request;
 
     if (request.retriesOnFail && retries >= request.retriesOnFail) {
       if ('onNotFound' in request && request?.onNotFound) {
-        await request.onNotFound();
+        await request.onNotFound('timeout');
       }
       return {
         details: 'retries exceeded',
@@ -411,7 +422,7 @@ export abstract class BaseQueue<
 
     if (retries > MAX_RETRIES) {
       if ('onNotFound' in request && request?.onNotFound) {
-        await request.onNotFound();
+        await request.onNotFound('timeout');
       }
       this.queueTask.statistics.retriesHeuristic['500+'] += 1;
       return {
@@ -422,7 +433,6 @@ export abstract class BaseQueue<
       };
     }
 
-    let { pageInfo, shop } = request;
     pageInfo.link = prefixLink(pageInfo.link, shop.d, shop.leaveDomainAsIs);
 
     const eligableForPremiumProxy = eligableForPremium(
@@ -714,16 +724,7 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    const shuffleTasks = [
-      'CRAWL_EAN',
-      'LOOKUP_INFO',
-      'DEALS_ON_EBY',
-      'DEALS_ON_AZN',
-      'CRAWL_EBY_LISTINGS',
-      'CRAWL_AZN_LISTINGS',
-      'QUERY_EANS_EBY',
-      'LOOKUP_CATEGORY',
-    ];
+
     if (shuffleTasks.includes(this.queueTask.type)) {
       this.queue = shuffle(this.queue);
     }

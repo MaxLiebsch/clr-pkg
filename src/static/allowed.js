@@ -1,5 +1,4 @@
 export const allowed = [
-  'prescience-data.github.io',
   "www.idealo.de",
   "www.alza.de",
   "cdn.alza.cz",
