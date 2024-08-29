@@ -19,6 +19,7 @@ import { VersionProvider } from '../versionProvider';
 import { ShopObject } from '../../types';
 import { ProxyType } from '../../types/proxyAuth';
 import { allowed } from '../../static/allowed';
+import { changeRequestProxy } from '../proxyFunctions';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -130,21 +131,7 @@ interface PagePropertiesOptions {
   proxyType?: ProxyType;
 }
 
-export async function changeRequestProxy(
-  proxyType: ProxyType,
-  link: string,
-  cnt: number = 1,
-) {
-  const host = new URL(link).hostname;
-  const response = await fetch(
-    `http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}&cnt=${cnt}`,
-  );
-  if (response.status === 200) {
-    return response;
-  } else {
-    throw new Error(`Failed to notify proxy. Status code: ${response.status}`);
-  }
-}
+
 
 export function isHostAllowed(hostname: string) {
   return allowed.some((domain) => hostname.includes(domain));

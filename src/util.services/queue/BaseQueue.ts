@@ -11,7 +11,7 @@ import {
   ScanRequest,
 } from '../../types/query-request';
 import { prefixLink } from '../../util/matching/compare_helper';
-import { changeRequestProxy, getPage } from '../../util/browser/getPage';
+import { getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
@@ -38,6 +38,7 @@ import EventEmitter from 'events';
 import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
 import { WaitUntil } from '../../types/shop';
+import { changeRequestProxy } from '../../util/proxyFunctions';
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -389,7 +390,7 @@ export abstract class BaseQueue<
   ) => {
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
-      if (proxyType) await changeRequestProxy(proxyType, pageInfo.link, 2);
+      if (proxyType) await changeRequestProxy(proxyType, pageInfo.link, 2, true);
       return originalGoto.apply(this, [url, options]);
     };
     return page.goto(pageInfo.link, {
