@@ -130,9 +130,15 @@ interface PagePropertiesOptions {
   proxyType?: ProxyType;
 }
 
-export async function changeRequestProxy(proxyType: ProxyType, link: string) {
+export async function changeRequestProxy(
+  proxyType: ProxyType,
+  link: string,
+  cnt: number = 1,
+) {
   const host = new URL(link).hostname;
-  const response = await fetch(`http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}`);
+  const response = await fetch(
+    `http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}&cnt=${cnt}`,
+  );
   if (response.status === 200) {
     return response;
   } else {
@@ -159,9 +165,10 @@ const setPageProperties = async ({
 
   await page.setRequestInterception(true);
   page.on('request', async (request) => {
-    const resourceType = request.resourceType();
     const requestUrl = request.url();
     const url = new URL(requestUrl);
+    if (proxyType) await changeRequestProxy(proxyType, requestUrl);
+    const resourceType = request.resourceType();
     let defaultDisallowedResourcTypes: ResourceType[] = [
       'image',
       'font',

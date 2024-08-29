@@ -11,7 +11,7 @@ import {
   ScanRequest,
 } from '../../types/query-request';
 import { prefixLink } from '../../util/matching/compare_helper';
-import { getPage } from '../../util/browser/getPage';
+import { changeRequestProxy, getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
@@ -385,7 +385,13 @@ export abstract class BaseQueue<
     page: Page,
     pageInfo: ICategory,
     waitUntil: WaitUntil,
+    proxyType?: ProxyType,
   ) => {
+    const originalGoto = page.goto;
+    page.goto = async function (url, options) {
+      if (proxyType) await changeRequestProxy(proxyType, pageInfo.link, 2);
+      return originalGoto.apply(this, [url, options]);
+    };
     return page.goto(pageInfo.link, {
       waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
       timeout:
@@ -471,7 +477,12 @@ export abstract class BaseQueue<
           referer,
         });
       }
-      const response = await this.visitPage(page, pageInfo, waitUntil);
+      const response = await this.visitPage(
+        page,
+        pageInfo,
+        waitUntil,
+        proxyType,
+      );
 
       if (response) {
         const status = response.status();
