@@ -17,6 +17,7 @@ export interface Shop {
   l: string; // link to shop
   ne: string; // name
   purlschema: string;
+  allowedHosts?: string[];
   fetch: boolean; // fetch with get
   javascript?: {
     webWorker: status;

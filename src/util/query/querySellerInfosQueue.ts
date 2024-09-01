@@ -43,7 +43,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
 
   if (retries > MAX_RETRIES_LOOKUP_EAN) {
     await closePage(page);
-    onNotFound && (await onNotFound());
+    onNotFound && (await onNotFound('notFound'));
     return `Finally missing: ${ean}`;
   }
 
@@ -61,7 +61,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (retries <= RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Unexpected Error: ${ean}`);
     } else {
-      onNotFound && (await onNotFound());
+      onNotFound && (await onNotFound('notFound'));
     }
     await closePage(page);
     return;
@@ -80,7 +80,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (retries < RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Not found: ${ean}`);
     } else {
-      onNotFound && (await onNotFound());
+      onNotFound && (await onNotFound('notFound'));
     }
     await closePage(page);
     return;
@@ -130,7 +130,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (retries < RETRY_LIMIT) {
       throw new Error(`${targetShopId} - Product Info seems empty: ${ean}`); //Retry logic
     } else {
-      onNotFound && (await onNotFound());
+      onNotFound && (await onNotFound('notFound'));
     }
   }
   const endTime = Date.now();

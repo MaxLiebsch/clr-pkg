@@ -28,6 +28,7 @@ import { ProxyAuth } from '../../types/proxyAuth';
 import { closePage } from '../browser/closePage';
 import { getPage } from '../browser/getPage';
 import { extractFromVariousLocations } from './extractFromVariousLocations';
+import { uuid } from '../uuid';
 
 const collectInternalLinks = (
   $: CheerioAPI,
@@ -444,6 +445,7 @@ export const getProductInfoWithBrowser = async (
   const page = await getPage({
     browser: browserInfo.brs,
     shop,
+    requestId: uuid(),
     requestCount: 0,
     disAllowedResourceTypes: shop.resourceTypes['query'],
     exceptions,

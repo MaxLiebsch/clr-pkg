@@ -4,6 +4,7 @@ export type Content =
   | 'price'
   | 'mnfctr'
   | 'cur'
+  | 's_hash'
   | 'hasMnfctr'
   | 'promoPrice'
   | 'van'

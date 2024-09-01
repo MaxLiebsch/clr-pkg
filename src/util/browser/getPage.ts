@@ -19,7 +19,8 @@ import { VersionProvider } from '../versionProvider';
 import { ShopObject } from '../../types';
 import { ProxyType } from '../../types/proxyAuth';
 import { allowed } from '../../static/allowed';
-import { changeRequestProxy } from '../proxyFunctions';
+import { notifyProxyChange } from '../proxyFunctions';
+import { sleep } from '../extract';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -129,9 +130,9 @@ interface PagePropertiesOptions {
   rules?: Rule[];
   customTimezones?: string[];
   proxyType?: ProxyType;
+  requestId: string;
+  allowedHosts?: string[];
 }
-
-
 
 export function isHostAllowed(hostname: string) {
   return allowed.some((domain) => hostname.includes(domain));
@@ -146,15 +147,17 @@ const setPageProperties = async ({
   rules,
   customTimezones,
   proxyType,
+  requestId,
+  allowedHosts,
 }: PagePropertiesOptions) => {
   const { javascript } = shop;
   let _timezones = customTimezones ?? timezones;
 
   await page.setRequestInterception(true);
+
   page.on('request', async (request) => {
     const requestUrl = request.url();
     const url = new URL(requestUrl);
-    if (proxyType) await changeRequestProxy(proxyType, requestUrl);
     const resourceType = request.resourceType();
     let defaultDisallowedResourcTypes: ResourceType[] = [
       'image',
@@ -168,7 +171,14 @@ const setPageProperties = async ({
       exceptions &&
       exceptions.some((exception) => requestUrl.includes(exception))
     ) {
-      if (proxyType) await changeRequestProxy(proxyType, requestUrl);
+      if (proxyType)
+        await notifyProxyChange(
+          proxyType,
+          requestUrl,
+          requestId,
+          Date.now(),
+          allowedHosts || [],
+        );
       return request.continue();
     }
 
@@ -179,7 +189,14 @@ const setPageProperties = async ({
         return request.abort();
       }
       if (isHostAllowed(url.hostname)) {
-        if (proxyType) await changeRequestProxy(proxyType, requestUrl);
+        if (proxyType)
+          await notifyProxyChange(
+            proxyType,
+            requestUrl,
+            requestId,
+            Date.now(),
+            allowedHosts || [],
+          );
         return request.continue();
       } else {
         return request.abort();
@@ -518,6 +535,8 @@ interface GetPageOptions {
   rules?: Rule[];
   timezones?: string[];
   proxyType?: ProxyType;
+  requestId: string;
+  allowedHosts?: string[];
 }
 
 export async function getPage({
@@ -529,6 +548,8 @@ export async function getPage({
   rules,
   timezones,
   proxyType,
+  requestId,
+  allowedHosts,
 }: GetPageOptions) {
   const page = await browser.newPage();
 
@@ -541,6 +562,8 @@ export async function getPage({
     rules,
     customTimezones: timezones,
     proxyType,
+    requestId,
+    allowedHosts,
   });
 
   return page;

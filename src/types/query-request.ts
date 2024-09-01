@@ -13,7 +13,8 @@ export interface QRequest {
   prio: number;
   retries: number;
   retriesOnFail?: number;
-  proxyType?: ProxyType
+  requestId: string;
+  proxyType?: ProxyType;
   shop: ShopObject;
   pageInfo: ICategory;
 }
@@ -44,15 +45,14 @@ export interface ScanRequest extends QRequest {
 
 export interface ProductInfo {
   key: string;
-  value: string
-
-
+  value: string;
 }
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
   addProduct: (product: ProductRecord) => Promise<void>;
   extendedLookUp?: boolean;
+  s_hash: string;
   targetRetailerList?: TargetShop[];
   targetShop?: TargetShop;
   prodInfo?: ProdInfo;
@@ -67,7 +67,9 @@ export interface QueryRequest extends QRequest {
     productInfo: ProductInfo[] | null;
     url: string;
   }) => Promise<void>;
-  onNotFound?: (cause?: string) => Promise<void>;
+  onNotFound?: (
+    cause: 'notFound' | 'domainNotAllowed' | 'timeout',
+  ) => Promise<void>;
 }
 
 export interface CrawlerRequest extends QRequest {

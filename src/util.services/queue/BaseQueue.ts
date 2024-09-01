@@ -29,7 +29,7 @@ import {
 } from '../../constants';
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
-import { sample, shuffle } from 'underscore';
+import { has, sample, shuffle } from 'underscore';
 import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 import { createHash } from '../../util/hash';
@@ -38,7 +38,12 @@ import EventEmitter from 'events';
 import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
 import { WaitUntil } from '../../types/shop';
-import { changeRequestProxy } from '../../util/proxyFunctions';
+import {
+  notifyProxyChange,
+  registerRequest,
+  requestCompleted,
+  terminateConnection,
+} from '../../util/proxyFunctions';
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -386,11 +391,25 @@ export abstract class BaseQueue<
     page: Page,
     pageInfo: ICategory,
     waitUntil: WaitUntil,
+    requestId: string,
+    allowedHosts: string[] = [],
     proxyType?: ProxyType,
   ) => {
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
-      if (proxyType) await changeRequestProxy(proxyType, pageInfo.link, 2, true);
+      if (proxyType) {
+        await notifyProxyChange(
+          proxyType,
+          pageInfo.link,
+          requestId,
+          Date.now(),
+          allowedHosts,
+          true,
+          2,
+        );
+      } else {
+        await registerRequest(url, requestId, allowedHosts, Date.now());
+      }
       return originalGoto.apply(this, [url, options]);
     };
     return page.goto(pageInfo.link, {
@@ -413,14 +432,29 @@ export abstract class BaseQueue<
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
 
-    const { retries, proxyType, pageInfo, shop } = request;
+    const { retries, proxyType, pageInfo, shop, requestId, retriesOnFail } =
+      request;
+    const { link } = pageInfo;
+    let { type, statistics, timezones, id: taskId } = this.queueTask;
+    const {
+      waitUntil,
+      resourceTypes,
+      allowedHosts,
+      exceptions,
+      rules,
+      mimic,
+      leaveDomainAsIs,
+      d: domain,
+    } = shop;
 
-    if (request.retriesOnFail && retries >= request.retriesOnFail) {
+    const hash = 's_hash' in request ? request.s_hash : createHash(link);
+
+    if (retriesOnFail && retries >= retriesOnFail) {
       if ('onNotFound' in request && request?.onNotFound) {
         await request.onNotFound('timeout');
       }
       return {
-        details: 'retries exceeded',
+        details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
         status: 'limit-reached',
         retries,
         proxyType: proxyType || 'mix',
@@ -431,29 +465,23 @@ export abstract class BaseQueue<
       if ('onNotFound' in request && request?.onNotFound) {
         await request.onNotFound('timeout');
       }
-      this.queueTask.statistics.retriesHeuristic['500+'] += 1;
+      statistics.retriesHeuristic['500+'] += 1;
       return {
-        details: 'retries exceeded',
+        details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
         status: 'error-handled',
         retries,
         proxyType: proxyType || 'mix',
       };
     }
 
-    pageInfo.link = prefixLink(pageInfo.link, shop.d, shop.leaveDomainAsIs);
+    pageInfo.link = prefixLink(link, domain, leaveDomainAsIs);
 
-    const eligableForPremiumProxy = eligableForPremium(
-      pageInfo.link,
-      this.queueTask.type,
-    );
+    const eligableForPremiumProxy = eligableForPremium(link, type);
 
-    const { waitUntil, resourceTypes } = shop;
-
-    this.queueTask.statistics.statusHeuristic['total'] += 1;
+    statistics.statusHeuristic['total'] += 1;
     let page: Page | undefined = undefined;
 
     try {
-      let timezones = this.queueTask.timezones;
       if (proxyType) {
         timezones = [standardTimeZones[proxyType]];
       }
@@ -462,16 +490,17 @@ export abstract class BaseQueue<
         shop,
         requestCount: this.requestCount,
         disAllowedResourceTypes: resourceTypes?.query,
-        exceptions: shop.exceptions,
-        rules: shop.rules,
+        exceptions,
+        rules,
         timezones,
         proxyType,
+        requestId,
       });
 
       if (
         retries === 0 &&
-        this.queueTask.type !== 'LOOKUP_INFO' &&
-        this.queueTask.type !== 'WHOLESALE_SEARCH'
+        type !== 'LOOKUP_INFO' &&
+        type !== 'WHOLESALE_SEARCH'
       ) {
         const referer = sample(refererList) ?? refererList[0];
         await page.setExtraHTTPHeaders({
@@ -482,93 +511,107 @@ export abstract class BaseQueue<
         page,
         pageInfo,
         waitUntil,
+        requestId,
+        allowedHosts || [],
         proxyType,
       );
 
       if (response) {
         const status = response.status();
-        if (status === 404 && !this.taskFinished) {
-          const errorType = ErrorType.NotFound;
-          this.queueTask.statistics.errorTypeCount[errorType] += 1;
-          if (retries < MAX_RETRIES_NOT_FOUND) {
-            throw new Error(ErrorType.NotFound);
-          } else {
-            // if the page is not found and the retries are more than the limit
-            if ('onNotFound' in request && request?.onNotFound) {
-              await request.onNotFound();
-            }
-            return {
-              details: '',
-              status: 'not-found',
-              retries,
-              proxyType: proxyType || 'mix',
-            };
-          }
-        }
-        if (status === 429 && !this.taskFinished) {
-          if (eligableForPremiumProxy) {
-            request.proxyType = 'de';
-          }
-          throw new Error(ErrorType.RateLimit);
-        }
-        if (status === 403 && !this.taskFinished) {
-          const newResponse = await this.refreshPage(page);
-          const newStatus = newResponse?.status();
-          if (newStatus !== 200) {
+        const handleError = async (
+          status: number,
+          requestId: string,
+          page: any,
+          retries: number,
+          proxyType: string | undefined,
+          request: any,
+          statistics: any,
+        ) => {
+          const terminateAndSetProxy = async (errorType: string) => {
+            await terminateConnection(requestId);
             if (eligableForPremiumProxy) {
               request.proxyType = 'de';
             }
-            throw new Error(ErrorType.AccessDenied);
-          }
-        }
-        if (status >= 500 && !this.taskFinished) {
-          const newResponse = await this.refreshPage(page);
-          const newStatus = newResponse?.status();
-          if (newStatus !== 200) {
-            if (eligableForPremiumProxy) {
-              request.proxyType = 'de';
+            throw new Error(errorType);
+          };
+
+          if (status === 404) {
+            const errorType = ErrorType.NotFound;
+            statistics.errorTypeCount[errorType] += 1;
+            if (retries < MAX_RETRIES_NOT_FOUND) {
+              throw new Error(ErrorType.NotFound);
+            } else {
+              if ('onNotFound' in request && request?.onNotFound) {
+                await request.onNotFound('notFound');
+              }
+              return {
+                details: `❓ Id: ${requestId} - ${type} - ${domain} - Hash: ${hash}`,
+                status: 'not-found',
+                retries,
+                proxyType: proxyType || 'mix',
+              };
             }
-            throw new Error(ErrorType.ServerError);
           }
+
+          if (status === 429) {
+            await terminateAndSetProxy(ErrorType.RateLimit);
+          }
+
+          if (status === 403 || status >= 500) {
+            const newResponse = await this.refreshPage(page);
+            const newStatus = newResponse?.status();
+            if (newStatus !== 200) {
+              await terminateAndSetProxy(
+                status === 403 ? ErrorType.AccessDenied : ErrorType.ServerError,
+              );
+            }
+          }
+        };
+
+        if (!this.taskFinished) {
+          await handleError(
+            status,
+            requestId,
+            page,
+            retries,
+            proxyType,
+            request,
+            statistics,
+          );
         }
       }
 
       const blocked = await checkForBlockingSignals(
         page,
         false,
-        shop.mimic,
-        pageInfo.link,
+        mimic,
+        link,
         this.queueTask,
       );
 
       if (blocked) {
+        await terminateConnection(requestId);
         if (eligableForPremiumProxy) {
           request.proxyType = 'de';
         }
         throw new Error(ErrorType.AccessDenied);
       }
+
       const message = await task(page, request);
       if (
-        this.queueTask.type === 'CRAWL_SHOP' &&
-        this.queueTask.statistics.visitedPages.indexOf(pageInfo.link) === -1
+        type === 'CRAWL_SHOP' &&
+        !statistics.visitedPages.includes(pageInfo.link)
       ) {
-        this.queueTask.statistics.visitedPages.push(pageInfo.link);
+        statistics.visitedPages.push(pageInfo.link);
       }
-      if (message && typeof message === 'string') {
-        return {
-          details: `🆗${' '} ${message} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
-          status: 'page-completed',
-          retries,
-          proxyType: proxyType || 'mix',
-        };
-      } else {
-        return {
-          details: `🆗${' '} ${this.queueTask?.id ?? ''} - ${'targetShop' in request ? request.targetShop?.name : shop.d} - ${createHash(pageInfo.link)}`,
-          status: 'page-completed',
-          retries,
-          proxyType: proxyType || 'mix',
-        };
-      }
+      await requestCompleted(requestId);
+      const details = `🆗 Id: ${requestId}${message && typeof message === 'string' ? ` - ${message} - ` : ` - ${type} - `}${'targetShop' in request ? request.targetShop?.name : domain} - Hash: ${hash}`;
+      return {
+        details,
+        status: 'page-completed',
+        retries,
+        proxyType: proxyType || 'mix',
+      };
     } catch (error) {
       process.env.DEBUG === 'true' &&
         console.log('WrapperFunction:Error:', error);
@@ -585,7 +628,7 @@ export abstract class BaseQueue<
                 this.pauseQueue('error');
               } else {
                 const errorType = error.message as ErrorType;
-                this.queueTask.statistics.errorTypeCount[errorType] += 1;
+                statistics.errorTypeCount[errorType] += 1;
                 if (
                   isErrorFrequent(
                     errorType,
@@ -608,12 +651,12 @@ export abstract class BaseQueue<
             ) {
               console.log('Restart browser because of protocol error');
               const errorType = ErrorType.ProtocolError;
-              this.queueTask.statistics.errorTypeCount[errorType] += 1;
+              statistics.errorTypeCount[errorType] += 1;
               this.pauseQueue('error');
             }
             const errorType = this.parseError(error);
             if (errorType) {
-              this.queueTask.statistics.errorTypeCount[errorType] += 1;
+              statistics.errorTypeCount[errorType] += 1;
               if (
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
               ) {
@@ -628,10 +671,10 @@ export abstract class BaseQueue<
             this.pauseQueue('error');
             this.errorLog[errorType].count += 1;
             this.errorLog[errorType].lastOccurred = Date.now();
-            this.queueTask.statistics.errorTypeCount[errorType] += 1;
+            statistics.errorTypeCount[errorType] += 1;
           }
         }
-        const details = `⛔${' '} ${this.queueTask?.id ?? ''} - ${shop.d} - ${error} - ${createHash(pageInfo.link)}`;
+        const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
         if (isDomainAllowed(pageInfo.link)) {
           if (error instanceof Error) {
             if (`${error}`.includes('TimeoutError: Navigation timeout')) {
@@ -656,7 +699,7 @@ export abstract class BaseQueue<
           }
         } else {
           if ('onNotFound' in request && request?.onNotFound) {
-            await request.onNotFound();
+            await request.onNotFound('domainNotAllowed');
           }
           return {
             details,
@@ -702,14 +745,6 @@ export abstract class BaseQueue<
   }
 
   next(): void {
-    // console.log(
-    //   'task type: ',
-    //   this.queueTask.type,
-    //   'task length:',
-    //   this.queueTask.actualProductLimit,
-    //   'current total: ',
-    //   this.total,
-    // );
     const tasks = ['DAILY_DEALS', 'LOOKUP_INFO', 'WHOLESALE_SEARCH'];
 
     if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {

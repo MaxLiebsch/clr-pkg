@@ -177,13 +177,13 @@ export const mainBrowser = async (
     args.push(proxySetting);
   }
 
-  if (task.proxyType) {
-    await fetch(
-      `http://${proxyAuth.host}/change-proxy?proxy=${task.proxyType}`,
-    );
-  } else {
-    await fetch(`http://${proxyAuth.host}/change-proxy?proxy=mix`);
-  }
+  // if (task.proxyType) {
+  //   await fetch(
+  //     `http://${proxyAuth.host}/change-proxy?proxy=${task.proxyType}`,
+  //   );
+  // } else {
+  //   await fetch(`http://${proxyAuth.host}/change-proxy?proxy=mix`);
+  // }
 
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);

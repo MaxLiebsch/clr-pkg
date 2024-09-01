@@ -11,6 +11,7 @@ import {
   matchTargetShopProdsWithRawProd,
 } from '../../util/query/matchTargetShopProdsWithRawProd';
 import { Shop } from '../../types/shop';
+import { uuid } from '../../util/uuid';
 
 export const queryTargetShops = async (
   targetShops: TargetShop[],
@@ -26,7 +27,8 @@ export const queryTargetShops = async (
       new Promise<TargetShopProducts>((resolve, rej) => {
         try {
           const { extendedLookUp, limit } = task;
-          let { procProd } = prodInfo;
+          let { procProd, rawProd} = prodInfo;
+          const { s_hash } = rawProd;
           const products: Product[] = [];
           const addProduct = async (product: ProductRecord) => {
             products.push(<Product>product);
@@ -125,6 +127,8 @@ export const queryTargetShops = async (
           queue.pushTask(queryShopQueue, {
             retries: 0,
             shop,
+            requestId: uuid(),
+            s_hash: s_hash as string,
             addProduct,
             targetShop,
             targetRetailerList,

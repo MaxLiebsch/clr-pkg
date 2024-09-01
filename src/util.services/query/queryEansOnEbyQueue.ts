@@ -32,7 +32,7 @@ export const queryEansOnEbyQueue = async (
     if (retries < MAX_RETRIES_LOOKUP_EAN) {
       throw new Error(`${targetShop?.name} - ${ean} not found on Eby`);
     } else {
-      onNotFound && (await onNotFound());
+      onNotFound && (await onNotFound('notFound'));
     }
     await closePage(page);
     return;

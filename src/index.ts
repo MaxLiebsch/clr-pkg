@@ -23,6 +23,8 @@ export * from './util/extract/saveParseJSON'
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
+export * from './util/uuid';
+export * from './util/proxyFunctions'
 export * from './util/fs/stats';
 export * from './util/events'
 export * from "./util/ProcessTImeTracker";
