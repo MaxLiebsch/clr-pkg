@@ -43,6 +43,7 @@ import {
   registerRequest,
   requestCompleted,
   terminateConnection,
+  terminationPrevConnections,
 } from '../../util/proxyFunctions';
 type Task = (page: Page, request: any) => Promise<any>;
 
@@ -513,6 +514,13 @@ export abstract class BaseQueue<
         allowedHosts || [],
         proxyType,
       );
+      const terminateAndSetProxy = async (errorType: string) => {
+        await terminationPrevConnections(requestId,link, allowedHosts, proxyType || 'mix');
+        if (eligableForPremiumProxy) {
+          request.proxyType = 'de';
+        }
+        throw new Error(errorType);
+      };
 
       if (response) {
         const status = response.status();
@@ -525,13 +533,6 @@ export abstract class BaseQueue<
           request: any,
           statistics: any,
         ) => {
-          const terminateAndSetProxy = async (errorType: string) => {
-            await terminateConnection(requestId);
-            if (eligableForPremiumProxy) {
-              request.proxyType = 'de';
-            }
-            throw new Error(errorType);
-          };
 
           if (status === 404) {
             const errorType = ErrorType.NotFound;
@@ -588,11 +589,7 @@ export abstract class BaseQueue<
       );
 
       if (blocked) {
-        await terminateConnection(requestId);
-        if (eligableForPremiumProxy) {
-          request.proxyType = 'de';
-        }
-        throw new Error(ErrorType.AccessDenied);
+        await terminateAndSetProxy(ErrorType.AccessDenied);
       }
 
       const message = await task(page, request);

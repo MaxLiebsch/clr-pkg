@@ -25,6 +25,7 @@ export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
 export * from './util/uuid';
 export * from './util/proxyFunctions'
+export * from './util/proxyFunctionsv3'
 export * from './util/fs/stats';
 export * from './util/events'
 export * from "./util/ProcessTImeTracker";
