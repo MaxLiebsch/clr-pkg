@@ -24,7 +24,7 @@ export async function terminateConnection(requestId: string) {
     `http://127.0.0.1:8080/terminate?requestId=${requestId}`,
   );
   if (response.status === 200) {
-    return response;
+    return response.text();
   } else {
     throw new Error(`Failed to notify proxy. Status code: ${response.status}`);
   }
