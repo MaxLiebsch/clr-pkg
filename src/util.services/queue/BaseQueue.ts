@@ -404,12 +404,17 @@ export abstract class BaseQueue<
           pageInfo.link,
           requestId,
           Date.now(),
-          allowedHosts
+          allowedHosts,
         );
         console.log(result);
       } else {
-        const result = await registerRequest(url, requestId, allowedHosts, Date.now());
-        console.log(result)
+        const result = await registerRequest(
+          url,
+          requestId,
+          allowedHosts,
+          Date.now(),
+        );
+        console.log(result);
       }
       return originalGoto.apply(this, [url, options]);
     };
@@ -436,7 +441,7 @@ export abstract class BaseQueue<
     const { retries, proxyType, pageInfo, shop, requestId, retriesOnFail } =
       request;
     const { link } = pageInfo;
-    let { type, statistics, timezones} = this.queueTask;
+    let { type, statistics, timezones } = this.queueTask;
     const {
       waitUntil,
       resourceTypes,
@@ -493,7 +498,7 @@ export abstract class BaseQueue<
         disAllowedResourceTypes: resourceTypes?.query,
         exceptions,
         rules,
-        timezones
+        timezones,
       });
 
       if (
@@ -515,7 +520,12 @@ export abstract class BaseQueue<
         proxyType,
       );
       const terminateAndSetProxy = async (errorType: string) => {
-        await terminationPrevConnections(requestId,link, allowedHosts, proxyType || 'mix');
+        await terminationPrevConnections(
+          requestId,
+          link,
+          allowedHosts,
+          proxyType || 'mix',
+        );
         if (eligableForPremiumProxy) {
           request.proxyType = 'de';
         }
@@ -533,7 +543,6 @@ export abstract class BaseQueue<
           request: any,
           statistics: any,
         ) => {
-
           if (status === 404) {
             const errorType = ErrorType.NotFound;
             statistics.errorTypeCount[errorType] += 1;
