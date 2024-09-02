@@ -492,9 +492,7 @@ export abstract class BaseQueue<
         disAllowedResourceTypes: resourceTypes?.query,
         exceptions,
         rules,
-        timezones,
-        proxyType,
-        requestId,
+        timezones
       });
 
       if (

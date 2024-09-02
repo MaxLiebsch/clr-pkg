@@ -444,8 +444,7 @@ export const getProductInfoWithBrowser = async (
   const { exceptions, resourceTypes, waitUntil } = shop;
   const page = await getPage({
     browser: browserInfo.brs,
-    shop,
-    requestId: uuid(),
+    shop, 
     requestCount: 0,
     disAllowedResourceTypes: shop.resourceTypes['query'],
     exceptions,

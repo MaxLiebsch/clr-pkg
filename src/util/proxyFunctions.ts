@@ -13,7 +13,7 @@ export async function notifyProxyChange(
     `http://127.0.0.1:8080/notify?proxy=${proxyType}&host=${host}&hosts=${encodedHosts}&time=${time}&requestId=${requestId}`,
   );
   if (response.status === 200) {
-    return await response.text();
+    return response.text();
   } else {
     throw new Error(`Failed to notify proxy. Status code: ${response.status}`);
   }
@@ -43,7 +43,7 @@ export async function registerRequest(
       `http://127.0.0.1:8080/register?host=${host}&hosts=${encodedHosts}&requestId=${requestId}&time=${time}`,
     );
     if (response.status === 200) {
-      return await response.text();
+      return response.text();
     } else {
       throw new Error(
         `Failed to notify proxy. Status code: ${response.status}`,

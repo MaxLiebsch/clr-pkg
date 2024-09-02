@@ -129,9 +129,6 @@ interface PagePropertiesOptions {
   disAllowedResourceTypes?: ResourceType[];
   rules?: Rule[];
   customTimezones?: string[];
-  proxyType?: ProxyType;
-  requestId: string;
-  allowedHosts?: string[];
 }
 
 export function isHostAllowed(hostname: string) {
@@ -146,9 +143,6 @@ const setPageProperties = async ({
   disAllowedResourceTypes,
   rules,
   customTimezones,
-  proxyType,
-  requestId,
-  allowedHosts,
 }: PagePropertiesOptions) => {
   const { javascript } = shop;
   let _timezones = customTimezones ?? timezones;
@@ -170,15 +164,7 @@ const setPageProperties = async ({
     if (
       exceptions &&
       exceptions.some((exception) => requestUrl.includes(exception))
-    ) {
-      if (proxyType)
-        await notifyProxyChange(
-          proxyType,
-          requestUrl,
-          requestId,
-          Date.now(),
-          allowedHosts || [],
-        );
+    ) { 
       return request.continue();
     }
 
@@ -189,14 +175,6 @@ const setPageProperties = async ({
         return request.abort();
       }
       if (isHostAllowed(url.hostname)) {
-        if (proxyType)
-          await notifyProxyChange(
-            proxyType,
-            requestUrl,
-            requestId,
-            Date.now(),
-            allowedHosts || [],
-          );
         return request.continue();
       } else {
         return request.abort();
@@ -534,9 +512,6 @@ interface GetPageOptions {
   exceptions?: string[];
   rules?: Rule[];
   timezones?: string[];
-  proxyType?: ProxyType;
-  requestId: string;
-  allowedHosts?: string[];
 }
 
 export async function getPage({
@@ -546,10 +521,7 @@ export async function getPage({
   disAllowedResourceTypes,
   exceptions,
   rules,
-  timezones,
-  proxyType,
-  requestId,
-  allowedHosts,
+  timezones
 }: GetPageOptions) {
   const page = await browser.newPage();
 
@@ -561,9 +533,6 @@ export async function getPage({
     disAllowedResourceTypes,
     rules,
     customTimezones: timezones,
-    proxyType,
-    requestId,
-    allowedHosts,
   });
 
   return page;
