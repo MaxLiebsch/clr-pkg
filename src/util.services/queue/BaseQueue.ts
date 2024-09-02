@@ -398,17 +398,17 @@ export abstract class BaseQueue<
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
       if (proxyType) {
-        await notifyProxyChange(
+        const result = await notifyProxyChange(
           proxyType,
           pageInfo.link,
           requestId,
           Date.now(),
-          allowedHosts,
-          true,
-          2,
+          allowedHosts
         );
+        console.log(result);
       } else {
-        await registerRequest(url, requestId, allowedHosts, Date.now());
+        const result = await registerRequest(url, requestId, allowedHosts, Date.now());
+        console.log(result)
       }
       return originalGoto.apply(this, [url, options]);
     };
@@ -435,7 +435,7 @@ export abstract class BaseQueue<
     const { retries, proxyType, pageInfo, shop, requestId, retriesOnFail } =
       request;
     const { link } = pageInfo;
-    let { type, statistics, timezones, id: taskId } = this.queueTask;
+    let { type, statistics, timezones} = this.queueTask;
     const {
       waitUntil,
       resourceTypes,
