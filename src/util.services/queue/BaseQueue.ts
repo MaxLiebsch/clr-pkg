@@ -42,7 +42,6 @@ import {
   notifyProxyChange,
   registerRequest,
   requestCompleted,
-  terminateConnection,
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
 type Task = (page: Page, request: any) => Promise<any>;
@@ -491,6 +490,7 @@ export abstract class BaseQueue<
       if (proxyType) {
         timezones = [standardTimeZones[proxyType]];
       }
+
       page = await getPage({
         browser: this.browser!,
         shop,
@@ -527,7 +527,14 @@ export abstract class BaseQueue<
           proxyType || 'mix',
         );
         if (eligableForPremiumProxy) {
+          request.prevProxyType = proxyType || 'mix';
           request.proxyType = 'de';
+          console.log(
+            'PrevProxy: ',
+            request.prevProxyType,
+            ' NewProxy: ',
+            proxyType,
+          );
         }
         throw new Error(errorType);
       };
