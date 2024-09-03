@@ -186,7 +186,7 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
     delete product.ean_prop;
   } else {
     if (!eanUpdatedAt) {
-      product.eanUpdatedAt = updatedAt;
+      product["eanUpdatedAt"] = updatedAt;
     }
   }
 
