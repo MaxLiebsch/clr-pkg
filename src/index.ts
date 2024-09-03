@@ -30,6 +30,7 @@ export * from './util/fs/stats';
 export * from './util/events'
 export * from "./util/ProcessTImeTracker";
 export * from './util/parseAsinFromUrl';
+export * from './util/parseEsinFromUrl';
 export * from './util/transformProduct';
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';

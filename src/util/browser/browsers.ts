@@ -243,7 +243,6 @@ export const mainBrowser = async (
     timeout: 600000,
     protocolTimeout: 60000,
   };
-  console.log('options:', options)
   //@ts-ignore
   options['executablePath'] = provider.currentPuppeteer.executablePath();
   const browser = await puppeteer.launch(options);

@@ -1,6 +1,7 @@
 import { createHash } from './hash';
 import { getManufacturer, prefixLink } from './matching/compare_helper';
 import { parseAsinFromUrl } from './parseAsinFromUrl';
+import { parseEsinFromUrl } from './parseEsinFromUrl';
 
 export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
   let product = { ...crawlDataProduct };
@@ -42,22 +43,53 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
     esin,
     a_fat,
     e_fat,
+    lckd,
     asin,
     vrfd,
     a_qty,
     e_qty,
     qty_batchId,
     qty_prop,
+    img,
     updatedAt,
+    arn,
     image,
     deletedAt,
+    s,
     a_props,
     a_lnk,
     ctgry,
+    e_mrgn_prc,
+    e_ns_mrgn_prc,
+    e_lnk,
     pblsh,
     brand,
     shop,
   } = product;
+
+  if (typeof e_mrgn_prc === 'number') {
+    delete product.e_mrgn_prc;
+  }
+
+  if (typeof e_ns_mrgn_prc === 'number') {
+    delete product.e_ns_mrgn_prc;
+  }
+
+  if (s) {
+    delete product.s;
+  }
+
+  if (!img) {
+    delete product.img;
+  }
+
+  if (arn) {
+    delete product.arn;
+  }
+
+  if (typeof lckd === 'boolean') {
+    delete product.lckd;
+  }
 
   if (typeof vrfd === 'boolean') {
     delete product.vrfd;
@@ -76,7 +108,18 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
   }
 
   if (typeof ctgry === 'string') {
-    product.ctrgry = [ctgry];
+    product.ctgry = [ctgry];
+  }
+
+  if (!esin && e_lnk) {
+    const esin = parseEsinFromUrl(e_lnk);
+    if (esin) {
+      product.esin = esin;
+    }
+  }
+
+  if (!product.esin) {
+    delete product.esin;
   }
 
   if (!asin && a_lnk) {
@@ -84,6 +127,10 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
     if (asin) {
       product.asin = asin;
     }
+  }
+
+  if (!product.asin) {
+    delete product.asin;
   }
 
   if (deletedAt) {
@@ -171,16 +218,8 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
     delete product.eby_taskId;
   }
 
-  if (!esin) {
-    delete product.esin;
-  }
-
   if (!e_qty) {
     delete product.e_qty;
-  }
-
-  if (!asin) {
-    delete product.asin;
   }
 
   if (!a_qty) {
@@ -230,8 +269,10 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
       product.eanUpdatedAt = updatedAt;
     }
     delete product.ean;
+  } else {
+    delete product.ean;
   }
-  if (category) {
+  if (category instanceof Array) {
     product['ctgry'] = product.category;
     delete product.category;
   }
