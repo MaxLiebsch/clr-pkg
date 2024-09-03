@@ -236,13 +236,14 @@ export const mainBrowser = async (
   }
 
   const options = {
-    headless: process.env.NODE_ENV === 'production' ? true : false,
-    devtools: process.env.NODE_ENV === 'development' ? true : false,
+    headless: process.env.HEADLESS === 'true' ? true : false,
+    devtools: process.env.DEV_TOOLS === 'true' ? true : false,
     args,
     defaultViewport: null,
     timeout: 600000,
     protocolTimeout: 60000,
   };
+  console.log('options:', options)
   //@ts-ignore
   options['executablePath'] = provider.currentPuppeteer.executablePath();
   const browser = await puppeteer.launch(options);

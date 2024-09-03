@@ -55,7 +55,7 @@ export async function registerRequest(
 ) {
   try {
     const host = new URL(link).hostname;
-    const encodedHosts = encodeURIComponent(JSON.stringify(hosts || []));
+    const encodedHosts = encodeURIComponent(JSON.stringify(hosts)) 
     const response = await fetch(
       `http://127.0.0.1:8080/register?host=${host}&hosts=${encodedHosts}&requestId=${requestId}&time=${time}`,
     );
