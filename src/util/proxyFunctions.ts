@@ -30,6 +30,24 @@ export async function terminateConnection(requestId: string) {
   }
 }
 
+export async function connectionHealth(
+  link: string,
+  requestId: string,
+  hosts: string[] = [],
+  proxyType?: ProxyType,
+  prevProxyType?: ProxyType,
+) {
+  const host = new URL(link).hostname;
+  const response = await fetch(
+    `http://127.0.0.1:8080/connection-health?requestId=${requestId}&host=${host}&hosts=${encodeURIComponent(JSON.stringify(hosts))}&prevProxyType=${prevProxyType}&proxyType=${proxyType}`,
+  );
+  if (response.status === 200) {
+    return response.text();
+  } else {
+    return response.text();
+  }
+}
+
 export async function terminationPrevConnections(
   requestId: string,
   link: string,
@@ -55,7 +73,7 @@ export async function registerRequest(
 ) {
   try {
     const host = new URL(link).hostname;
-    const encodedHosts = encodeURIComponent(JSON.stringify(hosts)) 
+    const encodedHosts = encodeURIComponent(JSON.stringify(hosts));
     const response = await fetch(
       `http://127.0.0.1:8080/register?host=${host}&hosts=${encodedHosts}&requestId=${requestId}&time=${time}`,
     );

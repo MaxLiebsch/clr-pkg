@@ -129,6 +129,7 @@ interface PagePropertiesOptions {
   disAllowedResourceTypes?: ResourceType[];
   rules?: Rule[];
   customTimezones?: string[];
+  requestId?: string;
 }
 
 export function isHostAllowed(hostname: string) {
@@ -143,12 +144,13 @@ const setPageProperties = async ({
   disAllowedResourceTypes,
   rules,
   customTimezones,
+  requestId,
 }: PagePropertiesOptions) => {
   const { javascript } = shop;
   let _timezones = customTimezones ?? timezones;
 
   await page.setRequestInterception(true);
-
+  
   page.on('request', async (request) => {
     const requestUrl = request.url();
     const url = new URL(requestUrl);
@@ -164,7 +166,7 @@ const setPageProperties = async ({
     if (
       exceptions &&
       exceptions.some((exception) => requestUrl.includes(exception))
-    ) { 
+    ) {
       return request.continue();
     }
 
@@ -512,6 +514,7 @@ interface GetPageOptions {
   exceptions?: string[];
   rules?: Rule[];
   timezones?: string[];
+  requestId?: string;
 }
 
 export async function getPage({
@@ -521,7 +524,8 @@ export async function getPage({
   disAllowedResourceTypes,
   exceptions,
   rules,
-  timezones
+  timezones,
+  requestId,
 }: GetPageOptions) {
   const page = await browser.newPage();
 

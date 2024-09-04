@@ -39,11 +39,13 @@ import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
 import { WaitUntil } from '../../types/shop';
 import {
+  connectionHealth,
   notifyProxyChange,
   registerRequest,
   requestCompleted,
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
+import { sleep } from '../../util/extract';
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -365,7 +367,6 @@ export abstract class BaseQueue<
     }
   };
   private resetCookies = async (page: Page) => {
-    console.log('reseting session');
     this.queueTask.statistics.resetedSession += 1;
     // Clear cookies
     const cookies = await page.cookies().catch((e) => {
@@ -398,25 +399,27 @@ export abstract class BaseQueue<
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
       if (proxyType) {
-        const result = await notifyProxyChange(
+        const notifyResponse = await notifyProxyChange(
           proxyType,
           pageInfo.link,
           requestId,
           Date.now(),
           allowedHosts,
         );
-        console.log(result);
+        // console.log(notifyResponse);
       } else {
-        const result = await registerRequest(
+        const registerResponse = await registerRequest(
           url,
           requestId,
           allowedHosts,
           Date.now(),
         );
-        console.log(result);
+        // console.log(registerResponse);
+
       }
       return originalGoto.apply(this, [url, options]);
     };
+
     return page.goto(pageInfo.link, {
       waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
       timeout:
@@ -437,8 +440,15 @@ export abstract class BaseQueue<
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
 
-    const { retries, proxyType, pageInfo, shop, requestId, retriesOnFail } =
-      request;
+    const {
+      retries,
+      proxyType,
+      prevProxyType,
+      pageInfo,
+      shop,
+      requestId,
+      retriesOnFail,
+    } = request;
     const { link } = pageInfo;
     let { type, statistics, timezones } = this.queueTask;
     const {
@@ -490,7 +500,14 @@ export abstract class BaseQueue<
       if (proxyType) {
         timezones = [standardTimeZones[proxyType]];
       }
-
+      if (eligableForPremiumProxy && prevProxyType && retries > 0) {
+        await terminationPrevConnections(
+          requestId,
+          link,
+          allowedHosts,
+          prevProxyType,
+        );
+      }
       page = await getPage({
         browser: this.browser!,
         shop,
@@ -499,6 +516,7 @@ export abstract class BaseQueue<
         exceptions,
         rules,
         timezones,
+        requestId,
       });
 
       if (
@@ -519,6 +537,7 @@ export abstract class BaseQueue<
         allowedHosts || [],
         proxyType,
       );
+
       const terminateAndSetProxy = async (errorType: string) => {
         await terminationPrevConnections(
           requestId,
@@ -529,12 +548,6 @@ export abstract class BaseQueue<
         if (eligableForPremiumProxy) {
           request.prevProxyType = proxyType || 'mix';
           request.proxyType = 'de';
-          console.log(
-            'PrevProxy: ',
-            request.prevProxyType,
-            ' NewProxy: ',
-            proxyType,
-          );
         }
         throw new Error(errorType);
       };
@@ -573,7 +586,9 @@ export abstract class BaseQueue<
           }
 
           if (status === 403 || status >= 500) {
-            const newResponse = await this.refreshPage(page);
+            const newResponse = await this.refreshPage(page).catch((e) => {
+              console.log('retry', e);
+            });
             const newStatus = newResponse?.status();
             if (newStatus !== 200) {
               await terminateAndSetProxy(
@@ -841,7 +856,7 @@ export abstract class BaseQueue<
                 }
               }
               console.log(
-                `Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
+                ` Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
               );
             },
           ),
