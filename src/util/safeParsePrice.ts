@@ -1,7 +1,15 @@
 import parsePrice from 'parse-price';
 import { roundToTwoDecimals } from './helpers';
 
-const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})*(?:,\d+)/g;
+const priceRegexp = /\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})*(?:,\d+)?/g;
+
+const replaceSecondDot = (str: string): string => {
+  let count = 0;
+  return str.replace(/\./g, (match) => {
+    count += 1;
+    return count === 2 ? ',' : match;
+  });
+};
 
 export const safeParsePrice = (
   priceStr: string | number | boolean | string[],
@@ -9,6 +17,11 @@ export const safeParsePrice = (
   const priceRegExp = new RegExp(priceRegexp);
 
   if (typeof priceStr === 'string') {
+    const multipleDots = priceStr.match(/\./g);
+    if (multipleDots && multipleDots.length > 1) {
+      priceStr = replaceSecondDot(priceStr);
+    }
+
     if (
       (priceStr.slice(priceStr.length - 1) === '€' ||
         priceStr.slice(0, 1) === '€') &&
@@ -18,11 +31,26 @@ export const safeParsePrice = (
     ) {
       return Number(priceStr.match(/\d+/g)?.join('')) || 0;
     }
+
     const match = priceStr.match(priceRegExp);
     if (match) {
       priceStr = match[0];
     }
   }
+
+  if (typeof priceStr === 'number') {
+    if (
+      priceStr.toString().match(/\.\d{3,4}\b/) &&
+      !priceStr.toString().includes(',')
+    ) {
+      console.log(
+        'priceStr.toString().match(/.d{3,4}/):',
+        priceStr.toString().match(/\.\d{3,4}/),
+      );
+      priceStr = priceStr.toString().replace(/\./g, '');
+    }
+  }
+
   const price = parsePrice(priceStr);
 
   const parsedPrice = roundToTwoDecimals(price);
@@ -127,14 +155,14 @@ const buildCurrencyRegex = () => {
 };
 
 export const detectCurrency = (input: string) => {
-  if(typeof input !== 'string') return null;
+  if (typeof input !== 'string') return null;
   const currencyRegex = buildCurrencyRegex();
   const match = input.match(currencyRegex);
   if (match) {
     const _currency = currency.find(
       (c) => c.symbol === match[0] || c.iso === match[0],
     );
-    return _currency?.iso || null; 
+    return _currency?.iso || null;
   }
   return null;
 };
