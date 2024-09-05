@@ -39,13 +39,11 @@ import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
 import { WaitUntil } from '../../types/shop';
 import {
-  connectionHealth,
   notifyProxyChange,
   registerRequest,
   requestCompleted,
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
-import { sleep } from '../../util/extract';
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -57,6 +55,7 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'CRAWL_EBY_LISTINGS',
   'CRAWL_AZN_LISTINGS',
   'SCAN_SHOP',
+  'MATCH_PRODUCTS'
 ];
 
 const shuffleTasks: TaskTypes[] = [
@@ -415,7 +414,6 @@ export abstract class BaseQueue<
           Date.now(),
         );
         // console.log(registerResponse);
-
       }
       return originalGoto.apply(this, [url, options]);
     };
