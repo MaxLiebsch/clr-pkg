@@ -23,6 +23,13 @@ export const safeParsePrice = (
     }
 
     if (
+      priceStr.toString().match(/\.\d{3,4}\b/) &&
+      !priceStr.toString().includes(',')
+    ) {
+      priceStr = priceStr.toString().replace(/\./g, '');
+    }
+
+    if (
       (priceStr.slice(priceStr.length - 1) === '€' ||
         priceStr.slice(0, 1) === '€') &&
       priceStr.match(/\./g)?.length === 1 &&
@@ -43,10 +50,6 @@ export const safeParsePrice = (
       priceStr.toString().match(/\.\d{3,4}\b/) &&
       !priceStr.toString().includes(',')
     ) {
-      console.log(
-        'priceStr.toString().match(/.d{3,4}/):',
-        priceStr.toString().match(/\.\d{3,4}/),
-      );
       priceStr = priceStr.toString().replace(/\./g, '');
     }
   }
