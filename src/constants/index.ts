@@ -14,6 +14,7 @@ export const amazonTransportFee = 0.25;
 export const MAX_RETRIES_LOOKUP_EAN = 1;
 export const SAVE_USAGE_INTERVAL = 1000 * 60 * 5; // 5 minutes
 export const MINIMUM_PENDING_PRODUCTS = 1;
+export const keepaTimeSummand = 21564000
 
 //Should be in the middle of the range of RANDOM_TIMEOUT_MIN and RANDOM_TIMEOUT_MAX or not
 export const ACCESS_DENIED_FREQUENCE = 10000;

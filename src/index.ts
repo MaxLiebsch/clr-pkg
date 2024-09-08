@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { getProductInfoWithFetch } from './util/extract/getProductInfoWithFetch';
 
 export * from './constants/index';
 
@@ -23,6 +22,7 @@ export * from './util/extract/saveParseJSON'
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
+export * from './util/reduceSalesRankArray'
 export * from './util/uuid';
 export * from './util/proxyFunctions'
 export * from './util/proxyFunctionsv3'

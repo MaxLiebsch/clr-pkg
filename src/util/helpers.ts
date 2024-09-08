@@ -6,12 +6,18 @@ import { load } from 'cheerio';
 import { NestedNameDetail } from '../types/productInfoDetails';
 import { ProductList } from '../types/productList';
 import { WaitUntil } from '../types/shop';
+import { keepaTimeSummand } from '../constants';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
   Object.keys(browserGroup).reduce(
     (min, key) => (browserGroup[key].load < min.load ? browserGroup[key] : min),
     browserGroup[Object.keys(browserGroup)[0]],
   );
+
+
+  export const createUnixTimeFromKeepaTime = (timestamp: number) =>
+    (timestamp + keepaTimeSummand) * 60;
+  
 
 export function makeSuitableObjectKey(string: string) {
   // Replace characters that are not allowed in object property keys with an underscore
