@@ -25,7 +25,7 @@ export const reduceSalesRankArray = (array: number[]) => {
       continue;
     } else {
       dates.push(dateStr);
-      parsedArray.push([array[i], array[i + 1]]);
+      parsedArray.push([unixTimestamp, array[i + 1]]);
     }
   }
   return parsedArray;
