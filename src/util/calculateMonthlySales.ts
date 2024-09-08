@@ -8,7 +8,7 @@ const aznCategoryMapper = AznCategoryMapper.getInstance(
 );
 export function calculateMonthlySales(
   categoryIds: number[],
-  salesRanks: { [key: number]: number[] },
+  salesRanks: { [key: number]: [number, number][] },
   categoryTree: CategroyTree[],
 ) {
   const salesRankAndCoefficients = findSalesRankAndCoefficients(
@@ -24,7 +24,7 @@ export function calculateMonthlySales(
 
 const findSalesRankAndCoefficients = (
   categoryIds: number[],
-  salesRanks: { [key: number]: number[] },
+  salesRanks: { [key: number]: [number, number][] },
   categoryTree: CategroyTree[],
 ) => {
   const category = categoryTree.find((c) =>
@@ -36,9 +36,9 @@ const findSalesRankAndCoefficients = (
     if (salesRankArr) {
       const salesRank = salesRankArr[salesRankArr.length - 1];
 
-      if (salesRank !== -1) {
+      if (salesRank[1] !== -1) {
         return {
-          salesRank,
+          salesRank: salesRank[1],
           coefficients: getCoefficients(category.name as Categories),
         };
       }
@@ -66,9 +66,9 @@ const findSalesRankAndCoefficients = (
         if (salesRankArr) {
           const salesRank = salesRankArr[salesRankArr.length - 1];
 
-          if (salesRank === -1) continue;
+          if (salesRank[1] === -1) continue;
           return {
-            salesRank,
+            salesRank: salesRank[1],
             coefficients: getCoefficients(category as Categories),
           };
         }
