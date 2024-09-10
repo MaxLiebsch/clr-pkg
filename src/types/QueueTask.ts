@@ -1,3 +1,4 @@
+import { ICategory } from '../util/crawl/getCategories';
 import { ProxyType } from './proxyAuth';
 
 export type TaskTypes =
@@ -47,4 +48,8 @@ export interface QueueTask {
     resetedSession: number;
     browserStarts: number;
   };
+}
+
+export interface CrawlTask extends QueueTask {
+  categories: ICategory[];
 }

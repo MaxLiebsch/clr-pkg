@@ -1,13 +1,13 @@
 import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
-import { DbProduct, ProductRecord } from '../../types/product';
+import { DbProduct, DbProductRecord, ProductRecord } from '../../types/product';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
 import { Infos } from '../../types/Infos';
 
 export interface ProdInfo {
-  procProd: DbProduct;
+  procProd: DbProductRecord;
   rawProd: ProductRecord;
   dscrptnSegments: string[];
   nmSubSegments: string[];

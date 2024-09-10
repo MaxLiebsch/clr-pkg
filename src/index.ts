@@ -11,6 +11,9 @@ export * from './schemas/performance';
 //TYPES
 export * from './types/index';
 export * from './types/status';
+export * from './types/proxyAuth'
+export * from "./types/QueueTask";
+export * from "./types/product"
 
 export * from './util/queryURLBuilder';
 export * from './util/extract/index';

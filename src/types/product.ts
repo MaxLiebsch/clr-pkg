@@ -1,3 +1,4 @@
+import { extend } from 'underscore';
 
 export type Content =
   | 'link'
@@ -56,43 +57,207 @@ export interface SrcProductDetails {
   mnfctr: string;
 }
 
-export type ProductRecord = Partial<Record<Content, string | boolean | Array<string> | number>>;
+export type ProductRecord = Partial<
+  Record<Content, string | boolean | Array<string> | number>
+>;
 
 export interface DbProduct {
-  s: string;
   ean: string;
-  asin: string;
-  curr: string;
-  bsr: [
-    {
-      number: number;
-      createdAt: string;
-      category: string;
-    },
-  ];
-  anr: string; //article number
-  pblsh: boolean;
+  eanList: string[];
+  curr?: string;
+  bsr: BSR[];
   ctgry: string[];
   mnfctr: string;
+  hasMnfctr: boolean;
   nm: string;
   img: string;
   lnk: string;
   qty: number;
+  uprc: number;
   prc: number;
   createdAt: string;
   updatedAt: string;
-  e_lnk: string;
-  e_orgn: string;
-  e_img: string;
-  e_nm: string;
-  e_prc: number;
-  e_mrgn: number;
-  e_mrgn_pct: number;
-  a_orgn: string;
-  a_lnk: string; 
-  a_img: string;
-  a_nm: string;
-  a_prc: number;
-  a_mrgn: number;
-  a_mrgn_pct: number;
+}
+
+export interface BSR {
+  category: string;
+  number: number;
+  createdAt: string;
+}
+
+export interface Costs {
+  tpt: number;
+  varc: number;
+  azn: number;
+  strg_1_hy: number;
+  strg_2_hy: number;
+}
+
+export interface Verification {
+  vrfd?: boolean;
+  isMatch?: boolean;
+  qty?: number;
+  qty_score?: number;
+  score?: number;
+  vrfn_pending?: boolean;
+  flags?: string[];
+  flag_cnt?: number;
+}
+
+export type Prange = {
+  min: number;
+  max: number;
+  median: number;
+};
+
+export interface EbyCategory {
+  category: string;
+  id: number;
+  createdAt?: string;
+}
+
+export type AznProps =
+  | 'a_pblsh'
+  | 'a_nm'
+  | 'a_lnk'
+  | 'a_img'
+  | 'asin'
+  | 'a_prc'
+  | 'costs'
+  | 'a_uprc'
+  | 'a_qty'
+  | 'a_orgn'
+  | 'a_hash'
+  | 'tax'
+  | 'a_mrgn'
+  | 'a_mrgn_pct'
+  | 'a_w_mrgn'
+  | 'a_w_mrgn_pct'
+  | 'a_p_w_mrgn'
+  | 'a_p_w_mrgn_pct'
+  | 'a_p_mrgn'
+  | 'a_vrfd'
+  | 'a_p_mrgn_pct'
+  | 'info_taskId'
+  | 'info_prop'
+  | 'keepaEanUpdatedAt'
+  | 'keepaEan_lckd'
+  | 'keepaUpdatedAt'
+  | 'keepa_lckd'
+  | 'aznUpdatedAt'
+  | 'azn_taskId'
+  | 'dealAznUpdatedAt'
+  | 'dealAznTaskId';
+
+export type EbyProps =
+"e_pblsh"|
+"e_nm"|
+"e_pRange"|
+"e_lnk"|
+"e_cur"|
+"e_img"|
+"esin"|
+"e_prc"|
+"e_uprc"|
+"e_qty"|
+"e_orgn"|
+"e_hash"|
+"e_mrgn"|
+"e_mrgn_prc"|
+"e_mrgn_pct"|
+"e_ns_costs"|
+"e_ns_mrgn"|
+"e_ns_mrgn_prc"|
+"e_ns_mrgn_pct"|
+"e_tax"|
+"e_costs"|
+"ebyCategories"|
+"e_vrfd"|
+"cat_taskId"|
+"ebyUpdatedAt"|
+"eby_taskId"|
+"dealEbyUpdatedAt"|
+"dealEbyTaskId"|
+"eby_prop"|
+"qEbyUpdatedAt"|
+"cat_prop"|
+"catUpdatedAt"
+
+
+export interface DbProductRecord extends DbProduct {
+  // AZN properties
+  a_pblsh?: Boolean;
+  a_nm?: string;
+  a_lnk?: string;
+  a_img?: string;
+  asin?: string;
+  a_prc?: number;
+  costs?: Costs;
+  a_uprc?: number;
+  a_qty?: number;
+  a_orgn?: string;
+  a_hash?: string;
+  tax?: string;
+  a_mrgn?: number;
+  a_mrgn_pct?: number;
+  a_w_mrgn?: number;
+  a_w_mrgn_pct?: number;
+  a_p_w_mrgn?: number;
+  a_p_w_mrgn_pct?: number;
+  a_p_mrgn?: number;
+  a_vrfd?: Verification;
+  a_p_mrgn_pct?: number;
+  // lookup info
+  info_taskId?: string;
+  info_prop?: string;
+  // keepa properties
+  keepaEanUpdatedAt?: string;
+  keepaEan_lckd?: boolean;
+  keepaUpdatedAt?: string;
+  keepa_lckd?: boolean;
+  // scrape listing
+  aznUpdatedAt?: string;
+  azn_taskId?: string;
+  // dealazn properties
+  dealAznUpdatedAt?: string;
+  dealAznTaskId?: string;
+
+  // Eby properties
+  e_pblsh?: boolean;
+  e_nm?: string;
+  e_pRange?: Prange;
+  e_lnk?: string;
+  e_cur?: string;
+  e_img?: string;
+  esin?: string;
+  e_prc?: number;
+  e_uprc?: number;
+  e_qty?: number;
+  e_orgn?: string;
+  e_hash?: string;
+  e_mrgn?: number;
+  e_mrgn_prc?: number;
+  e_mrgn_pct?: number;
+  e_ns_costs?: number;
+  e_ns_mrgn?: number;
+  e_ns_mrgn_prc?: number;
+  e_ns_mrgn_pct?: number;
+  e_tax?: number;
+  e_costs?: number;
+  ebyCategories?: EbyCategory[];
+  e_vrfd?: Verification;
+  // lookup category
+  cat_taskId?: string;
+  // scrape listing
+  ebyUpdatedAt?: string;
+  eby_taskId?: string;
+  // dealeby properties
+  dealEbyUpdatedAt?: string;
+  dealEbyTaskId?: string;
+
+  eby_prop?: string;
+  qEbyUpdatedAt?: string;
+
+  cat_prop?: string;
+  catUpdatedAt?: string;
 }
