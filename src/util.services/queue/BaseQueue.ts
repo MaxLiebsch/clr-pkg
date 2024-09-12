@@ -1,7 +1,7 @@
 import { HTTPResponse, Page } from 'puppeteer1';
 import { ProxyAuth, ProxyType, standardTimeZones } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
-import { QueueTask, TaskTypes } from '../../types/QueueTask';
+import { QueueStats, QueueTask, TaskTypes } from '../../types/QueueTask';
 import { LoggerService } from '../../util/logger';
 import { mainBrowser } from '../../util/browser/browsers';
 import { closePage } from '../../util/browser/closePage';
@@ -55,7 +55,7 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'CRAWL_EBY_LISTINGS',
   'CRAWL_AZN_LISTINGS',
   'SCAN_SHOP',
-  'MATCH_PRODUCTS'
+  'MATCH_PRODUCTS',
 ];
 
 const shuffleTasks: TaskTypes[] = [
@@ -122,6 +122,7 @@ export abstract class BaseQueue<
   public total = 0;
   public actualProductLimit = 0;
   private totalReached = false;
+  public queueStats: QueueStats;
   private versionChooser: Generator<string, void, unknown> =
     yieldBrowserVersion();
 
@@ -129,32 +130,32 @@ export abstract class BaseQueue<
     this.queueId = crypto.randomUUID();
     this.queueTask = {
       ...task,
-      statistics: {
-        visitedPages: [],
-        proxyTypes: {
-          de: 0,
-          mix: 0,
-        },
-        estimatedProducts: task.productLimit,
-        statusHeuristic: {
-          'error-handled': 0,
-          'not-found': 0,
-          'page-completed': 0,
-          'limit-reached': 0,
-          total: 0,
-        },
-        retriesHeuristic: {
-          '0': 0,
-          '1-9': 0,
-          '10-49': 0,
-          '50-99': 0,
-          '100-499': 0,
-          '500+': 0,
-        },
-        resetedSession: 0,
-        errorTypeCount,
-        browserStarts: 0,
+    };
+    this.queueStats = {
+      visitedPages: [],
+      proxyTypes: {
+        de: 0,
+        mix: 0,
       },
+      estimatedProducts: task.productLimit,
+      statusHeuristic: {
+        'error-handled': 0,
+        'not-found': 0,
+        'page-completed': 0,
+        'limit-reached': 0,
+        total: 0,
+      },
+      retriesHeuristic: {
+        '0': 0,
+        '1-9': 0,
+        '10-49': 0,
+        '50-99': 0,
+        '100-499': 0,
+        '500+': 0,
+      },
+      resetedSession: 0,
+      errorTypeCount,
+      browserStarts: 0,
     };
     this.actualProductLimit = task.actualProductLimit;
     this.concurrency = concurrency; //new page
@@ -191,7 +192,7 @@ export abstract class BaseQueue<
   async connect(): Promise<void> {
     const currentVersion = this.versionChooser.next().value as Versions;
     const listeners = this.eventEmitter.listeners(`${this.queueId}-finished`);
-    this.queueTask.statistics.browserStarts += 1;
+    this.queueStats.browserStarts += 1;
     try {
       this.browser = await mainBrowser(
         this.queueTask,
@@ -289,7 +290,7 @@ export abstract class BaseQueue<
       estimatedProducts,
       retriesHeuristic,
       statusHeuristic,
-    } = this.queueTask.statistics;
+    } = this.queueStats;
     this.log({
       errorTypes: errorTypeCount,
       browserStarts,
@@ -366,7 +367,7 @@ export abstract class BaseQueue<
     }
   };
   private resetCookies = async (page: Page) => {
-    this.queueTask.statistics.resetedSession += 1;
+    this.queueStats.resetedSession += 1;
     // Clear cookies
     const cookies = await page.cookies().catch((e) => {
       console.error('Failed to get cookies:', e?.message);
@@ -816,40 +817,34 @@ export abstract class BaseQueue<
                 const { retries, status, proxyType } = result;
                 switch (true) {
                   case status === 'not-found':
-                    this.queueTask.statistics.statusHeuristic['not-found'] += 1;
+                    this.queueStats.statusHeuristic['not-found'] += 1;
                     break;
                   case status === 'error-handled':
-                    this.queueTask.statistics.statusHeuristic[
-                      'error-handled'
-                    ] += 1;
+                    this.queueStats.statusHeuristic['error-handled'] += 1;
                     break;
                   case status === 'page-completed':
-                    this.queueTask.statistics.proxyTypes[proxyType] += 1;
-                    this.queueTask.statistics.statusHeuristic[
-                      'page-completed'
-                    ] += 1;
+                    this.queueStats.proxyTypes[proxyType] += 1;
+                    this.queueStats.statusHeuristic['page-completed'] += 1;
                     break;
                   case status === 'limit-reached':
-                    this.queueTask.statistics.statusHeuristic[
-                      'limit-reached'
-                    ] += 1;
+                    this.queueStats.statusHeuristic['limit-reached'] += 1;
                     break;
                 }
                 switch (true) {
                   case retries === 0:
-                    this.queueTask.statistics.retriesHeuristic['0'] += 1;
+                    this.queueStats.retriesHeuristic['0'] += 1;
                     break;
                   case retries >= 0 && retries < 10:
-                    this.queueTask.statistics.retriesHeuristic['1-9'] += 1;
+                    this.queueStats.retriesHeuristic['1-9'] += 1;
                     break;
                   case retries >= 10 && retries < 50:
-                    this.queueTask.statistics.retriesHeuristic['10-49'] += 1;
+                    this.queueStats.retriesHeuristic['10-49'] += 1;
                     break;
                   case retries >= 50 && retries < 100:
-                    this.queueTask.statistics.retriesHeuristic['50-99'] += 1;
+                    this.queueStats.retriesHeuristic['50-99'] += 1;
                     break;
                   case retries >= 100 && retries < 500:
-                    this.queueTask.statistics.retriesHeuristic['100-499'] += 1;
+                    this.queueStats.retriesHeuristic['100-499'] += 1;
                     break;
                 }
               }

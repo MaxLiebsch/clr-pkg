@@ -44,10 +44,17 @@ export interface ScanRequest extends QRequest {
   };
 }
 
-export interface ProductInfo {
+export interface AddProductInfo {
   key: string;
   value: string;
 }
+
+export interface AddProductInfoProps {
+  productInfo: AddProductInfo[] | null;
+  url: string;
+}
+
+export type NotFoundCause = 'notFound' | 'domainNotAllowed' | 'timeout';
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
@@ -61,16 +68,8 @@ export interface QueryRequest extends QRequest {
   lookupRetryLimit?: number;
   query: Query;
   isFinished?: (interm?: IntermediateProdInfo) => Promise<void>;
-  addProductInfo?: ({
-    productInfo,
-    url,
-  }: {
-    productInfo: ProductInfo[] | null;
-    url: string;
-  }) => Promise<void>;
-  onNotFound?: (
-    cause: 'notFound' | 'domainNotAllowed' | 'timeout',
-  ) => Promise<void>;
+  addProductInfo?: ({ productInfo, url }: AddProductInfoProps) => Promise<void>;
+  onNotFound?: (cause: NotFoundCause) => Promise<void>;
 }
 
 export interface CrawlerRequest extends QRequest {

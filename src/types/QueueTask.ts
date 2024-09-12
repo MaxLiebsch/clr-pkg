@@ -16,6 +16,32 @@ export type TaskTypes =
   | 'QUERY_EANS_EBY'
   | 'LOOKUP_CATEGORY';
 
+export interface QueueStats {
+  proxyTypes: { [key in ProxyType]: number };
+  visitedPages: string[];
+  errorTypeCount: {
+    [key: string]: number;
+  }; 
+  estimatedProducts: number;
+  statusHeuristic: {
+    'error-handled': number;
+    'page-completed': number;
+    'not-found': number;
+    'limit-reached': number;
+    total: number;
+  };
+  retriesHeuristic: {
+    '0': number;
+    '1-9': number;
+    '10-49': number;
+    '50-99': number;
+    '100-499': number;
+    '500+': number;
+  };
+  resetedSession: number;
+  browserStarts: number;
+}
+
 export interface QueueTask {
   [key: string]: any;
   id: string;
@@ -23,31 +49,6 @@ export interface QueueTask {
   productLimit: number;
   proxyType?: ProxyType;
   timezones?: string[];
-  statistics: {
-    proxyTypes: { [key in ProxyType]: number };
-    visitedPages: string[];
-    errorTypeCount: {
-      [key: string]: number;
-    };
-    estimatedProducts: number;
-    statusHeuristic: {
-      'error-handled': number;
-      'page-completed': number;
-      'not-found': number;
-      'limit-reached': number;
-      total: number;
-    };
-    retriesHeuristic: {
-      '0': number;
-      '1-9': number;
-      '10-49': number;
-      '50-99': number;
-      '100-499': number;
-      '500+': number;
-    };
-    resetedSession: number;
-    browserStarts: number;
-  };
 }
 
 export interface CrawlTask extends QueueTask {

@@ -1,11 +1,12 @@
 import { Page } from 'puppeteer1';
 import { ICategory, getCategories } from '../../util/crawl/getCategories';
-import { ICategoryStats, StatService } from '../../util/fs/stats';
+import {  StatService } from '../../util/fs/stats';
 import { transformCategories } from '../../util/crawl/transformCategories';
 import { closePage } from '../../util/browser/closePage';
 import { LoggerService } from '../../util/logger';
 import { ScanRequest } from '../../types/query-request';
 import { scanSubpageLoop } from './scanSubpageLoop';
+import { ICategoryStats } from '../../types/Sitemap';
 
 export const scanShop = async (page: Page, request: ScanRequest) => {
   const { pageInfo, shop, queue, parentPath, infos } = request;

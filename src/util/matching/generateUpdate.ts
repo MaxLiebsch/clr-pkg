@@ -1,13 +1,13 @@
 import { UTCDate } from '@date-fns/utc';
-import { ProductInfo } from '../../types/query-request';
 import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
 import { createHash } from '../hash';
+import { AddProductInfo } from '../../types/query-request';
 
 export const generateUpdate = (
-  productInfo: ProductInfo[],
+  productInfo: AddProductInfo[],
   buyPrice: number,
   a_qty: number,
   qty: number,

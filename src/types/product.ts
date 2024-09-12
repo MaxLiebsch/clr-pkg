@@ -1,3 +1,4 @@
+import { WithId } from 'mongodb';
 import { extend } from 'underscore';
 
 export type Content =
@@ -70,12 +71,14 @@ export interface DbProduct {
   mnfctr: string;
   hasMnfctr: boolean;
   nm: string;
+  s_hash: string;
   img: string;
   lnk: string;
   qty: number;
   uprc: number;
   prc: number;
   createdAt: string;
+  shop?: string;
   updatedAt: string;
 }
 
@@ -150,45 +153,46 @@ export type AznProps =
   | 'dealAznTaskId';
 
 export type EbyProps =
-"e_pblsh"|
-"e_nm"|
-"e_pRange"|
-"e_lnk"|
-"e_cur"|
-"e_img"|
-"esin"|
-"e_prc"|
-"e_uprc"|
-"e_qty"|
-"e_orgn"|
-"e_hash"|
-"e_mrgn"|
-"e_mrgn_prc"|
-"e_mrgn_pct"|
-"e_ns_costs"|
-"e_ns_mrgn"|
-"e_ns_mrgn_prc"|
-"e_ns_mrgn_pct"|
-"e_tax"|
-"e_costs"|
-"ebyCategories"|
-"e_vrfd"|
-"cat_taskId"|
-"ebyUpdatedAt"|
-"eby_taskId"|
-"dealEbyUpdatedAt"|
-"dealEbyTaskId"|
-"eby_prop"|
-"qEbyUpdatedAt"|
-"cat_prop"|
-"catUpdatedAt"
+  | 'e_pblsh'
+  | 'e_nm'
+  | 'e_pRange'
+  | 'e_lnk'
+  | 'e_cur'
+  | 'e_img'
+  | 'esin'
+  | 'e_prc'
+  | 'e_uprc'
+  | 'e_qty'
+  | 'e_orgn'
+  | 'e_hash'
+  | 'e_mrgn'
+  | 'e_mrgn_prc'
+  | 'e_mrgn_pct'
+  | 'e_ns_costs'
+  | 'e_ns_mrgn'
+  | 'e_ns_mrgn_prc'
+  | 'e_ns_mrgn_pct'
+  | 'e_tax'
+  | 'e_costs'
+  | 'ebyCategories'
+  | 'e_vrfd'
+  | 'cat_taskId'
+  | 'ebyUpdatedAt'
+  | 'eby_taskId'
+  | 'dealEbyUpdatedAt'
+  | 'dealEbyTaskId'
+  | 'eby_prop'
+  | 'qEbyUpdatedAt'
+  | 'cat_prop'
+  | 'catUpdatedAt';
 
-
-export interface DbProductRecord extends DbProduct {
+export interface DbProductRecord extends DbProduct, WithId<Document> {
+  availUpdatedAt?: string;
   // AZN properties
   a_pblsh?: Boolean;
   a_nm?: string;
   a_lnk?: string;
+  a_cur?: string;
   a_img?: string;
   asin?: string;
   a_prc?: number;
@@ -197,7 +201,7 @@ export interface DbProductRecord extends DbProduct {
   a_qty?: number;
   a_orgn?: string;
   a_hash?: string;
-  tax?: string;
+  tax?: number;
   a_mrgn?: number;
   a_mrgn_pct?: number;
   a_w_mrgn?: number;

@@ -1,3 +1,4 @@
+import * as mongo from 'mongodb';
 import mongoose from 'mongoose';
 
 export * from './constants/index';
@@ -11,9 +12,12 @@ export * from './schemas/performance';
 //TYPES
 export * from './types/index';
 export * from './types/status';
-export * from './types/proxyAuth'
-export * from "./types/QueueTask";
-export * from "./types/product"
+export * from './types/proxyAuth';
+export * from './types/QueueTask';
+export * from './types/product';
+export * from './types/shop'
+export * from './types/Sitemap'
+export * from './types/query-request'
 
 export * from './util/queryURLBuilder';
 export * from './util/extract/index';
@@ -21,28 +25,28 @@ export * from './util/sanitize/index';
 export * from './util/dbOperations';
 export * from './util/helpers';
 export * from './util/safeParsePrice';
-export * from './util/extract/saveParseJSON'
+export * from './util/extract/saveParseJSON';
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
-export * from './util/reduceSalesRankArray'
+export * from './util/reduceSalesRankArray';
 export * from './util/uuid';
-export * from './util/proxyFunctions'
-export * from './util/proxyFunctionsv3'
+export * from './util/proxyFunctions';
+export * from './util/proxyFunctionsv3';
 export * from './util/fs/stats';
-export * from './util/events'
-export * from "./util/ProcessTImeTracker";
+export * from './util/events';
+export * from './util/ProcessTImeTracker';
 export * from './util/parseAsinFromUrl';
 export * from './util/parseEsinFromUrl';
 export * from './util/transformProduct';
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';
-export * from "./util/matching/packageRecognition";
+export * from './util/matching/packageRecognition';
 export * from './util/matching/calculateArbitrage';
 export * from './util/matching/calculateAznArbitrage';
 export * from './util/matching/calculateEbyArbitrage';
 export * from './util/matching/parseEbyCategories';
-export * from './util/calculateMonthlySales'
+export * from './util/calculateMonthlySales';
 export * from './util/matching/generateUpdate';
 export * from './util/browser/yieldBrowserVersion';
 export * from './static/allowed';
@@ -87,3 +91,5 @@ export * from './util/crawl/browseProductPagesQueue';
 export * from './util/extract/getProductInfoWithFetch';
 
 export const mg = { mongoose };
+
+export * from 'mongodb';

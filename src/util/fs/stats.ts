@@ -1,6 +1,7 @@
 import { join } from 'path';
 const jetpack = require('fs-jetpack');
 import lodash from 'lodash';
+import { SiteMap } from '../../types/Sitemap';
 
 /*
     page name
@@ -10,42 +11,12 @@ import lodash from 'lodash';
     cnt products
 */
 
-export interface ProductPage {
-  offset?: number;
-  missing?: string;
-  link: string;
-  cnt?: number;
-}
-
-export interface SubCategory {
-  link: string;
-  cnt_category?: number;
-  cnt_pages?: number;
-  cnt_products?: number;
-  productpages?: ProductPage[];
-  subcategories?: {
-    [key: string]: SubCategory;
-  };
-}
-
-export interface SubCategories {
-  [key: string]: SubCategory;
-}
-
-export interface ICategoryStats {
-  default: {};
-  link: string;
-  name: string;
-  cnt_category: number;
-  subcategories: SubCategories;
-}
-
-const defaults: { [key: string]: ICategoryStats } = {};
+const defaults: SiteMap = {};
 
 export class StatService {
   public static singleton: StatService;
   public pathToStatsFile: string = '';
-  public stats: { [key: string]: ICategoryStats } = {}
+  public stats: SiteMap = {};
   public static getSingleton(shopDomain: string): StatService {
     if (!StatService.singleton) {
       StatService.singleton = new StatService(shopDomain);

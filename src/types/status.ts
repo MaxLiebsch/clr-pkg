@@ -2,7 +2,7 @@ interface Status {
   name: string;
   message: string;
   stack?: string;
-  result?: any;
+  result?:any;
 }
 
 interface StatusConstructor {
