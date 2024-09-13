@@ -1,9 +1,13 @@
+import { DbProductRecord } from '../types/product';
 import { createHash } from './hash';
 import { getManufacturer, prefixLink } from './matching/compare_helper';
 import { parseAsinFromUrl } from './parseAsinFromUrl';
 import { parseEsinFromUrl } from './parseEsinFromUrl';
 
-export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
+export const transformProduct = (
+  crawlDataProduct: any,
+  shopDomain: string,
+): DbProductRecord => {
   let product = { ...crawlDataProduct };
   let {
     name,
@@ -186,7 +190,7 @@ export const transformProduct = (crawlDataProduct: any, shopDomain: string) => {
     delete product.ean_prop;
   } else {
     if (!eanUpdatedAt) {
-      product["eanUpdatedAt"] = updatedAt;
+      product['eanUpdatedAt'] = updatedAt;
     }
   }
 
