@@ -71,12 +71,15 @@ export interface DbProduct {
   mnfctr: string;
   hasMnfctr: boolean;
   nm: string;
+  matched?: boolean;
   s_hash: string;
   img: string;
   lnk: string;
   qty: number;
   uprc: number;
   prc: number;
+  ean_taskId?: string;
+  ean_prop?: string;
   createdAt: string;
   shop?: string;
   updatedAt: string;
