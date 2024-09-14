@@ -15,9 +15,9 @@ export * from './types/status';
 export * from './types/proxyAuth';
 export * from './types/QueueTask';
 export * from './types/product';
-export * from './types/shop'
-export * from './types/Sitemap'
-export * from './types/query-request'
+export * from './types/shop';
+export * from './types/Sitemap';
+export * from './types/query-request';
 
 export * from './util/queryURLBuilder';
 export * from './util/extract/index';
@@ -29,6 +29,8 @@ export * from './util/extract/saveParseJSON';
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
+export * from './util/localLogger';
+export * from './util/removeSearch'
 export * from './util/reduceSalesRankArray';
 export * from './util/uuid';
 export * from './util/proxyFunctions';

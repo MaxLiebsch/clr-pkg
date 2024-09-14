@@ -3,6 +3,7 @@ import { createHash } from './hash';
 import { getManufacturer, prefixLink } from './matching/compare_helper';
 import { parseAsinFromUrl } from './parseAsinFromUrl';
 import { parseEsinFromUrl } from './parseEsinFromUrl';
+import { removeSearchParams } from './removeSearch';
 
 export const transformProduct = (
   crawlDataProduct: any,
@@ -258,8 +259,9 @@ export const transformProduct = (
     delete product.price;
   }
   if (link) {
-    product['lnk'] = prefixLink(link, shopDomain);
+    link = prefixLink(removeSearchParams(link), shopDomain);
     product['s_hash'] = createHash(link);
+    product['lnk'] = link;
     delete product.link;
   }
 

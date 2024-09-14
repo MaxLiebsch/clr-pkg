@@ -21,7 +21,7 @@ export interface QueueStats {
   visitedPages: string[];
   errorTypeCount: {
     [key: string]: number;
-  }; 
+  };
   estimatedProducts: number;
   statusHeuristic: {
     'error-handled': number;

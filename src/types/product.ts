@@ -72,14 +72,20 @@ export interface DbProduct {
   hasMnfctr: boolean;
   nm: string;
   matched?: boolean;
-  s_hash: string;
+  productHash: string;
   img: string;
   lnk: string;
   qty: number;
   uprc: number;
   prc: number;
+  s_hash: string;
   ean_taskId?: string;
   ean_prop?: string;
+  nm_batchId?: string;
+  nm_prop?: string;
+  qty_batchId?: string;
+  qty_prop?: string;
+
   createdAt: string;
   shop?: string;
   updatedAt: string;
@@ -243,6 +249,7 @@ export interface DbProductRecord extends DbProduct, WithId<Document> {
   e_orgn?: string;
   e_hash?: string;
   e_mrgn?: number;
+  e_totalOfferCount?: number;
   e_mrgn_prc?: number;
   e_mrgn_pct?: number;
   e_ns_costs?: number;

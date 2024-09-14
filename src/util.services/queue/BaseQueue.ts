@@ -29,7 +29,7 @@ import {
 } from '../../constants';
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
 import { Versions } from '../../util/versionProvider';
-import { has, sample, shuffle } from 'underscore';
+import { sample, shuffle } from 'underscore';
 import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 import { createHash } from '../../util/hash';
@@ -449,7 +449,7 @@ export abstract class BaseQueue<
       retriesOnFail,
     } = request;
     const { link } = pageInfo;
-    let { type, statistics, timezones } = this.queueTask;
+    let { type, timezones } = this.queueTask;
     const {
       waitUntil,
       resourceTypes,
@@ -479,7 +479,7 @@ export abstract class BaseQueue<
       if ('onNotFound' in request && request?.onNotFound) {
         await request.onNotFound('timeout');
       }
-      statistics.retriesHeuristic['500+'] += 1;
+      this.queueStats.retriesHeuristic['500+'] += 1;
       return {
         details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
         status: 'error-handled',
@@ -492,7 +492,7 @@ export abstract class BaseQueue<
 
     const eligableForPremiumProxy = eligableForPremium(link, type);
 
-    statistics.statusHeuristic['total'] += 1;
+    this.queueStats.statusHeuristic['total'] += 1;
     let page: Page | undefined = undefined;
 
     try {
@@ -564,7 +564,7 @@ export abstract class BaseQueue<
         ) => {
           if (status === 404) {
             const errorType = ErrorType.NotFound;
-            statistics.errorTypeCount[errorType] += 1;
+            this.queueStats.errorTypeCount[errorType] += 1;
             if (retries < MAX_RETRIES_NOT_FOUND) {
               throw new Error(ErrorType.NotFound);
             } else {
@@ -605,7 +605,7 @@ export abstract class BaseQueue<
             retries,
             proxyType,
             request,
-            statistics,
+            this.queueStats,
           );
         }
       }
@@ -625,9 +625,9 @@ export abstract class BaseQueue<
       const message = await task(page, request);
       if (
         type === 'CRAWL_SHOP' &&
-        !statistics.visitedPages.includes(pageInfo.link)
+        !this.queueStats.visitedPages.includes(pageInfo.link)
       ) {
-        statistics.visitedPages.push(pageInfo.link);
+        this.queueStats.visitedPages.push(pageInfo.link);
       }
       await requestCompleted(requestId);
       const details = `🆗 Id: ${requestId}${message && typeof message === 'string' ? ` - ${message} - ` : ` - ${type} - `}${'targetShop' in request ? request.targetShop?.name : domain} - Hash: ${hash}`;
@@ -653,7 +653,7 @@ export abstract class BaseQueue<
                 this.pauseQueue('error');
               } else {
                 const errorType = error.message as ErrorType;
-                statistics.errorTypeCount[errorType] += 1;
+                this.queueStats.errorTypeCount[errorType] += 1;
                 if (
                   isErrorFrequent(
                     errorType,
@@ -676,12 +676,12 @@ export abstract class BaseQueue<
             ) {
               console.log('Restart browser because of protocol error');
               const errorType = ErrorType.ProtocolError;
-              statistics.errorTypeCount[errorType] += 1;
+              this.queueStats.errorTypeCount[errorType] += 1;
               this.pauseQueue('error');
             }
             const errorType = this.parseError(error);
             if (errorType) {
-              statistics.errorTypeCount[errorType] += 1;
+              this.queueStats.errorTypeCount[errorType] += 1;
               if (
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
               ) {
@@ -696,7 +696,7 @@ export abstract class BaseQueue<
             this.pauseQueue('error');
             this.errorLog[errorType].count += 1;
             this.errorLog[errorType].lastOccurred = Date.now();
-            statistics.errorTypeCount[errorType] += 1;
+            this.queueStats.errorTypeCount[errorType] += 1;
           }
         }
         const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
@@ -770,7 +770,11 @@ export abstract class BaseQueue<
   }
 
   next(): void {
-    const tasks = ['DAILY_DEALS', 'LOOKUP_INFO', 'WHOLESALE_SEARCH'];
+    const tasks: TaskTypes[] = [
+      'DAILY_SALES',
+      'LOOKUP_INFO',
+      'WHOLESALE_SEARCH',
+    ];
 
     if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {
       console.log('Multiple queue completed:', this.queueId);
