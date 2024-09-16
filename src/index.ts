@@ -25,13 +25,14 @@ export * from './util/sanitize/index';
 export * from './util/dbOperations';
 export * from './util/helpers';
 export * from './util/safeParsePrice';
-export * from './util/getMainDomainFromUrl'
+export * from './util/getMainDomainFromUrl';
 export * from './util/extract/saveParseJSON';
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';
 export * from './util/logger';
 export * from './util/localLogger';
-export * from './util/removeSearch'
+export * from './util/hash';
+export * from './util/removeSearch';
 export * from './util/reduceSalesRankArray';
 export * from './util/uuid';
 export * from './util/proxyFunctions';
