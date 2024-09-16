@@ -70,6 +70,7 @@ export interface DbProduct {
   mnfctr: string;
   hasMnfctr: boolean;
   nm: string;
+  nm_vrfd?: Verification;
   matched?: boolean;
   productHash: string;
   img: string;
@@ -108,6 +109,7 @@ export interface Verification {
   vrfd?: boolean;
   isMatch?: boolean;
   qty?: number;
+  qty_prop?: string;
   qty_score?: number;
   score?: number;
   vrfn_pending?: boolean;

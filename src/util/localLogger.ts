@@ -6,7 +6,7 @@ import os from 'os';
 import { TaskTypes } from '../types/QueueTask';
 
 const defaultLogDirectory =
-  os.platform() === 'linux' ? '/var/logs/tasks' : './var/logs/tasks';
+  os.platform() === 'linux' ? '/var/log/tasks' : './var/log/tasks';
 
 function getTimestamp() {
   const now = new Date();
