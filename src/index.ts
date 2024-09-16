@@ -25,6 +25,7 @@ export * from './util/sanitize/index';
 export * from './util/dbOperations';
 export * from './util/helpers';
 export * from './util/safeParsePrice';
+export * from './util/getMainDomainFromUrl'
 export * from './util/extract/saveParseJSON';
 export * from './util/extractProductAvailabilityInfo';
 export * from './util/deliveryTImeCleansing';

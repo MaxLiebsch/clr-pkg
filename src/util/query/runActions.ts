@@ -1,12 +1,12 @@
 import { ElementHandle, Page } from 'puppeteer1';
-import { ShopObject } from '../../types';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
 import { Query } from '../../types/query';
+import { Shop } from '../../types/shop';
 
 export async function runActions(
   page: Page,
-  shop: ShopObject,
+  shop: Shop,
   type: 'query' | 'crawl' | 'standard' = 'standard',
   query?: Query,
   step?: number,

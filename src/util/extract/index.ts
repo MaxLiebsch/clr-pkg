@@ -28,11 +28,11 @@ import { ProxyAuth } from '../../types/proxyAuth';
 import { closePage } from '../browser/closePage';
 import { getPage } from '../browser/getPage';
 import { extractFromVariousLocations } from './extractFromVariousLocations';
-import { uuid } from '../uuid';
+import { Shop } from '../../types/shop';
 
 const collectInternalLinks = (
   $: CheerioAPI,
-  shop: ShopObject,
+  shop: Shop,
   url: string,
 ): string[] => {
   const { d, ece, ap } = shop;
@@ -182,7 +182,7 @@ export const extractRegexFromString = (str: string, regex: RegExp) => {
 
 export const findProductInfo = (
   $: CheerioAPI,
-  shop: ShopObject,
+  shop: Shop,
   url: string,
   extractLinks: boolean = true,
 ): Candidate => {

@@ -3,6 +3,7 @@ import path from 'path';
 import jetpack from 'fs-jetpack';
 import { scheduleJob } from 'node-schedule';
 import os from 'os';
+import { TaskTypes } from '../types/QueueTask';
 
 const defaultLogDirectory =
   os.platform() === 'linux' ? '/var/logs/tasks' : './var/logs/tasks';
@@ -40,7 +41,7 @@ export class LocalLogger {
   }
 
   // Create a logger for a specific task
-  createLogger(taskId: string) {
+  createLogger(taskId: TaskTypes) {
     const timestamp = getTimestamp();
     const logFilePath = path.join(
       this.logDirectory,

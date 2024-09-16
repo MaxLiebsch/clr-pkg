@@ -68,6 +68,12 @@ const shuffleTasks: TaskTypes[] = [
   'QUERY_EANS_EBY',
   'LOOKUP_CATEGORY',
 ];
+
+const multipleQueues: TaskTypes[] = [
+  'DAILY_SALES',
+  'LOOKUP_INFO',
+  'WHOLESALE_SEARCH',
+];
 const neverUsePremiumProxyDomains = ['amazon.de', 'ebay.de'];
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
@@ -123,6 +129,7 @@ export abstract class BaseQueue<
   public actualProductLimit = 0;
   private totalReached = false;
   public queueStats: QueueStats;
+  private logged = false;
   private versionChooser: Generator<string, void, unknown> =
     yieldBrowserVersion();
 
@@ -191,6 +198,7 @@ export abstract class BaseQueue<
   /*  BROWSER RELATED FUNCTIONS  */
   async connect(): Promise<void> {
     const currentVersion = this.versionChooser.next().value as Versions;
+    console.log('currentVersion:', currentVersion)
     const listeners = this.eventEmitter.listeners(`${this.queueId}-finished`);
     this.queueStats.browserStarts += 1;
     try {
@@ -291,18 +299,21 @@ export abstract class BaseQueue<
       retriesHeuristic,
       statusHeuristic,
     } = this.queueStats;
-    this.log({
-      errorTypes: errorTypeCount,
-      browserStarts,
-      infos: {
-        ...infos,
-        estimatedProducts,
-      },
-      resetedSession,
-      statusHeuristic,
-      retriesHeuristic,
-      event,
-    });
+    if (!this.logged) {
+      this.logged = true;
+      this.log({
+        errorTypes: errorTypeCount,
+        browserStarts,
+        infos: {
+          ...infos,
+          estimatedProducts,
+        },
+        resetedSession,
+        statusHeuristic,
+        retriesHeuristic,
+        event,
+      });
+    }
     this.errorLog = errorTypes;
     this.requestCount = 0;
     this.criticalErrorCount = 0;
@@ -465,7 +476,7 @@ export abstract class BaseQueue<
 
     if (retriesOnFail && retries >= retriesOnFail) {
       if ('onNotFound' in request && request?.onNotFound) {
-        await request.onNotFound('timeout');
+        await request.onNotFound('exceedsLimit');
       }
       return {
         details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
@@ -477,7 +488,7 @@ export abstract class BaseQueue<
 
     if (retries > MAX_RETRIES) {
       if ('onNotFound' in request && request?.onNotFound) {
-        await request.onNotFound('timeout');
+        await request.onNotFound('exceedsLimit');
       }
       this.queueStats.retriesHeuristic['500+'] += 1;
       return {
@@ -770,21 +781,16 @@ export abstract class BaseQueue<
   }
 
   next(): void {
-    const tasks: TaskTypes[] = [
-      'DAILY_SALES',
-      'LOOKUP_INFO',
-      'WHOLESALE_SEARCH',
-    ];
-
-    if (tasks.includes(this.queueTask.type) && this.queue.length === 0) {
-      console.log('Multiple queue completed:', this.queueId);
+    if (
+      multipleQueues.includes(this.queueTask.type) &&
+      this.queue.length === 0
+    ) {
       this.eventEmitter.emit(`${this.queueId}-finished`, {
         queueId: this.queueId,
       });
     } else {
       if (!this.totalReached && this.total === this.actualProductLimit) {
         this.totalReached = true;
-        console.log('Queue completed:', this.queueId);
         this.eventEmitter.emit(`${this.queueId}-finished`, {
           queueId: this.queueId,
         });

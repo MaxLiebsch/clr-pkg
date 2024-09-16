@@ -1,5 +1,4 @@
-import { WithId } from 'mongodb';
-import { extend } from 'underscore';
+import { ObjectId, WithId } from 'mongodb';
 
 export type Content =
   | 'link'
@@ -183,6 +182,7 @@ export type EbyProps =
   | 'e_ns_mrgn_pct'
   | 'e_tax'
   | 'e_costs'
+  | 'e_totalOfferCount'
   | 'ebyCategories'
   | 'e_vrfd'
   | 'cat_taskId'
@@ -195,7 +195,8 @@ export type EbyProps =
   | 'cat_prop'
   | 'catUpdatedAt';
 
-export interface DbProductRecord extends DbProduct, WithId<Document> {
+
+export interface DbProductRecord extends WithId<Document>, DbProduct {
   availUpdatedAt?: string;
   // AZN properties
   a_pblsh?: Boolean;

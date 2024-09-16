@@ -1,4 +1,4 @@
-import { ShopObject, TargetShop } from '../../types';
+import {  TargetShop } from '../../types';
 import { QueueTask } from '../../types/QueueTask';
 import { Product, ProductRecord } from '../../types/product';
 import { Query } from '../../types/query';
@@ -16,7 +16,7 @@ import { uuid } from '../../util/uuid';
 export const queryTargetShops = async (
   targetShops: TargetShop[],
   queue: QueryQueue,
-  shops: { [key: string]: ShopObject },
+  shops: { [key: string]: Shop },
   query: Query,
   task: QueueTask,
   prodInfo: ProdInfo,

@@ -16,11 +16,8 @@ import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
 import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
-import { ShopObject } from '../../types';
-import { ProxyType } from '../../types/proxyAuth';
 import { allowed } from '../../static/allowed';
-import { notifyProxyChange } from '../proxyFunctions';
-import { sleep } from '../extract';
+import { Shop } from '../../types/shop';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
@@ -123,7 +120,7 @@ export const rotateGraphicUnit = (
 
 interface PagePropertiesOptions {
   page: Page;
-  shop: ShopObject;
+  shop: Shop;
   exceptions?: string[];
   requestCount: number | null;
   disAllowedResourceTypes?: ResourceType[];
@@ -508,7 +505,7 @@ const setPageProperties = async ({
 
 interface GetPageOptions {
   browser: Browser;
-  shop: ShopObject;
+  shop: Shop;
   requestCount: number | null;
   disAllowedResourceTypes?: ResourceType[];
   exceptions?: string[];

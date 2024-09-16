@@ -11,7 +11,6 @@ import { ImgMeta } from '.';
 import { ProxyType } from './proxyAuth';
 
 export interface Shop {
-  _id: string;
   mimic?: string;
   d: string; // domain
   l: string; // link to shop

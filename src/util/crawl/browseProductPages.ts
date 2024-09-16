@@ -17,10 +17,11 @@ import { closePage } from '../browser/closePage';
 import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
 import { buildNextPageUrl } from './buildNextPageUrl';
+import { Shop } from '../../types/shop';
 
 export async function browseProductpages(
   page: Page,
-  shop: ShopObject,
+  shop: Shop,
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
   limit: Limit | undefined,

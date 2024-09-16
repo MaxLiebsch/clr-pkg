@@ -1,5 +1,4 @@
 import { Page } from 'puppeteer1';
-import { ShopObject } from '../../types';
 import {
   cleanUpHTML,
   extractPart,
@@ -22,10 +21,11 @@ import {
 import { get } from 'lodash';
 import { safeJSONParse } from '../extract/saveParseJSON';
 import { detectCurrency, safeParsePrice } from '../safeParsePrice';
+import { Shop } from '../../types/shop';
 
 export const crawlProducts = async (
   page: Page,
-  shop: ShopObject,
+  shop: Shop,
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
 ) => {

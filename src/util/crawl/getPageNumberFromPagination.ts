@@ -8,6 +8,7 @@ import {
 } from '../helpers';
 import { getNumber, getNumbers } from '../matching/compare_helper';
 import { PaginationElement } from '../../types/paginationElement';
+import { Shop } from '../../types/shop';
 
 /**
  * Retrieves the page numbers from a pagination element.
@@ -32,7 +33,7 @@ import { PaginationElement } from '../../types/paginationElement';
 
 export const getPageNumberFromPagination = async (
   page: Page,
-  shop: ShopObject,
+  shop: Shop,
   paginationEl: PaginationElement,
   currentPage?: number,
   productCount?: number | null,

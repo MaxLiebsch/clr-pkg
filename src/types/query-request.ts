@@ -8,6 +8,7 @@ import { Query } from './query';
 import { ScanQueue } from '../util.services/queue/ScanQueue';
 import { Infos } from './Infos';
 import { ProxyType } from './proxyAuth';
+import { Shop } from './shop';
 
 export interface QRequest {
   prio: number;
@@ -16,7 +17,7 @@ export interface QRequest {
   requestId: string;
   prevProxyType?: ProxyType;
   proxyType?: ProxyType;
-  shop: ShopObject;
+  shop: Shop;
   pageInfo: ICategory;
 }
 
@@ -54,7 +55,7 @@ export interface AddProductInfoProps {
   url: string;
 }
 
-export type NotFoundCause = 'notFound' | 'domainNotAllowed' | 'timeout';
+export type NotFoundCause = 'notFound' | 'domainNotAllowed' | 'timeout' | 'exceedsLimit';
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;

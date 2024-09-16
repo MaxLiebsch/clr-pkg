@@ -1,5 +1,5 @@
 import { ChildProcess } from 'child_process';
-import { ObjectId } from 'mongodb';
+import { Document, ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
 import { Browser } from 'puppeteer1';
 
@@ -22,8 +22,9 @@ export interface TargetShop {
   d: string;
   name: string;
 }
+type WithId<T> = T & { _id: ObjectId };
 
-export interface ShopObject extends Shop {}
+export interface ShopObject extends Shop, WithId<Document> {}
 
 export interface BrowserGroup {
   [key: string]: BrowserInfo;
