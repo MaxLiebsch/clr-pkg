@@ -1,4 +1,3 @@
-import * as mongo from 'mongodb';
 import mongoose from 'mongoose';
 
 export * from './constants/index';
@@ -18,6 +17,7 @@ export * from './types/product';
 export * from './types/shop';
 export * from './types/Sitemap';
 export * from './types/query-request';
+export * from './types/keepa'
 
 export * from './util/queryURLBuilder';
 export * from './util/extract/index';
@@ -64,6 +64,11 @@ export * from './util/browser/getPage';
 // SCAN
 export * from './util.services/queue/ScanQueue';
 export * from './util.services/scan/scanShop';
+
+
+// DB
+export * from './util/db/aznQueries';
+export * from './util/db/ebyQueries';
 
 // QUERY
 export * from './util.services/query/submitQuery';

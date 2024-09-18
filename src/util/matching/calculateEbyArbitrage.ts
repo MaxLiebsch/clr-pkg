@@ -1,12 +1,13 @@
 import { ebayTier } from '../../static/ebay';
 import { EbyCategory } from '../../types/ebayCategory';
+import { DbProductRecord } from '../../types/product';
 import { roundToTwoDecimals } from '../helpers';
 
 export const calculateEbyArbitrage = (
   mappedCategory: EbyCategory,
   sellPrice: number,
   bruttoBuyPrice: number, //EK  // p.prc * (p.e_qty/p.qty) Herkunftshoppreis * (QTY Zielshop/QTY Herkunftsshop)
-) => {
+): Partial<DbProductRecord> | null => {
   const nettoBuyPrice = bruttoBuyPrice / 1.19;
   const taxCosts = roundToTwoDecimals(sellPrice - sellPrice / (1 + 19 / 100));
   let totalCosts = roundToTwoDecimals(nettoBuyPrice + taxCosts);
@@ -18,7 +19,7 @@ export const calculateEbyArbitrage = (
 
   const e_mrgn = roundToTwoDecimals(sellPrice - totalCosts - ebyShpCosts);
   const e_mrgn_pct = roundToTwoDecimals((e_mrgn / sellPrice) * 100);
-  
+
   const e_ns_mrgn = roundToTwoDecimals(sellPrice - totalCosts - ebyCosts);
   const e_ns_mrgn_pct = roundToTwoDecimals((e_ns_mrgn / sellPrice) * 100);
 

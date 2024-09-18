@@ -1,4 +1,5 @@
 import { amazonTransportFee } from '../../constants';
+import { DbProductRecord } from '../../types/product';
 import { roundToTwoDecimals } from '../helpers';
 
 interface Costs {
@@ -42,7 +43,7 @@ export const calculateAznArbitrage = (
   sellPrice: number,
   costs: Costs,
   tax?: number,
-) => {
+): Partial<DbProductRecord> => {
   const buyPrice = roundToTwoDecimals(
     _buyPrice / (tax ? 1 + Number(tax / 100) : 1.19),
   );
