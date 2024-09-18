@@ -197,8 +197,37 @@ export type EbyProps =
   | 'cat_prop'
   | 'catUpdatedAt';
 
+export interface KeepaProperties  {
+  categories?: string,
+  k_eanList?: string[],
+  brand?: string,
+  numberOfItems?: number,
+  availabilityAmazon?: string,
+  categoryTree?: string,
+  salesRanks?: number[][], // Sales Rank nullable
+  monthlySold?: number,
+  ahstprcs?: number[][], // Amazon history prices
+  anhstprcs?: number[][], // Amazon new history prices
+  auhstprcs?: number[][], // Amazon used history prices
+  curr_ahsprcs?: number,
+  curr_ansprcs?: number,
+  curr_ausprcs?: number,
+  curr_salesRank?: number,
+  avg30_ahsprcs?: number, // Average of the Amazon history prices of the last 30 days
+  avg30_ansprcs?: number, // Average of the Amazon history prices of the last 30 days
+  avg30_ausprcs?: number, // Average of the Amazon history prices of the last 30 days
+  avg30_salesRank?: number, // Average of the Amazon history prices of the last 30 days
+  avg90_ahsprcs?: number, // Average of the Amazon history prices of the last 90 days
+  avg90_ansprcs?: number, // Average of the Amazon history prices of the last 90 days
+  avg90_ausprcs?: number, // Average of the Amazon history prices of the last 90 days
+  avg90_salesRank?: number, // Average of the Amazon history prices of the last 90 days
+  buyBoxIsAmazon?: boolean,
+  stockAmount?: number, //  The stock of the Amazon offer, if available. Otherwise undefined.
+  stockBuyBox?: string, // he stock of the buy box offer, if available. Otherwise undefined.
+  totalOfferCount?: number,
+}; // The total count of offers for this product (all conditions combined). The offer count per condition can be found in the current field.
 
-export interface DbProductRecord extends WithId<Document>, DbProduct {
+export interface DbProductRecord extends KeepaProperties, WithId<Document>, DbProduct {
   availUpdatedAt?: string;
   // AZN properties
   a_pblsh?: Boolean;

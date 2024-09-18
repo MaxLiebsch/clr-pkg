@@ -41,11 +41,10 @@ export class LocalLogger {
   }
 
   // Create a logger for a specific task
-  createLogger(taskId: TaskTypes) {
-    const timestamp = getTimestamp();
+  createLogger(taskId: TaskTypes | 'GLOBAL') {
     const logFilePath = path.join(
       this.logDirectory,
-      `task-${taskId}-${timestamp}.log`,
+      taskId === 'GLOBAL' ? `_${taskId}.log` : `task-${taskId}.log`,
     );
 
     const fileTransport = pino.transport({
