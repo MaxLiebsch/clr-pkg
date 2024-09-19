@@ -20,6 +20,13 @@ function getTimestamp() {
 
 const loggers: { [key: string]: pino.Logger } = {};
 
+export type CronjobTasks =
+  | 'UNWATCHED_PRODUCTS'
+  | 'PROCESS_PROPS'
+  | 'PENDING_KEEPAS'
+  | 'BATCHES'
+  | 'RESURRECTION';
+
 export class LocalLogger {
   logDirectory = defaultLogDirectory;
   public static instance: LocalLogger;
@@ -41,7 +48,7 @@ export class LocalLogger {
   }
 
   // Create a logger for a specific task
-  createLogger(taskId: TaskTypes | 'GLOBAL') {
+  createLogger(taskId: TaskTypes | 'GLOBAL' | CronjobTasks) {
     const logFilePath = path.join(
       this.logDirectory,
       taskId === 'GLOBAL' ? `_${taskId}.log` : `task-${taskId}.log`,
