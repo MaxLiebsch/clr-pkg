@@ -72,6 +72,12 @@ export const transformProduct = (
     shop,
   } = product;
 
+  for (const key in product) {
+    if (Number.isNaN(product[key])) {
+      delete product[key];
+    }
+  }
+
   if (typeof e_mrgn_prc === 'number') {
     delete product.e_mrgn_prc;
   }
@@ -88,7 +94,7 @@ export const transformProduct = (
     delete product.img;
   }
 
-  if (arn) {
+  if (typeof arn === 'string') {
     delete product.arn;
   }
 
