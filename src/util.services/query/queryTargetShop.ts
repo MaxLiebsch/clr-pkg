@@ -22,6 +22,7 @@ export const queryTargetShops = async (
   task: QueueTask,
   prodInfo: ProdInfo,
   srcShop: Shop,
+  log?: any,
 ) =>
   targetShops.map(
     (targetShop) =>
@@ -35,7 +36,10 @@ export const queryTargetShops = async (
             products.push(<Product>product);
           };
           const isFinished = async (interm?: IntermediateProdInfo) => {
-            if (!interm) return resolve({ products, targetShop, path: 'wtf' });
+            if (!interm) {
+              log && log(`No Itermediate found ${s_hash} in ${targetShop.d}`);
+              return resolve({ products, targetShop, path: 'wtf' });
+            }
 
             const { intermProcProd, missingShops, candidates, path } = interm;
 
@@ -69,6 +73,7 @@ export const queryTargetShops = async (
                 task,
                 prodInfo,
                 srcShop,
+                log,
               );
 
               const targetShopProducts = (await Promise.all(
@@ -134,7 +139,7 @@ export const queryTargetShops = async (
             targetShop,
             targetRetailerList,
             onNotFound: async (cause: NotFoundCause) => {
-              console.log('cause:', cause)
+              log && log(`Not found ${s_hash} in ${d} because ${cause}`);
               await isFinished();
             },
             queue,
