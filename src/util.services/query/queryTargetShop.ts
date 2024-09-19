@@ -1,4 +1,4 @@
-import {  TargetShop } from '../../types';
+import { TargetShop } from '../../types';
 import { QueueTask } from '../../types/QueueTask';
 import { Product, ProductRecord } from '../../types/product';
 import { Query } from '../../types/query';
@@ -12,6 +12,7 @@ import {
 } from '../../util/query/matchTargetShopProdsWithRawProd';
 import { Shop } from '../../types/shop';
 import { uuid } from '../../util/uuid';
+import { NotFoundCause } from '../../types/query-request';
 
 export const queryTargetShops = async (
   targetShops: TargetShop[],
@@ -27,7 +28,7 @@ export const queryTargetShops = async (
       new Promise<TargetShopProducts>((resolve, rej) => {
         try {
           const { extendedLookUp, limit } = task;
-          let { procProd, rawProd} = prodInfo;
+          let { procProd, rawProd } = prodInfo;
           const { s_hash } = rawProd;
           const products: Product[] = [];
           const addProduct = async (product: ProductRecord) => {
@@ -132,6 +133,10 @@ export const queryTargetShops = async (
             addProduct,
             targetShop,
             targetRetailerList,
+            onNotFound: async (cause: NotFoundCause) => {
+              console.log('cause:', cause)
+              await isFinished();
+            },
             queue,
             query,
             prio: 0,
