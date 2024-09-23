@@ -13,6 +13,7 @@ import {
 import { Shop } from '../../types/shop';
 import { uuid } from '../../util/uuid';
 import { NotFoundCause } from '../../types/query-request';
+import { RETRY_LIMIT_MATCH_PRODUCTS } from '../../constants';
 
 export const queryTargetShops = async (
   targetShops: TargetShop[],
@@ -136,6 +137,7 @@ export const queryTargetShops = async (
             requestId: uuid(),
             s_hash: s_hash as string,
             addProduct,
+            retriesOnFail: RETRY_LIMIT_MATCH_PRODUCTS,
             targetShop,
             targetRetailerList,
             onNotFound: async (cause: NotFoundCause) => {
