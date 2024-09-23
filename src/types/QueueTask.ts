@@ -7,6 +7,7 @@ export type TaskTypes =
   | 'DAILY_SALES'
   | 'CRAWL_SHOP'
   | 'WHOLESALE_SEARCH'
+  | 'WHOLESALE_EBY_SEARCH'
   | 'SCAN_SHOP'
   | 'MATCH_PRODUCTS'
   | 'CRAWL_AZN_LISTINGS'
