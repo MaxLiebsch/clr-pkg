@@ -2,13 +2,14 @@ import { P } from 'pino';
 import { getCoefficients } from '../static/aznMonthlySalesCoefficients';
 import { Categories, CategroyTree } from '../types/aznSalesRankCoefficients';
 import { AznCategoryMapper } from './AznCategoryMapper';
+import { get } from 'underscore';
 
 const aznCategoryMapper = AznCategoryMapper.getInstance(
   '../static/aznCategoryMapping.json',
 );
 export function calculateMonthlySales(
   categoryIds: number[],
-  salesRanks: { [key: number]: [number, number][] },
+  salesRanks: { [key: number]: number[][] },
   categoryTree: CategroyTree[],
 ) {
   const salesRankAndCoefficients = findSalesRankAndCoefficients(
@@ -24,7 +25,7 @@ export function calculateMonthlySales(
 
 const findSalesRankAndCoefficients = (
   categoryIds: number[],
-  salesRanks: { [key: number]: [number, number][] },
+  salesRanks: { [key: number]: number[][] },
   categoryTree: CategroyTree[],
 ) => {
   const category = categoryTree.find((c) =>
@@ -54,10 +55,26 @@ const findSalesRankAndCoefficients = (
       return false;
     }
   });
+  console.log('exisitingCategoryIds:', exisitingCategoryIds)
 
   for (let i = 0; i < exisitingCategoryIds.length; i++) {
     const category = aznCategoryMapper.get(exisitingCategoryIds[i]);
     if (category) {
+      const coefficients = getCoefficients(category as Categories);
+      if (coefficients) {
+        const salesRankArr = salesRanks[exisitingCategoryIds[i]];
+        if (salesRankArr) {
+          const salesRank = salesRankArr[salesRankArr.length - 1];
+
+          if (salesRank[1] !== -1) {
+            return {
+              salesRank: salesRank[1],
+              coefficients,
+            };
+          }
+        }
+      }
+
       const categoryTreeItem = categoryTree.find(
         (treeItem) => treeItem.name === category,
       );

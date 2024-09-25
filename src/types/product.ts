@@ -200,13 +200,13 @@ export type EbyProps =
   | 'catUpdatedAt';
 
 export interface KeepaProperties {
-  categories?: string;
+  categories?: number[] | null;
   k_eanList?: string[];
   brand?: string;
   numberOfItems?: number;
   availabilityAmazon?: string;
-  categoryTree?: string;
-  salesRanks?: { [key: string]: number[][] }; // Sales Rank nullable
+  categoryTree?: { name: string; catId: number }[] | null;
+  salesRanks?: { [key: string]: number[][] } | null; // Sales Rank nullable
   monthlySold?: number;
   ahstprcs?: number[][]; // Amazon history prices
   anhstprcs?: number[][]; // Amazon new history prices
