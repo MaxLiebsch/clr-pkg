@@ -24,8 +24,8 @@ export const queryTargetShops = async (
   prodInfo: ProdInfo,
   srcShop: Shop,
   log?: any,
-) =>
-  targetShops.map(
+) => {
+  const promises = targetShops.map(
     (targetShop) =>
       new Promise<TargetShopProducts>((resolve, rej) => {
         try {
@@ -65,8 +65,10 @@ export const queryTargetShops = async (
             if (missingShops.length) {
               // WE DID NOT FIND ALL IN I D E A L O
               task.extendedLookUp = false;
-
-              const shopQueryPromises = queryTargetShops(
+              log(
+                `Missing shops ${missingShops.map((s) => s.d).join(', ')} - ${s_hash}`,
+              );
+              const shopQueryPromises = await queryTargetShops(
                 missingShops,
                 queue,
                 shops,
@@ -77,9 +79,7 @@ export const queryTargetShops = async (
                 log,
               );
 
-              const targetShopProducts = (await Promise.all(
-                await shopQueryPromises,
-              )) as TargetShopProducts[];
+              const targetShopProducts = await Promise.all(shopQueryPromises);
 
               // CALCULATE ARBIBTRAGE FOR THE REMAINING SHOP(S)
               const {
@@ -108,6 +108,7 @@ export const queryTargetShops = async (
 
               resolve({ targetShop, procProd, candidates, path });
             } else {
+              log(`Found all azn, eby for ${s_hash} in ${targetShop.d}`);
               // WE FOUND A M A Z O N AND E B A Y IN I D E A L O
               let origin: { [key: string]: any } = { a_orgn: 'i', e_orgn: 'i' };
               if (srcShop.hasEan || srcShop.ean) {
@@ -159,7 +160,11 @@ export const queryTargetShops = async (
             },
           });
         } catch (error) {
+          log(`Error in queryTargetShops ${error} - ${prodInfo.rawProd.s_hash}`);
+          resolve({ targetShop, path: 'wtf' });
           console.log('error:', error);
         }
       }),
   );
+  return Promise.all(promises);
+};
