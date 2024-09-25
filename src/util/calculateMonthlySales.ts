@@ -55,8 +55,6 @@ const findSalesRankAndCoefficients = (
       return false;
     }
   });
-  console.log('exisitingCategoryIds:', exisitingCategoryIds)
-
   for (let i = 0; i < exisitingCategoryIds.length; i++) {
     const category = aznCategoryMapper.get(exisitingCategoryIds[i]);
     if (category) {
