@@ -64,16 +64,16 @@ export const queryTargetShops = async (
 
             if (missingShops.length) {
               // WE DID NOT FIND ALL IN I D E A L O
-              task.extendedLookUp = false;
-              log(
-                `Missing shops ${missingShops.map((s) => s.d).join(', ')} - ${s_hash}`,
-              );
+              log &&
+                log(
+                  `Missing shops ${missingShops.map((s) => s.d).join(', ')} - ${s_hash}`,
+                );
               const shopQueryPromises = await queryTargetShops(
                 missingShops,
                 queue,
                 shops,
                 query,
-                task,
+                { ...task, extendedLookUp: false },
                 prodInfo,
                 srcShop,
                 log,
@@ -135,6 +135,7 @@ export const queryTargetShops = async (
           queue.pushTask(queryShopQueue, {
             retries: 0,
             shop,
+            log,
             requestId: uuid(),
             s_hash: s_hash as string,
             addProduct,
@@ -160,7 +161,9 @@ export const queryTargetShops = async (
             },
           });
         } catch (error) {
-          log(`Error in queryTargetShops ${error} - ${prodInfo.rawProd.s_hash}`);
+          log(
+            `Error in queryTargetShops ${error} - ${prodInfo.rawProd.s_hash}`,
+          );
           resolve({ targetShop, path: 'wtf' });
           console.log('error:', error);
         }

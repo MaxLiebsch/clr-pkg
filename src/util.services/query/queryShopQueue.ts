@@ -29,6 +29,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
     addProduct,
     isFinished,
     limit,
+    log,
     prodInfo,
     extendedLookUp,
     targetShop,
@@ -61,7 +62,9 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
       const { foundProds, candidatesToSave: candidates } =
         reduceTargetShopCandidates(products as Product[]);
 
-      let { procProd, rawProd } = prodInfo;
+        
+        let { procProd, rawProd } = prodInfo;
+        log && log(`Found ${foundProds.length} products for ${prodInfo.rawProd.s_hash}`);
 
       const { arbitrage, bestMatch } = addBestMatchToProduct(
         foundProds,
@@ -70,6 +73,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
       );
       // No match found on I D E A L O => we need to search on the A M A Z O N and E B A Y
       if (!bestMatch) {
+        log && log(`No best match found ${rawProd.s_hash}`);
         isFinished &&
           isFinished({
             path: 'no_bm_search_all',
@@ -79,8 +83,10 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
           });
         await closePage(page);
       } else {
+        log && log(`Best match found ${rawProd.s_hash}`);
         // Best match on I D E A L O
         if (bestMatch.vendor) {
+          log && log(`vendor found ${rawProd.s_hash}`);
           const vendor = bestMatch.vendor.toLowerCase().trim();
           const isEbay = vendor.includes('ebay');
           const isAmazon = vendor.includes('amazon');
@@ -91,6 +97,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
           //Verkauft durch ... e.g. r e i c h e l t . . .
           // => we need check if we need to search on the A M A Z O N and E B A Y
           if (isSelfVendor) {
+            log && log(`self vendor found ${rawProd.s_hash}`);
             await closePage(page);
             isFinished &&
               isFinished({
@@ -102,6 +109,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
           }
           // best match vendor is neither ebay nor amazon
           if (!isEbay && !isAmazon) {
+            log && log(`catch all search ${rawProd.s_hash}`);
             await closePage(page);
             isFinished &&
               isFinished({
@@ -113,6 +121,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
           }
           // best match vendor is ebay or amazon
           if (isEbay || isAmazon) {
+            log && log(`happy path, vendor found ${rawProd.s_hash}`);
             const path = isEbay ? 'bm_v_m_amazon' : 'bm_v_m_ebay';
             const targetShopIndex = currentTargetRetailerList.findIndex(
               (shop) => {
@@ -146,6 +155,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             }
           }
         } else {
+          log && log(`happy path, No vendor found ${rawProd.s_hash}`);
           //Happy path We found a match on I D E A L O but no vendor
           const foundShops: ProductRecord[] = [];
           const addProductCb = async (product: ProductRecord) => {

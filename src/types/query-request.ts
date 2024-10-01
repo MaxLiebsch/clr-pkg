@@ -59,6 +59,7 @@ export type NotFoundCause = 'notFound' | 'domainNotAllowed' | 'timeout' | 'excee
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
+  log?: any;
   addProduct: (product: ProductRecord) => Promise<void>;
   extendedLookUp?: boolean;
   s_hash: string;
