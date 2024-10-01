@@ -244,16 +244,13 @@ const setPageProperties = async ({
     'accept-language': `${lng},${lng_set1};q=0.9`,
     'sec-gpc': '1',
   };
-  const shuffledHeaders = shuffleObject(headers);
-  await page.setExtraHTTPHeaders(shuffledHeaders);
+  await page.setExtraHTTPHeaders(headers);
 
   const viewPort = requestCount
     ? rotateScreenResolution(platform, requestCount)
     : sample(screenResolutions) ?? screenResolutions[0];
 
   await page.setViewport(viewPort);
-
-  await page.setBypassCSP(true);
 
   const timezone = requestCount
     ? _timezones[requestCount % _timezones.length]

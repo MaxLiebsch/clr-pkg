@@ -81,7 +81,12 @@ export const totalPositivAmazon = {
   ],
 };
 
-export const countProductsPerCategoryAzn = [
+export const countProductsPerCategoryAzn = (domain: string) => [
+  {
+    $match: {
+      sdmn: domain,
+    },
+  },
   {
     $unwind: '$categoryTree', // Flatten the array of categoryId
   },

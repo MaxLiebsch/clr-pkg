@@ -81,7 +81,12 @@ export const totalPositivEbay = {
   ],
 };
 
-export const countProductsPerCategoryEby = [
+export const countProductsPerCategoryEby = (domain: string) => [
+  {
+    $match: {
+      sdmn: domain,
+    },
+  },
   {
     $unwind: '$ebyCategories', // Flatten the array of categoryId
   },

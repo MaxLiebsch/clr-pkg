@@ -65,6 +65,7 @@ export interface DbProduct {
   ean: string;
   eanList: string[];
   curr?: string;
+  sdmn: string;
   bsr: BSR[];
   ctgry: string[];
   mnfctr: string;
