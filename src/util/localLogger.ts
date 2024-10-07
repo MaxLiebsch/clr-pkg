@@ -5,7 +5,7 @@ import { scheduleJob } from 'node-schedule';
 import os from 'os';
 import { TaskTypes } from '../types/QueueTask';
 
-const defaultLogDirectory =
+export const defaultLogDirectory =
   os.platform() === 'linux' ? '/var/log/tasks' : './var/log/tasks';
 
 function getTimestamp() {
