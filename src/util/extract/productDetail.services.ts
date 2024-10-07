@@ -14,7 +14,6 @@ import {
   cleanUpHTML,
   extractPart,
   getElementHandleInnerText,
-  myQuerySelectorAll,
   myQuerySelectorAllElementHandle,
   nestedProductName,
 } from '../helpers';
@@ -25,6 +24,7 @@ import { get } from 'lodash';
 import { findProperty } from './findProperty';
 import { TableContent } from '../../types/table';
 import { detailExtractorRegistry } from './productDetailPageParser.gateway';
+import { Content } from '../../types/product';
 
 export abstract class ExtractProductDetail {
   constructor() {}
@@ -111,9 +111,19 @@ export class TextDetailExtractor implements ExtractProductDetail {
     }
   }
 }
+
+const returnValue = (content: Content, value: any) => {
+  if (value) {
+    if (content === 'image' && value instanceof Array) {
+      return value[0];
+    }
+    return value;
+  }
+};
+
 export class ParseJSONFromElementExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONElementDetail) {
-    const { path, sel } = detail;
+    const { path, sel, content } = detail;
     try {
       if (detail?.multiple) {
         const elements = await myQuerySelectorAllElementHandle(element, sel);
@@ -134,11 +144,21 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
               if (path instanceof Array) {
                 for (let j = 0; j < path.length; j++) {
                   const value = findProperty(parsed, path[j]);
-                  if (value) return value;
+                  if (value) {
+                    if (content === 'image' && value instanceof Array) {
+                      return value[0];
+                    }
+                    return value;
+                  }
                 }
               } else {
                 const value = findProperty(parsed, path);
-                if (value) return value;
+                if (value) {
+                  if (content === 'image' && value instanceof Array) {
+                    return value[0];
+                  }
+                  return value;
+                }
               }
             }
           }
@@ -158,11 +178,17 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
           if (path instanceof Array) {
             for (let j = 0; j < path.length; j++) {
               const value = findProperty(parsed, path[j]);
-              if (value) return value;
+              if (content === 'image' && value instanceof Array) {
+                return value[0];
+              }
+              return value;
             }
           } else {
             const value = findProperty(parsed, path);
-            if (value) return value;
+            if (content === 'image' && value instanceof Array) {
+              return value[0];
+            }
+            return value;
           }
         }
       }

@@ -5,6 +5,8 @@ import { LoggerService } from '../../util/logger';
 import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
 
+const defaultDetection = ['access denied', 'spamschutz', 'spam-schutz'];
+
 export async function checkForBlockingSignals(
   page: Page,
   log: boolean = false,
@@ -12,7 +14,12 @@ export async function checkForBlockingSignals(
   link?: string,
   task?: QueueTask,
 ) {
+  let extendedCheck = true;
   if (mimic) {
+    if (mimic.endsWith(';')) {
+      extendedCheck = false;
+      mimic = mimic.slice(0, -1);
+    }
     const isMissing = await contentMissing(page, mimic);
     if (isMissing) {
       if (log) {
@@ -50,16 +57,13 @@ export async function checkForBlockingSignals(
       return true;
     }
   }
+
+  if (!extendedCheck) return false;
   const pageContent = await page.content().catch((e) => {});
 
-  const accessDenied = (pageContent ?? '')
-    .toLowerCase()
-    .includes('access denied');
-  const spamdetection =
-    (pageContent ?? '').toLowerCase().includes('spamschutz') ||
-    (pageContent ?? '').toLowerCase().includes('spam-schutz');
-
-  const isBlocked = accessDenied || spamdetection;
+  const isBlocked = defaultDetection.some((detection) =>
+    (pageContent ?? '').toLowerCase().includes(detection),
+  );
 
   if (isBlocked) {
     if (task)
@@ -67,8 +71,7 @@ export async function checkForBlockingSignals(
         location: `BlockedBlock`,
         link,
         msg: 'isBlocked',
-        accessDenied,
-        spamdetection,
+        isBlocked,
         hostname: hostname(),
         type: task.type,
         typeId: task.id,
@@ -78,9 +81,8 @@ export async function checkForBlockingSignals(
       LoggerService.getSingleton().logger.info({
         location: `BlockedBlock`,
         msg: 'isBlocked',
+        isBlocked,
         link,
-        accessDenied,
-        spamdetection,
         hostname: hostname(),
       });
     if (process.env.DEBUG == 'true') {

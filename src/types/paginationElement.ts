@@ -20,6 +20,8 @@ export interface PaginationElement {
     };
     calculation: {
       method: string;
+      sel?: string;
+      type?: string;
       replace?: {
         use?: string;
         skip?: number;

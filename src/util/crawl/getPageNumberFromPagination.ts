@@ -1,5 +1,4 @@
-import { Page, TimeoutError } from 'puppeteer1';
-import { ShopObject } from '../../types';
+import { Page } from 'puppeteer1';
 import {
   getElementHandleInnerText,
   getInnerText,
@@ -28,7 +27,7 @@ import { Shop } from '../../types/shop';
   - find_highest: The page numbers are the highest number found in button/elements text
   - estimate: The page numbers are estimated from the researched number of products per page.
   - product_count: The page numbers are calculated from the product count element .
-
+ 
 */
 
 export const getPageNumberFromPagination = async (

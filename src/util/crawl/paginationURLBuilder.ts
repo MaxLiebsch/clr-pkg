@@ -1,11 +1,28 @@
-
-
+import { Page } from 'puppeteer1';
 import { PaginationElement } from '../../types/paginationElement';
+import { extractAttributePage } from '../helpers';
 
-export const paginationUrlBuilder = (
+/**
+ * Builds a pagination URL based on the provided URL, pagination elements, page number, and optional query.
+ *
+ * @param url - The base URL to which pagination parameters will be appended.
+ * @param paginationEls - An array of pagination elements that define how the pagination should be constructed.
+ * @param pageNo - The current page number to be used in the pagination URL.
+ * @param query - An optional query string to be included in the pagination URL.
+ * @returns The constructed pagination URL.
+ *
+ * The function processes each pagination element and applies the defined pagination schema, which may include:
+ * - Replacing parts of the URL with query parameters.
+ * - Parsing and replacing parts of the URL based on regular expressions.
+ * - Calculating offsets for pagination.
+ * - Appending or replacing parts of the URL based on the pagination schema.
+ */
+
+export const paginationUrlBuilder = async (
   url: string,
   paginationEls: PaginationElement[],
   pageNo: number,
+  page: Page | null,
   query?: string,
 ) => {
   let resultUrl = url;
@@ -44,7 +61,10 @@ export const paginationUrlBuilder = (
       if ('replace' in calculation && calculation.method === 'replace_append') {
         calculation.replace!.forEach((_replace) => {
           if ('replace' in _replace) {
-            resultUrl = resultUrl.replaceAll(_replace.search, _replace.replace!);
+            resultUrl = resultUrl.replaceAll(
+              _replace.search,
+              _replace.replace!,
+            );
           }
           if ('use' in _replace) {
             if (_replace.use === 'skip' && 'skip' in _replace) {
@@ -56,6 +76,33 @@ export const paginationUrlBuilder = (
           }
         });
         resultUrl = resultUrl + navStr;
+      }
+
+      if (calculation.method === 'find_pagination_apendix' && page) {
+        if (
+          'sel' in calculation &&
+          'type' in calculation &&
+          'replace' in calculation
+        ) {
+          const elementText = await extractAttributePage(
+            page,
+            calculation.sel!,
+            calculation.type!,
+          );
+          if (elementText) {
+            const { replace } = calculation;
+            if (replace?.length) {
+              const match = elementText.match(new RegExp(replace[0].search));
+              if (match) {
+                navStr = navStr.replaceAll(replace[0].replace!, match[0]);
+                navStr = navStr.replaceAll('<page>', pageNo.toString());
+                resultUrl = resultUrl + navStr;
+              } else {
+                console.log('No match found for:', replace[0].search);
+              }
+            }
+          }
+        }
       }
     }
   }

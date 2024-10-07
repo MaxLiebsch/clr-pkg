@@ -131,10 +131,11 @@ export async function browseProductPagesQueue(
               pageNo,
             );
             if (paginationEl?.paginationUrlSchema) {
-              nextUrl = paginationUrlBuilder(
+              nextUrl = await paginationUrlBuilder(
                 initialPageUrl,
                 paginationEls,
                 pageNo,
+                page,
                 query?.product.value,
               );
             }

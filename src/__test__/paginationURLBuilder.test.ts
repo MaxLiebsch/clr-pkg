@@ -2,9 +2,9 @@ import { describe, expect, test } from '@jest/globals';
 import { paginationUrlBuilder } from '../util/crawl/paginationURLBuilder';
 
 describe('Pagination Builder', () => {
-  // test('reichelt.de generate page 3', () => {
+  // test('reichelt.de generate page 3', async () => {
   //   expect(
-  //     paginationUrlBuilder(
+  //     await paginationUrlBuilder(
   //       'https://www.reichelt.de/de/de/index.html?ACTION=446&LA=102&GROUPID=5820&VIEWALL=1&search=specialprice&nbc=1',
   //       [
   //         {
@@ -64,11 +64,10 @@ describe('Pagination Builder', () => {
   //   );
   // });
 
-  test('gameshop generate page 2', () => {
+  test('gameshop generate page 2', async () => {
     expect(
-      paginationUrlBuilder(
+      await paginationUrlBuilder(
         'https://www.gamestop.de/SearchResult/Quicksearch?platform=68&productType=2',
-
         [
           {
             type: 'pagination',
@@ -102,7 +101,8 @@ describe('Pagination Builder', () => {
             },
           },
         ],
-        2,
+        2,  
+        null,
       ),
     ).toBe(
       'https://www.gamestop.de/SearchResult/QuicksearchAjax?platform=68&productType=2&typesorting=0&sdirection=ascending&skippos=48&takenum=24',

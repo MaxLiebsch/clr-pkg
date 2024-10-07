@@ -92,10 +92,11 @@ export async function browseProductpages(
               pageNo,
             );
             if (paginationEl.paginationUrlSchema) {
-              nextUrl = paginationUrlBuilder(
+              nextUrl = await paginationUrlBuilder(
                 initialpageurl,
                 paginationEls,
                 pageNo,
+                page,
                 query?.product.value,
               );
             }

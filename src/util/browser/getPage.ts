@@ -36,6 +36,7 @@ const fingerPrints: {
     currWinGpu: number;
     currLinuxGpu: number;
     currMacGpu: number;
+    timezone: number;
   };
 } = {};
 
@@ -49,6 +50,7 @@ const initFingerPrintForHost = (host: string) => {
       currWinGpu: 0,
       currLinuxGpu: 0,
       currMacGpu: 0,
+      timezone: 0,
     };
 };
 
@@ -62,6 +64,21 @@ export const rotateUserAgent = (requestCount: number, host: string) => {
     return userAgentList[currentUserAgent];
   } else {
     return userAgentList[currentUserAgent];
+  }
+};
+
+export const rotateTimezone = (
+  requestCount: number,
+  host: string,
+  timezones: string[],
+) => {
+  const timezonesCnt = timezones.length;
+  const timezone = fingerPrints[host].timezone;
+  if (isNextFingerPrint(requestCount)) {
+    fingerPrints[host].timezone = (timezone + 1) % timezonesCnt;
+    return timezones[timezone];
+  } else {
+    return timezones[timezone];
   }
 };
 
@@ -279,7 +296,7 @@ const setPageProperties = async ({
 
   await page.setViewport(viewPort);
 
-  const timezone = _timezones[requestCount % _timezones.length];
+  const timezone = rotateTimezone(requestCount, host, _timezones);
 
   await page.emulateTimezone(timezone);
 

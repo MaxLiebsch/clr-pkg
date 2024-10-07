@@ -67,10 +67,11 @@ export const crawlProductsQueue = async (
             pageNo,
           );
           if (paginationEl?.paginationUrlSchema) {
-            nextUrl = paginationUrlBuilder(
+            nextUrl = await paginationUrlBuilder(
               initialProductPageUrl,
               paginationEls,
               pageNo,
+              page,
               query?.product.value,
             );
           }
