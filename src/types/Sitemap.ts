@@ -1,5 +1,3 @@
-
-
 export interface SiteMap {
   [key: string]: ICategoryStats;
 }
@@ -17,9 +15,7 @@ export interface SubCategory {
   cnt_pages?: number;
   cnt_products?: number;
   productpages?: ProductPage[];
-  subcategories?: {
-    [key: string]: SubCategory;
-  };
+  subcategories?: SubCategories;
 }
 
 export interface SubCategories {

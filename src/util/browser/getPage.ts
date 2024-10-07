@@ -5,46 +5,66 @@ import {
   graphicsCardListByPlatform,
   languageList,
   languagesLists,
-  screenResolutions,
   screenResolutionsByPlatform,
   timezones,
   userAgentList,
   voicesList,
 } from '../../constants';
-import { sample, shuffle } from 'underscore';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
-import { shuffleObject } from './shuffleHeader';
 import { VersionProvider } from '../versionProvider';
 import { allowed } from '../../static/allowed';
 import { Shop } from '../../types/shop';
+import { ProxyType } from '../../types/proxyAuth';
 
 const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
 //Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
-export const averageNumberOfPagesPerSession = 11;
+export const avgNoPagesPerSession = 11;
 const UserAgentCnt = userAgentList.length;
 const lng_set1 = 'de';
 const lng = 'de-DE';
 
-let currentUserAgent = 0;
+const fingerPrints: {
+  [key: string]: {
+    currentUserAgent: number;
+    currWinRes: number;
+    currLinuxRes: number;
+    currMacRes: number;
+    currWinGpu: number;
+    currLinuxGpu: number;
+    currMacGpu: number;
+  };
+} = {};
 
-export const rotateUserAgent = (requestCount: number) => {
-  if (requestCount < averageNumberOfPagesPerSession) {
+const initFingerPrintForHost = (host: string) => {
+  if (!fingerPrints[host])
+    fingerPrints[host] = {
+      currentUserAgent: 0,
+      currWinRes: 0,
+      currLinuxRes: 0,
+      currMacRes: 0,
+      currWinGpu: 0,
+      currLinuxGpu: 0,
+      currMacGpu: 0,
+    };
+};
+
+const isNextFingerPrint = (requestCount: number) =>
+  requestCount % avgNoPagesPerSession === 0;
+
+export const rotateUserAgent = (requestCount: number, host: string) => {
+  const currentUserAgent = fingerPrints[host].currentUserAgent;
+  if (isNextFingerPrint(requestCount)) {
+    fingerPrints[host].currentUserAgent = (currentUserAgent + 1) % UserAgentCnt;
     return userAgentList[currentUserAgent];
   } else {
-    currentUserAgent = (currentUserAgent + 1) % UserAgentCnt;
     return userAgentList[currentUserAgent];
   }
 };
 
-// extraLauncher.use(StealthPlugin())
-
-let currWinRes = 0;
-let currLinuxRes = 0;
-let currMacRes = 0;
 const windowsResCnt = screenResolutionsByPlatform['Windows'].length;
 const linuxResCnt = screenResolutionsByPlatform['Linux'].length;
 const macResCnt = screenResolutionsByPlatform['macOS'].length;
@@ -52,37 +72,35 @@ const macResCnt = screenResolutionsByPlatform['macOS'].length;
 export const rotateScreenResolution = (
   platform: 'Windows' | 'macOS' | 'Linux',
   requestCount: number,
+  host: string,
 ) => {
   const screenResolutions = screenResolutionsByPlatform[platform];
+  const currWinRes = fingerPrints[host].currWinRes;
+  const currLinuxRes = fingerPrints[host].currLinuxRes;
+  const currMacRes = fingerPrints[host].currMacRes;
   let currRes =
     platform === 'Windows'
       ? currWinRes
       : platform === 'Linux'
         ? currLinuxRes
         : currMacRes;
-  if (
-    requestCount < averageNumberOfPagesPerSession &&
-    currRes < screenResolutions.length
-  ) {
-    return screenResolutions[currRes];
-  } else {
+  if (isNextFingerPrint(requestCount) && currRes < screenResolutions.length) {
     if (platform === 'Windows') {
       currRes = (currWinRes + 1) % windowsResCnt;
-      currWinRes = currRes;
+      fingerPrints[host].currWinRes = currRes;
     } else if (platform === 'Linux') {
       currRes = (currLinuxRes + 1) % linuxResCnt;
-      currLinuxRes = currRes;
+      fingerPrints[host].currLinuxRes = currRes;
     } else if (platform === 'macOS') {
       currRes = (currMacRes + 1) % macResCnt;
-      currMacRes = currRes;
+      fingerPrints[host].currMacRes = currRes;
     }
+    return screenResolutions[currRes];
+  } else {
     return screenResolutions[currRes];
   }
 };
 
-let currWinGpu = 0;
-let currLinuxGpu = 0;
-let currMacGpu = 0;
 const windowsGpuCnt = graphicsCardListByPlatform['Windows'].length;
 const linuxGpuCnt = graphicsCardListByPlatform['Linux'].length;
 const macGpuCnt = graphicsCardListByPlatform['macOS'].length;
@@ -90,8 +108,12 @@ const macGpuCnt = graphicsCardListByPlatform['macOS'].length;
 export const rotateGraphicUnit = (
   platform: 'Windows' | 'macOS' | 'Linux',
   requestCount: number,
+  host: string,
 ) => {
   const graphicsCardList = graphicsCardListByPlatform[platform];
+  const currWinGpu = fingerPrints[host].currWinGpu;
+  const currLinuxGpu = fingerPrints[host].currLinuxGpu;
+  const currMacGpu = fingerPrints[host].currMacGpu;
   let currGraphicCard =
     platform === 'Windows'
       ? currWinGpu
@@ -99,21 +121,21 @@ export const rotateGraphicUnit = (
         ? currLinuxGpu
         : currMacGpu;
   if (
-    requestCount < averageNumberOfPagesPerSession &&
+    isNextFingerPrint(requestCount) &&
     currGraphicCard < graphicsCardList.length
   ) {
-    return graphicsCardList[currGraphicCard];
-  } else {
     if (platform === 'Windows') {
       currGraphicCard = (currWinGpu + 1) % windowsGpuCnt;
-      currWinGpu = currGraphicCard;
+      fingerPrints[host].currWinGpu = currGraphicCard;
     } else if (platform === 'Linux') {
       currGraphicCard = (currLinuxGpu + 1) % linuxGpuCnt;
-      currLinuxGpu = currGraphicCard;
+      fingerPrints[host].currLinuxGpu = currGraphicCard;
     } else if (platform === 'macOS') {
       currGraphicCard = (currMacGpu + 1) % macGpuCnt;
-      currMacGpu = currGraphicCard;
+      fingerPrints[host].currMacGpu = currGraphicCard;
     }
+    return graphicsCardList[currGraphicCard];
+  } else {
     return graphicsCardList[currGraphicCard];
   }
 };
@@ -122,15 +144,27 @@ interface PagePropertiesOptions {
   page: Page;
   shop: Shop;
   exceptions?: string[];
-  requestCount: number | null;
+  requestCount: number;
   disAllowedResourceTypes?: ResourceType[];
   rules?: Rule[];
-  customTimezones?: string[];
-  requestId?: string;
+  host: string;
+  proxyType?: ProxyType;
 }
 
 export function isHostAllowed(hostname: string) {
   return allowed.some((domain) => hostname.includes(domain));
+}
+
+interface FingerPrint {
+  agent: string;
+  viewPort: { width: number; height: number };
+  graphicCard: { renderer: string; vendor: string };
+  timezone: string;
+  languages: string[];
+  language: string;
+  voices: string;
+  accept: string;
+  acceptEncoding: string;
 }
 
 const setPageProperties = async ({
@@ -140,14 +174,14 @@ const setPageProperties = async ({
   requestCount,
   disAllowedResourceTypes,
   rules,
-  customTimezones,
-  requestId,
-}: PagePropertiesOptions) => {
+  host,
+  proxyType,
+}: PagePropertiesOptions): Promise<FingerPrint> => {
   const { javascript } = shop;
-  let _timezones = customTimezones ?? timezones;
+  let _timezones = proxyType === 'de' ? ['Europe/Berlin'] : timezones;
 
   await page.setRequestInterception(true);
-  
+
   page.on('request', async (request) => {
     const requestUrl = request.url();
     const url = new URL(requestUrl);
@@ -181,9 +215,7 @@ const setPageProperties = async ({
     }
   });
 
-  const userAgentMeta = requestCount
-    ? rotateUserAgent(requestCount)
-    : sample(userAgentList) ?? userAgentList[0];
+  const userAgentMeta = rotateUserAgent(requestCount, host);
 
   const { agent, platformVersion } = userAgentMeta;
 
@@ -222,13 +254,10 @@ const setPageProperties = async ({
 
   await page.setUserAgent(_agent, agentMeta);
 
-  const accpetEncoding = requestCount
-    ? acceptEncodingList[requestCount % acceptEncodingList.length]
-    : sample(acceptEncodingList) ?? acceptEncodingList[0];
+  const acceptEncoding =
+    acceptEncodingList[requestCount % acceptEncodingList.length];
 
-  const accept = requestCount
-    ? acceptList[requestCount % acceptList.length]
-    : sample(acceptList) ?? acceptList[0];
+  const accept = acceptList[requestCount % acceptList.length];
 
   const headers = {
     'upgrade-insecure-requests': '1',
@@ -240,31 +269,22 @@ const setPageProperties = async ({
     'sec-fetch-mode': 'navigate',
     'sec-fetch-user': '?1',
     'sec-fetch-dest': 'document',
-    'accept-encoding': accpetEncoding,
+    'accept-encoding': acceptEncoding,
     'accept-language': `${lng},${lng_set1};q=0.9`,
     'sec-gpc': '1',
   };
   await page.setExtraHTTPHeaders(headers);
 
-  const viewPort = requestCount
-    ? rotateScreenResolution(platform, requestCount)
-    : sample(screenResolutions) ?? screenResolutions[0];
+  const viewPort = rotateScreenResolution(platform, requestCount, host);
 
   await page.setViewport(viewPort);
 
-  const timezone = requestCount
-    ? _timezones[requestCount % _timezones.length]
-    : sample(_timezones) ?? 'America/New_York';
+  const timezone = _timezones[requestCount % _timezones.length];
 
   await page.emulateTimezone(timezone);
 
-  const languages = requestCount
-    ? languagesLists[requestCount % languagesLists.length]
-    : sample(languagesLists) ?? languagesLists[0];
-
-  const language = requestCount
-    ? languageList[requestCount % languageList.length]
-    : sample(languageList) ?? languageList[0];
+  const languages = languagesLists[requestCount % languagesLists.length];
+  const language = languageList[requestCount % languageList.length];
 
   await page.evaluateOnNewDocument(
     (navigatorPlatform, languages, language) => {
@@ -290,9 +310,7 @@ const setPageProperties = async ({
     language,
   );
 
-  const voices = requestCount
-    ? voicesList.slice(requestCount % voicesList.length, undefined)
-    : shuffle(voicesList).slice(0, 5);
+  const voices = voicesList.slice(requestCount % voicesList.length, undefined);
 
   if (voices.length < 6 && requestCount) {
     let i = 0;
@@ -312,31 +330,6 @@ const setPageProperties = async ({
       },
     });
   }, voices);
-
-  // await page.evaluateOnNewDocument((viewPort) => {
-  // //   Object.defineProperty(screen, 'availHeight', {
-  // //     get: function () {
-  // //       return viewPort.height;
-  // //     },
-  // //   });
-  // //   Object.defineProperty(screen, 'availWidth', {
-  // //     get: function () {
-  // //       return viewPort.width;
-  // //     },
-  // //   });
-  // //   Object.defineProperty(screen, 'width', {
-  // //     get: function () {
-  // //       return viewPort.width - 384;
-  // //     },
-  // //   });
-  // //   // //@ts-ignore
-  // //   // screen.height = viewPort.height;
-  // //   // //@ts-ignore
-  // //   // screen.width = viewPort.width;
-  // //   window.outerHeight = viewPort.height - 120;
-  // //   window.outerWidth = viewPort.width - 384;
-
-  // }, viewPort);
 
   await page.evaluateOnNewDocument(() => {
     const originalQuery = window.navigator.permissions.query;
@@ -446,9 +439,7 @@ const setPageProperties = async ({
     };
   });
 
-  const graphicCard = requestCount
-    ? rotateGraphicUnit(platform, requestCount)
-    : graphicsCardListByPlatform['Windows'][0];
+  const graphicCard = rotateGraphicUnit(platform, requestCount, host);
 
   await new WebGlVendor(graphicCard).onPageCreated(page);
 
@@ -498,17 +489,29 @@ const setPageProperties = async ({
       },
     });
   });
+
+  return {
+    agent: _agent,
+    viewPort,
+    graphicCard,
+    timezone,
+    languages,
+    language,
+    accept,
+    acceptEncoding,
+    voices: '',
+  };
 };
 
 interface GetPageOptions {
   browser: Browser;
   shop: Shop;
-  requestCount: number | null;
+  requestCount: number;
   disAllowedResourceTypes?: ResourceType[];
   exceptions?: string[];
   rules?: Rule[];
-  timezones?: string[];
-  requestId?: string;
+  proxyType?: ProxyType;
+  host: string;
 }
 
 export async function getPage({
@@ -518,20 +521,21 @@ export async function getPage({
   disAllowedResourceTypes,
   exceptions,
   rules,
-  timezones,
-  requestId,
+  host,
+  proxyType,
 }: GetPageOptions) {
   const page = await browser.newPage();
-
-  await setPageProperties({
+  initFingerPrintForHost(host);
+  const fingerprint = await setPageProperties({
     page,
     shop,
     exceptions,
+    host,
     requestCount,
     disAllowedResourceTypes,
     rules,
-    customTimezones: timezones,
+    proxyType,
   });
 
-  return page;
+  return { page, fingerprint };
 }

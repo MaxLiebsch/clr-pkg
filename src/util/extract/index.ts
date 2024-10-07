@@ -442,9 +442,10 @@ export const getProductInfoWithBrowser = async (
     sku: '',
   };
   const { exceptions, resourceTypes, waitUntil } = shop;
-  const page = await getPage({
+  const {page} = await getPage({
     browser: browserInfo.brs,
     shop, 
+    host: shop.d,
     requestCount: 0,
     disAllowedResourceTypes: shop.resourceTypes['query'],
     exceptions,

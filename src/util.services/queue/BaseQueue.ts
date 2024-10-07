@@ -11,7 +11,7 @@ import {
   ScanRequest,
 } from '../../types/query-request';
 import { prefixLink } from '../../util/matching/compare_helper';
-import { getPage } from '../../util/browser/getPage';
+import { avgNoPagesPerSession, getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
 import { createLabeledTimeout } from './createLabeledTimeout';
@@ -84,6 +84,11 @@ const eligableForPremium = (link: string, taskType: TaskTypes) => {
   );
 };
 
+const getHost = (link: string) => {
+  const url = new URL(link);
+  return url.hostname;
+};
+
 export type WrapperFunctionResponse =
   | {
       status:
@@ -115,6 +120,9 @@ export abstract class BaseQueue<
   private repairing: Boolean = false;
   private waitingForRepairResolvers: (() => void)[] = [];
   private pause: boolean = false;
+  private requestCountPerHost: {
+    [key: string]: number;
+  } = {};
   public queueId: string;
   public taskFinished: boolean = false;
   /*
@@ -122,7 +130,6 @@ export abstract class BaseQueue<
   */
   private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private errorLog: ErrorLog = errorTypes;
-  private requestCount: number = 0;
   private criticalErrorCount: number = 0;
   private eventEmitter: EventEmitter = globalEventEmitter;
   public total = 0;
@@ -198,7 +205,7 @@ export abstract class BaseQueue<
   /*  BROWSER RELATED FUNCTIONS  */
   async connect(): Promise<void> {
     const currentVersion = this.versionChooser.next().value as Versions;
-    console.log('currentVersion:', currentVersion)
+    console.log('currentVersion:', currentVersion);
     const listeners = this.eventEmitter.listeners(`${this.queueId}-finished`);
     this.queueStats.browserStarts += 1;
     try {
@@ -282,6 +289,46 @@ export abstract class BaseQueue<
       this.logError({ msg: 'Cannot restart browser', reason });
     }
   }
+
+  initRequestCountPerHost(link: string) {
+    const host = getHost(link);
+    if (this.requestCountPerHost[host] === undefined) {
+      this.requestCountPerHost[host] = 0;
+    }
+  }
+
+  incrementRequestCount(link: string) {
+    const host = getHost(link);
+    if (this.requestCountPerHost[host] !== undefined) {
+      this.requestCountPerHost[host] += 1;
+    } else {
+      this.requestCountPerHost[host] = 0;
+    }
+    return this.requestCountPerHost[host];
+  }
+
+  /*
+  If a request is rate limited, we need to jump to the next user agent
+  
+  */
+
+  jumpToNextUserAgent(link: string) {
+    const host = getHost(link);
+    const currRequestCount = this.requestCountPerHost[host];
+    if (currRequestCount !== undefined) {
+      const remainder = currRequestCount % avgNoPagesPerSession;
+      if (remainder !== 0) {
+        const necessaryRequests = avgNoPagesPerSession - remainder;
+        this.requestCountPerHost[host] += necessaryRequests;
+      }else{
+        this.requestCountPerHost[host] += avgNoPagesPerSession;
+      }
+    } else {
+      this.requestCountPerHost[host] = avgNoPagesPerSession;
+    }
+    return this.requestCountPerHost[host];
+  }
+
   /*  QUEUE RELATED FUNCTIONS  */
   async clearQueue(event: string, infos: Infos) {
     await this.disconnect(true);
@@ -315,7 +362,6 @@ export abstract class BaseQueue<
       });
     }
     this.errorLog = errorTypes;
-    this.requestCount = 0;
     this.criticalErrorCount = 0;
     return this.queueTask;
   }
@@ -337,8 +383,6 @@ export abstract class BaseQueue<
 
     // reset error count, so browser is not restarted again
     this.criticalErrorCount = 0;
-    // next user agent;
-    this.requestCount += 1;
 
     //Reset errors
     Object.keys(this.errorLog).forEach((errorType) => {
@@ -410,22 +454,15 @@ export abstract class BaseQueue<
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
       if (proxyType) {
-        const notifyResponse = await notifyProxyChange(
+        await notifyProxyChange(
           proxyType,
           pageInfo.link,
           requestId,
           Date.now(),
           allowedHosts,
         );
-        // console.log(notifyResponse);
       } else {
-        const registerResponse = await registerRequest(
-          url,
-          requestId,
-          allowedHosts,
-          Date.now(),
-        );
-        // console.log(registerResponse);
+        await registerRequest(url, requestId, allowedHosts, Date.now());
       }
       return originalGoto.apply(this, [url, options]);
     };
@@ -449,7 +486,7 @@ export abstract class BaseQueue<
     id: string,
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
-
+    let { type } = this.queueTask;
     const {
       retries,
       proxyType,
@@ -460,7 +497,7 @@ export abstract class BaseQueue<
       retriesOnFail,
     } = request;
     const { link } = pageInfo;
-    let { type, timezones } = this.queueTask;
+    this.initRequestCountPerHost(link);
     const {
       waitUntil,
       resourceTypes,
@@ -507,9 +544,6 @@ export abstract class BaseQueue<
     let page: Page | undefined = undefined;
 
     try {
-      if (proxyType) {
-        timezones = [standardTimeZones[proxyType]];
-      }
       if (eligableForPremiumProxy && prevProxyType && retries > 0) {
         await terminationPrevConnections(
           requestId,
@@ -518,16 +552,25 @@ export abstract class BaseQueue<
           prevProxyType,
         );
       }
-      page = await getPage({
+      const pageAndPrint = await getPage({
         browser: this.browser!,
+        host: getHost(link),
         shop,
-        requestCount: this.requestCount,
+        requestCount: this.requestCountPerHost[getHost(link)] || 0,
         disAllowedResourceTypes: resourceTypes?.query,
         exceptions,
         rules,
-        timezones,
-        requestId,
+        proxyType,
       });
+      page = pageAndPrint.page;
+
+      console.log(
+        getHost(link),
+        'requestCount: ',
+        this.requestCountPerHost[getHost(link)] || 0,
+        'print: ',
+        pageAndPrint.fingerprint,
+      );
 
       if (
         retries === 0 &&
@@ -641,6 +684,7 @@ export abstract class BaseQueue<
         this.queueStats.visitedPages.push(pageInfo.link);
       }
       await requestCompleted(requestId);
+      this.incrementRequestCount(link);
       const details = `🆗 Id: ${requestId}${message && typeof message === 'string' ? ` - ${message} - ` : ` - ${type} - `}${'targetShop' in request ? request.targetShop?.name : domain} - Hash: ${hash}`;
       return {
         details,
@@ -673,7 +717,12 @@ export abstract class BaseQueue<
                   )
                 ) {
                   this.criticalErrorCount += 1;
-                  this.requestCount += 1;
+                  const requestCount = this.jumpToNextUserAgent(link);
+                  console.log(
+                    'Jump to next user agent',
+                    getHost(link),
+                    requestCount,
+                  );
                   page && (await this.resetCookies(page));
                 } else {
                   this.errorLog[errorType].count += 1;
@@ -711,6 +760,7 @@ export abstract class BaseQueue<
           }
         }
         const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
+
         if (isDomainAllowed(pageInfo.link)) {
           if (error instanceof Error) {
             if (`${error}`.includes('TimeoutError: Navigation timeout')) {

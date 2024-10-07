@@ -175,15 +175,7 @@ export const mainBrowser = async (
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
-  }
-
-  if (task.proxyType) {
-    await fetch(
-      `http://${proxyAuth.host}/change-proxy?proxy=${task.proxyType}`,
-    );
-  } else {
-    await fetch(`http://${proxyAuth.host}/change-proxy?proxy=mix`);
-  }
+  } 
 
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
