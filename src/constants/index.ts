@@ -5,7 +5,7 @@ import { Versions, puppeteerVersions } from '../util/versionProvider';
 export const RESTART_DELAY = 1;
 export const MAX_RESTART_DELAY = 5;
 export const MAX_RETRIES = 500;
-export const RETRY_LIMIT_MATCH_PRODUCTS = 50;
+export const RETRY_LIMIT_MATCH_PRODUCTS = 10;
 export const MAX_RETRIES_NOT_FOUND = 2;
 export const RANDOM_TIMEOUT_MIN = 3000;
 export const RANDOM_TIMEOUT_MAX = 8000;
@@ -348,7 +348,7 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '',
   },
   {
@@ -368,7 +368,7 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '',
   },
   {
@@ -378,7 +378,7 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '15.0.0',
   },
   {
@@ -388,12 +388,12 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '',
   },
   {
     agent:
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '14.4.0',
   },
   {
@@ -403,7 +403,7 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '',
   },
   {
@@ -413,7 +413,7 @@ export const userAgentList = [
   },
   {
     agent:
-      'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/124.0',
+      'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:124.0) Gecko/20100101 Chrome/<version>.0.0.0 Firefox/129.0',
     platformVersion: '',
   },
   {

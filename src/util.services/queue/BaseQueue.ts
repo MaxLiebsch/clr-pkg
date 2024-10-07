@@ -717,12 +717,7 @@ export abstract class BaseQueue<
                   )
                 ) {
                   this.criticalErrorCount += 1;
-                  const requestCount = this.jumpToNextUserAgent(link);
-                  console.log(
-                    'Jump to next user agent',
-                    getHost(link),
-                    requestCount,
-                  );
+                  this.jumpToNextUserAgent(link);
                   page && (await this.resetCookies(page));
                 } else {
                   this.errorLog[errorType].count += 1;
