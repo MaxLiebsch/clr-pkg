@@ -22,7 +22,7 @@ import { Shop } from '../../types/shop';
   Possible Options:
   - button: The page numbers are buttons.
   - first_last: The page numbers are the first and last page numbers.
-  - count: The page numbers are are retrievedfrom the element with the highest number in their text.
+  - count: The page numbers are are retrieved from the element with the highest number in their text.
   - match_text: The page numbers match a specific text then add exactly 1 page.
   - find_highest: The page numbers are the highest number found in button/elements text
   - estimate: The page numbers are estimated from the researched number of products per page.

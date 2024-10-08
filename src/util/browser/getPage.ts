@@ -277,18 +277,9 @@ const setPageProperties = async ({
   const accept = acceptList[requestCount % acceptList.length];
 
   const headers = {
-    'upgrade-insecure-requests': '1',
-    'cache-control': 'max-age=0',
     'sec-ch-ua-platform': platform,
-    'sec-ch-ua-form-factors': 'Desktop',
-    accept,
-    'sec-fetch-site': 'none',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-user': '?1',
-    'sec-fetch-dest': 'document',
     'accept-encoding': acceptEncoding,
     'accept-language': `${lng},${lng_set1};q=0.9`,
-    'sec-gpc': '1',
   };
   await page.setExtraHTTPHeaders(headers);
 
