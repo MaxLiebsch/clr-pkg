@@ -89,13 +89,18 @@ export class LocalLogger {
     const files = await jetpack.listAsync(this.logDirectory);
     const now = new Date().getTime();
     const fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
+    const sizeLimit = 20 * 1024 * 1024; // 20 MB in bytes
 
     if (!files) return;
     for (const file of files) {
       const filePath = path.join(this.logDirectory, file);
       const stats = await jetpack.inspectAsync(filePath, { times: true });
 
-      if (stats && now - new Date(stats.modifyTime!).getTime() > fiveDays) {
+      if (
+        stats &&
+        (now - new Date(stats.modifyTime!).getTime() > fiveDays ||
+          stats.size > sizeLimit)
+      ) {
         await jetpack.removeAsync(filePath);
         console.log(`Deleted old log file: ${filePath}`);
       }
