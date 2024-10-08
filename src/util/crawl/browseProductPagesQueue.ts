@@ -22,7 +22,7 @@ export async function browseProductPagesQueue(
 ) {
   const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
     request;
-  const {pages} = limit;
+  const { pages } = limit;
 
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil } = shop;
@@ -172,6 +172,7 @@ export async function browseProductPagesQueue(
       while (exists && cnt < limit.pages - 1) {
         cnt++;
         const btn = await waitForSelector(page, sel, undefined, true);
+        console.log('btn:', btn);
         if (btn) {
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
           const shouldscroll = shop.crawlActions
@@ -188,11 +189,29 @@ export async function browseProductPagesQueue(
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
+      return 'crawled';
+    } else if (type === 'scroll-and-click') {
+      let exists = true;
+      let cnt = 0;
+      while (exists && cnt < limit.pages - 1) {
+        cnt++;
+        await humanScroll(page);
+        const btn = await waitForSelector(page, sel, 500, true);
+        if (btn) {
+          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+        }
+      }
+      await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
+        timeouts.forEach((timeout) => clearInterval(timeout));
+        closePage(page).then();
+      });
+      return 'crawled';
     }
   } else {
     await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
       timeouts.forEach((timeout) => clearInterval(timeout));
       closePage(page).then();
     });
+    return 'crawled';
   }
 }

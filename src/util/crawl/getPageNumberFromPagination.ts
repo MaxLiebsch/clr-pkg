@@ -128,7 +128,5 @@ export const getPageNumberFromPagination = async (
     }
   }
 
-  const noOfFoundPages = pageCount;
-
   return pageCount;
 };

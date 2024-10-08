@@ -138,7 +138,10 @@ export async function browseProductpages(
       // type === 'infinite_scroll'
       const scrolling = await scrollToBottom(page);
       if (scrolling === 'finished') {
-        await crawlProducts(page, shop, addProductCb, pageInfo);
+        await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+          timeouts.forEach((timeout) => clearInterval(timeout));
+          closePage(page).then();
+        });
         return 'crawled';
       }
     } else if (type === 'recursive-more-button') {
@@ -163,9 +166,29 @@ export async function browseProductpages(
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
+      return 'crawled';
+    } else if (type === 'scroll-and-click') {
+      let exists = true;
+      let cnt = 0;
+      while (exists && cnt < limitPages - 1) {
+        cnt++;
+        await humanScroll(page);
+        const btn = await waitForSelector(page, sel, 500, true);
+        if (btn) {
+          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
+        }
+      }
+      await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+        timeouts.forEach((timeout) => clearInterval(timeout));
+        closePage(page).then();
+      });
+      return 'crawled';
     }
   } else {
-    await crawlProducts(page, shop, addProductCb, pageInfo);
+    await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+      timeouts.forEach((timeout) => clearInterval(timeout));
+      closePage(page).then();
+    });
     return 'crawled';
   }
 }
