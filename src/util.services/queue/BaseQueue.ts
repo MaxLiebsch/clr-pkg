@@ -320,7 +320,7 @@ export abstract class BaseQueue<
       if (remainder !== 0) {
         const necessaryRequests = avgNoPagesPerSession - remainder;
         this.requestCountPerHost[host] += necessaryRequests;
-      }else{
+      } else {
         this.requestCountPerHost[host] += avgNoPagesPerSession;
       }
     } else {
@@ -740,7 +740,12 @@ export abstract class BaseQueue<
               if (
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
               ) {
-                this.pauseQueue('error');
+                if (errorType === ErrorType.RateLimit) {
+                  this.jumpToNextUserAgent(link);
+                  page && (await this.resetCookies(page));
+                } else {
+                  this.pauseQueue('error');
+                }
               } else {
                 this.errorLog[errorType].count += 1;
                 this.errorLog[errorType].lastOccurred = Date.now();
