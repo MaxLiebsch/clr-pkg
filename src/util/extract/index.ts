@@ -447,7 +447,7 @@ export const getProductInfoWithBrowser = async (
     shop, 
     host: shop.d,
     requestCount: 0,
-    disAllowedResourceTypes: shop.resourceTypes['query'],
+    disAllowedResourceTypes: shop.resourceTypes['crawl'],
     exceptions,
   });
 

@@ -1,6 +1,7 @@
 import pkg from 'mongoose';
 import { ShopObject } from '../types/index';
 import { UTCDate } from '@date-fns/utc';
+import { Shop } from '../types/shop';
 const { model, Schema } = pkg;
 
 const Shipping = new Schema({
@@ -9,7 +10,7 @@ const Shipping = new Schema({
   fs: { type: Number, default: 0 },
 });
 
-const ShopSchema = new Schema<ShopObject>(
+const ShopSchema = new Schema<Shop>(
   {
     manualCategories:{ type: [], default: [] },
     d: { type: String, unique: true, required: true }, //domain
@@ -23,7 +24,7 @@ const ShopSchema = new Schema<ShopObject>(
     queryUrlSchema: {type: [], default:[]},
     resourceTypes: {
       crawl: { type: [], default: [] },
-      query: { type: [], default: [] },
+      product: { type: [], default: [] },
     },
     waitUntil: {
       product: { type: String },

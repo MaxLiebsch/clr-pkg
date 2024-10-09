@@ -15,6 +15,7 @@ export const allowed = [
   'www.coolshop.de',
   'webshop.coolshop-cdn.com',
   'www.euronics.de',
+  'cdn.euronics.de',
   'www.galaxus.de',
   'www.galeria.de',
   'www.hornbach.de',

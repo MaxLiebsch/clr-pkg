@@ -74,6 +74,26 @@ const multipleQueues: TaskTypes[] = [
   'LOOKUP_INFO',
   'WHOLESALE_SEARCH',
 ];
+
+const resourceTypesPerTask: {
+  [taskType in TaskTypes]: 'crawl' | 'product';
+} = {
+  DEALS_ON_EBY: 'product',
+  DEALS_ON_AZN: 'product',
+  DAILY_SALES: 'product',
+  CRAWL_SHOP: 'crawl',
+  WHOLESALE_SEARCH: 'crawl',
+  WHOLESALE_EBY_SEARCH: 'crawl',
+  SCAN_SHOP: 'crawl',
+  MATCH_PRODUCTS: 'crawl',
+  CRAWL_AZN_LISTINGS: 'product',
+  CRAWL_EBY_LISTINGS: 'product',
+  CRAWL_EAN: 'product',
+  LOOKUP_INFO: 'crawl',
+  QUERY_EANS_EBY: 'crawl',
+  LOOKUP_CATEGORY: 'crawl',
+};
+
 const neverUsePremiumProxyDomains = ['amazon.de', 'ebay.de'];
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
@@ -552,12 +572,19 @@ export abstract class BaseQueue<
           prevProxyType,
         );
       }
+      let disAllowedResourceTypes = resourceTypes?.crawl;
+      if (
+        resourceTypes &&
+        resourceTypes[resourceTypesPerTask[type]] !== undefined
+      ) {
+        disAllowedResourceTypes = resourceTypes[resourceTypesPerTask[type]];
+      }
       const pageAndPrint = await getPage({
         browser: this.browser!,
         host: getHost(link),
         shop,
         requestCount: this.requestCountPerHost[getHost(link)] || 0,
-        disAllowedResourceTypes: resourceTypes?.query,
+        disAllowedResourceTypes,
         exceptions,
         rules,
         proxyType,

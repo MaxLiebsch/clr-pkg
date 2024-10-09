@@ -24,7 +24,7 @@ export interface Shop {
     sharedWorker: status;
   };
   resourceTypes: {
-    query: ResourceTypes[];
+    product: ResourceTypes[];
     crawl: ResourceTypes[];
   };
   entryPoints: EntryPoint[];

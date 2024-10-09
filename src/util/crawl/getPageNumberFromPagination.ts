@@ -1,5 +1,6 @@
 import { Page } from 'puppeteer1';
 import {
+  extractAttributePage,
   getElementHandleInnerText,
   getInnerText,
   getProductCount,
@@ -27,6 +28,7 @@ import { Shop } from '../../types/shop';
   - find_highest: The page numbers are the highest number found in button/elements text
   - estimate: The page numbers are estimated from the researched number of products per page.
   - product_count: The page numbers are calculated from the product count element .
+  - element_attribute: The page numbers are the attribute of the element.
  
 */
 
@@ -40,26 +42,34 @@ export const getPageNumberFromPagination = async (
   let pageCount = 0;
   if (!Object.keys(paginationEl).length) return pageCount;
 
-  const { calculation, type } = paginationEl;
-  if (calculation.method === 'button') {
-    const pageButtons = await myQuerySelectorAll(page, calculation.sel);
+  const { calculation, type, sel: paginationSel } = paginationEl;
+  const {
+    method: calMethod,
+    productsPerPage,
+    attribute,
+    textToMatch,
+    sel: calculationSel,
+    last: lastSel,
+  } = calculation;
+  if (calMethod === 'button') {
+    const pageButtons = await myQuerySelectorAll(page, calculationSel);
     if (pageButtons) {
       pageCount = pageButtons.length;
     }
   }
-  if (calculation.method === 'first_last') {
-    const last = await getInnerText(page, calculation.last);
+  if (calMethod === 'first_last') {
+    const last = await getInnerText(page, lastSel);
     if (last) {
       pageCount = parseInt(last);
     } else {
-      const next = await getInnerText(page, calculation.sel);
+      const next = await getInnerText(page, calculationSel);
       if (next) {
         pageCount = parseInt(next);
       }
     }
   }
-  if (calculation.method === 'count') {
-    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+  if (calMethod === 'count') {
+    const paginationEls = await myQuerySelectorAll(page, calculationSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
@@ -76,15 +86,15 @@ export const getPageNumberFromPagination = async (
     }
   }
 
-  if (calculation.method === 'match_text' && calculation.textToMatch) {
-    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+  if (calMethod === 'match_text' && textToMatch) {
+    const paginationEls = await myQuerySelectorAll(page, calculationSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
         const paginationEl = paginationEls[index];
         const innerText = await getElementHandleInnerText(paginationEl);
         if (innerText) {
-          if (innerText.trim().includes(calculation.textToMatch))
+          if (innerText.trim().includes(textToMatch))
             pagesCount = (currentPage ?? 0) + 1;
         }
       }
@@ -92,8 +102,8 @@ export const getPageNumberFromPagination = async (
     }
   }
 
-  if (calculation.method === 'find_highest') {
-    const paginationEls = await myQuerySelectorAll(page, calculation.sel);
+  if (calMethod === 'find_highest') {
+    const paginationEls = await myQuerySelectorAll(page, calculationSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
@@ -113,18 +123,21 @@ export const getPageNumberFromPagination = async (
       pageCount = pagesCount;
     }
   }
-  if (
-    calculation.method === 'estimate' &&
-    productCount &&
-    calculation.productsPerPage
-  ) {
-    pageCount = Math.floor(productCount / calculation.productsPerPage);
+  if (calMethod === 'estimate' && productCount && productsPerPage) {
+    pageCount = Math.floor(productCount / productsPerPage);
   }
 
-  if (calculation.method === 'product_count' && calculation.productsPerPage) {
+  if (calMethod === 'product_count' && productsPerPage) {
     const count = await getProductCount(page, shop.productList);
     if (count) {
-      pageCount = Math.floor(count / calculation.productsPerPage);
+      pageCount = Math.floor(count / productsPerPage);
+    }
+  }
+
+  if (calMethod === 'element_attribute' && attribute) {
+    const element = await extractAttributePage(page, paginationSel, attribute);
+    if (element && Number(element)) {
+      pageCount = parseInt(element);
     }
   }
 

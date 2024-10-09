@@ -3,6 +3,7 @@ import { Limit, ShopObject } from '../../types';
 import {
   clickBtn,
   deleteElementFromPage,
+  extractAttributePage,
   humanScroll,
   scrollToBottom,
   waitForSelector,
@@ -35,6 +36,7 @@ export async function browseProductpages(
     paginationEls,
     limit,
   );
+  process.env.DEBUG === 'true' && console.log('pagination:', pagination);
   const limitPages = limit?.pages ? limit?.pages : 1;
 
   if (shop.crawlActions && shop.crawlActions.length > 0) {
@@ -74,6 +76,21 @@ export async function browseProductpages(
       process.env.DEBUG && console.log('pageCount:', pageCount);
 
       if (pageCount) {
+        const findPaginationAppendix = paginationEls.find(
+          (el) =>
+            el?.paginationUrlSchema?.calculation?.method ===
+            'find_pagination_apendix',
+        );
+        if (findPaginationAppendix) {
+          const { calculation } = findPaginationAppendix.paginationUrlSchema!;
+          const { sel, type, replace } = calculation;
+          if (sel && type && replace) {
+            const elementText = await extractAttributePage(page, sel, type);
+            if (elementText) {
+              calculation.appendix = elementText;
+            }
+          }
+        }
         const noOfPages = limitPages
           ? limitPages > pageCount
             ? pageCount

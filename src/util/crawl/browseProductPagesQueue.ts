@@ -2,6 +2,7 @@ import { Page } from 'puppeteer1';
 import {
   clickBtn,
   deleteElementFromPage,
+  extractAttributePage,
   humanScroll,
   scrollToBottom,
   waitForSelector,
@@ -15,6 +16,7 @@ import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
+import { find } from 'underscore';
 
 export async function browseProductPagesQueue(
   page: Page,
@@ -99,6 +101,21 @@ export async function browseProductPagesQueue(
       );
 
       if (pageCount) {
+        const findPaginationAppendix = paginationEls.find(
+          (el) =>
+            el?.paginationUrlSchema?.calculation?.method ===
+            'find_pagination_apendix',
+        );
+        if (findPaginationAppendix) {
+          const { calculation } = findPaginationAppendix.paginationUrlSchema!;
+          const { sel, type, replace } = calculation;
+          if (sel && type && replace) {
+            const elementText = await extractAttributePage(page, sel, type);
+            if (elementText) {
+              calculation.appendix = elementText;
+            }
+          }
+        }
         const noOfPages = calculatePageCount(limit, pageCount);
         switch (true) {
           case pageCount === 0:
@@ -139,6 +156,8 @@ export async function browseProductPagesQueue(
                 query?.product.value,
               );
             }
+            process.env.DEBUG === 'true' &&
+              console.log(initialPageUrl, 'nextUrl:', nextUrl);
             queue.pushTask(crawlProductsQueue, {
               ...request,
               retries: 0,

@@ -27,6 +27,7 @@ export const paginationUrlBuilder = async (
 ) => {
   let resultUrl = url;
   let startPointSubstractor = 1;
+
   for (let index = 0; index < paginationEls.length; index++) {
     const element = paginationEls[index];
     let navStr = element.nav;
@@ -78,17 +79,23 @@ export const paginationUrlBuilder = async (
         resultUrl = resultUrl + navStr;
       }
 
-      if (calculation.method === 'find_pagination_apendix' && page) {
+      if (
+        calculation.method === 'find_pagination_apendix' &&
+        calculation.appendix
+      ) {
         if (
           'sel' in calculation &&
           'type' in calculation &&
           'replace' in calculation
         ) {
-          const elementText = await extractAttributePage(
-            page,
-            calculation.sel!,
-            calculation.type!,
-          );
+          const elementText = calculation.appendix;
+          process.env.DEBUG === 'true' &&
+            console.log(
+              url,
+              calculation.sel,
+              elementText,
+              pageNo,
+            );
           if (elementText) {
             const { replace } = calculation;
             if (replace?.length) {
@@ -101,6 +108,8 @@ export const paginationUrlBuilder = async (
                 console.log('No match found for:', replace[0].search);
               }
             }
+          } else {
+            console.log('No element text found for:', calculation.sel);
           }
         }
       }
