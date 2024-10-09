@@ -33,34 +33,55 @@ export const paginationUrlBuilder = async (
     let navStr = element.nav;
     const { paginationUrlSchema, nav } = element;
     if (paginationUrlSchema) {
-      const { withQuery, calculation, replace } = paginationUrlSchema;
+      const {
+        withQuery,
+        calculation: urlSchemaCalc,
+        replace: urlSchemaReplace,
+        parseAndReplace,
+      } = paginationUrlSchema;
+      const {
+        method: urlSchemaCalcMethod,
+        replace: urlSchemaCalcReplace,
+        appendix,
+        type,
+        sel,
+      } = urlSchemaCalc;
+
       if (withQuery && query) {
         navStr = nav.replace('<query>', encodeURIComponent(query));
       }
 
-      if (paginationUrlSchema.parseAndReplace) {
-        const { regexp, replace } = paginationUrlSchema.parseAndReplace;
+      if (parseAndReplace) {
+        const { regexp, replace } = parseAndReplace;
         const parsedUrlPart = resultUrl.match(new RegExp(regexp));
         if (parsedUrlPart) {
           navStr = navStr.replace(replace, parsedUrlPart[0]);
         }
       }
 
-      if (calculation.method === 'offset') {
-        const finalNavStr = `${navStr.replace('<page>', ((pageNo - startPointSubstractor) * calculation.offset).toString())}`;
-        const replaceRegExp = new RegExp(replace);
+      if (urlSchemaCalcMethod === 'offset' && urlSchemaReplace) {
+        let offset = urlSchemaCalc.offset;
+        let pageCalculation = (pageNo - startPointSubstractor) * offset;
+
+        process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
+        if (urlSchemaCalc.startOffset) {
+          pageCalculation = (pageNo - startPointSubstractor) * offset + urlSchemaCalc.startOffset;
+        }
+
+        const finalNavStr = `${navStr.replace('<page>', pageCalculation.toString())}`;
+        const replaceRegExp = new RegExp(urlSchemaReplace);
         if (replaceRegExp.test(resultUrl)) {
           return resultUrl.replace(replaceRegExp, finalNavStr);
         }
-        if (replace === 'attach_end') {
+        if (urlSchemaReplace === 'attach_end') {
           return resultUrl + finalNavStr;
         }
 
         return resultUrl;
       }
 
-      if ('replace' in calculation && calculation.method === 'replace_append') {
-        calculation.replace!.forEach((_replace) => {
+      if (urlSchemaCalcMethod === 'replace_append' && urlSchemaCalcReplace) {
+        urlSchemaCalcReplace.forEach((_replace) => {
           if ('replace' in _replace) {
             resultUrl = resultUrl.replaceAll(
               _replace.search,
@@ -79,37 +100,25 @@ export const paginationUrlBuilder = async (
         resultUrl = resultUrl + navStr;
       }
 
-      if (
-        calculation.method === 'find_pagination_apendix' &&
-        calculation.appendix
-      ) {
-        if (
-          'sel' in calculation &&
-          'type' in calculation &&
-          'replace' in calculation
-        ) {
-          const elementText = calculation.appendix;
+      if (urlSchemaCalcMethod === 'find_pagination_apendix' && appendix) {
+        if (sel && type && urlSchemaCalcReplace) {
           process.env.DEBUG === 'true' &&
-            console.log(
-              url,
-              calculation.sel,
-              elementText,
-              pageNo,
-            );
-          if (elementText) {
-            const { replace } = calculation;
-            if (replace?.length) {
-              const match = elementText.match(new RegExp(replace[0].search));
+            console.log(url, urlSchemaCalc.sel, appendix, pageNo);
+          if (appendix) {
+            if (urlSchemaCalcReplace?.length) {
+              const replace = urlSchemaCalcReplace[0];
+              const { search } = replace;
+              const match = appendix.match(new RegExp(search));
               if (match) {
-                navStr = navStr.replaceAll(replace[0].replace!, match[0]);
+                navStr = navStr.replaceAll(replace.replace!, match[0]);
                 navStr = navStr.replaceAll('<page>', pageNo.toString());
                 resultUrl = resultUrl + navStr;
               } else {
-                console.log('No match found for:', replace[0].search);
+                console.log('No match found for:', search);
               }
             }
           } else {
-            console.log('No element text found for:', calculation.sel);
+            console.log('No element text found for:', sel);
           }
         }
       }

@@ -26,8 +26,8 @@ export type PaginationUrlSchemaMethod =
   | 'find_pagination_apendix';
 
 export interface PaginationUrlSchema {
-  replace: string;
-  withQuery: boolean;
+  replace?: 'attach_end';
+  withQuery?: boolean;
   parseAndReplace?: {
     regexp: string;
     replace: string;
@@ -43,6 +43,7 @@ export interface PaginationUrlSchema {
       search: string;
       replace?: string;
     }[];
+    startOffset?: number; // abfalleimer-348?take=48+60 the 48 is the startOffset, so that the next page will be 108, 168, etc.
     offset: number;
   };
 }

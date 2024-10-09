@@ -7,6 +7,7 @@ import { NestedNameDetail } from '../types/productInfoDetails';
 import { ProductList } from '../types/productList';
 import { WaitUntil } from '../types/shop';
 import { keepaTimeSummand } from '../constants';
+import { sleep } from './extract';
 
 export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
   Object.keys(browserGroup).reduce(
@@ -14,10 +15,8 @@ export const browserLoadChecker = (browserGroup: BrowserGroup): BrowserInfo =>
     browserGroup[Object.keys(browserGroup)[0]],
   );
 
-
-  export const createUnixTimeFromKeepaTime = (timestamp: number) =>
-    (timestamp + keepaTimeSummand) * 60;
-  
+export const createUnixTimeFromKeepaTime = (timestamp: number) =>
+  (timestamp + keepaTimeSummand) * 60;
 
 export function makeSuitableObjectKey(string: string) {
   // Replace characters that are not allowed in object property keys with an underscore
@@ -156,12 +155,19 @@ export const getProductCount = async (
   productList: ProductList[],
 ) => {
   if (productList.length) {
-    const { productCntSel, productsPerPage, awaitProductCntSel } =
-      productList[0];
+    const {
+      productCntSel,
+      productsPerPage,
+      awaitProductCntSel,
+      waitProductCntSel,
+    } = productList[0];
     if (productCntSel.length) {
       if (awaitProductCntSel) {
         for (let index = 0; index < productCntSel.length; index++) {
           const selector = productCntSel[index];
+          if (waitProductCntSel) {
+            await sleep(waitProductCntSel);
+          }
           const handle = await waitForSelector(page, selector, 5000, false);
 
           if (!handle) continue;
@@ -382,7 +388,7 @@ export function replaceAllHiddenCharacters(str: string) {
   const hiddenCharactersRegex = /[^\x20-\x7E\xA0-\xFF]+/g;
 
   // Replace hidden characters with an empty string
-  return str.replace(hiddenCharactersRegex, "");
+  return str.replace(hiddenCharactersRegex, '');
 }
 
 export function roundToTwoDecimals(num: number) {

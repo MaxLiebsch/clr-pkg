@@ -16,7 +16,6 @@ import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
-import { find } from 'underscore';
 
 export async function browseProductPagesQueue(
   page: Page,

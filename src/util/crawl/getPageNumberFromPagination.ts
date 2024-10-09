@@ -42,17 +42,21 @@ export const getPageNumberFromPagination = async (
   let pageCount = 0;
   if (!Object.keys(paginationEl).length) return pageCount;
 
-  const { calculation, type, sel: paginationSel } = paginationEl;
+  const {
+    calculation: paginationCalc,
+    type,
+    sel: paginationSel,
+  } = paginationEl;
   const {
     method: calMethod,
     productsPerPage,
     attribute,
     textToMatch,
-    sel: calculationSel,
+    sel: paginationCalcSel,
     last: lastSel,
-  } = calculation;
+  } = paginationCalc;
   if (calMethod === 'button') {
-    const pageButtons = await myQuerySelectorAll(page, calculationSel);
+    const pageButtons = await myQuerySelectorAll(page, paginationCalcSel);
     if (pageButtons) {
       pageCount = pageButtons.length;
     }
@@ -62,14 +66,14 @@ export const getPageNumberFromPagination = async (
     if (last) {
       pageCount = parseInt(last);
     } else {
-      const next = await getInnerText(page, calculationSel);
+      const next = await getInnerText(page, paginationCalcSel);
       if (next) {
         pageCount = parseInt(next);
       }
     }
   }
   if (calMethod === 'count') {
-    const paginationEls = await myQuerySelectorAll(page, calculationSel);
+    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
@@ -87,7 +91,7 @@ export const getPageNumberFromPagination = async (
   }
 
   if (calMethod === 'match_text' && textToMatch) {
-    const paginationEls = await myQuerySelectorAll(page, calculationSel);
+    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {
@@ -103,7 +107,7 @@ export const getPageNumberFromPagination = async (
   }
 
   if (calMethod === 'find_highest') {
-    const paginationEls = await myQuerySelectorAll(page, calculationSel);
+    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
     if (paginationEls) {
       let pagesCount = 0;
       for (let index = 0; index < paginationEls.length; index++) {

@@ -5,6 +5,7 @@ export interface ProductList {
   type: string;
   timeout?: number;
   awaitProductCntSel?: boolean;
+  waitProductCntSel?: number;
   productsPerPage?: number;
   productCntSel: string[];
   product: IProductSelector;
@@ -42,6 +43,7 @@ export interface Detail {
   baseUrl?: string;
   extractPart?: number;
   regexp?: string;
+  fallback?:string;
   proprietaryProducts?: string;
   attr?: string;
   key?: string;

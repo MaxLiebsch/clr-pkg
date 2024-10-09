@@ -74,7 +74,6 @@ describe('Pagination Builder', () => {
             sel: 'button.button-secondary.loadmoreBtn',
             nav: '&typesorting=0&sdirection=ascending&skippos=<skip>&takenum=24',
             paginationUrlSchema: {
-              replace: '',
               withQuery: false,
               calculation: {
                 method: 'replace_append',

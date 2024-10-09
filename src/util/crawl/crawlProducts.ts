@@ -29,8 +29,9 @@ export const crawlProducts = async (
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
 ) => {
-  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
-    const { min, max } = shop.pauseOnProductPage;
+  const { pauseOnProductPage } = shop;
+  if (pauseOnProductPage && pauseOnProductPage.pause) {
+    const { min, max } = pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
     await new Promise((r) => setTimeout(r, pause));
   }
@@ -196,15 +197,31 @@ export const crawlProducts = async (
       if (product.price && product.price !== 0) {
         const currency = detectCurrency(product.price as string);
         if (currency) {
-          product["cur"] = currency;
+          product['cur'] = currency;
         }
         product.price = safeParsePrice(product.price);
+        if (product.price === 0) {
+          const detail = details.find((d) => d.content === 'price');
+          if (detail && detail.fallback) {
+            const el = await extractTextFromElementHandle(
+              productEl,
+              detail.fallback,
+            );
+            if (el) {
+              const currency = detectCurrency(el);
+              if (currency) {
+                product['cur'] = currency;
+              }
+              product.price = safeParsePrice(el);
+            }
+          }
+        }
       }
 
       if (product.promoPrice && product.promoPrice !== 0) {
         const currency = detectCurrency(product.promoPrice as string);
         if (currency) {
-          product["cur"] = currency;
+          product['cur'] = currency;
         }
         product.promoPrice = safeParsePrice(product.promoPrice);
       }
@@ -220,8 +237,8 @@ export const crawlProducts = async (
         const ean = (product.link as string).match(new RegExp(shop.ean, 'g'));
         if (ean) {
           const cleanEan = ean[0].replaceAll(/\D/g, '');
-          product['ean'] = cleanEan
-          product['eanList']= [cleanEan]
+          product['ean'] = cleanEan;
+          product['eanList'] = [cleanEan];
         }
       }
       // Add proprietary products to the name
