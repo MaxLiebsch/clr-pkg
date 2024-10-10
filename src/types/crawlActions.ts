@@ -16,6 +16,7 @@ export type ActionType =
 export interface BaseAction {
   type: ActionType;
   sel: string;
+  interval?: number;
   name: string;
   step?: number;
   action: string;

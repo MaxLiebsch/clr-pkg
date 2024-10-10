@@ -26,32 +26,59 @@ export const avgNoPagesPerSession = 11;
 const UserAgentCnt = userAgentList.length;
 const lng_set1 = 'de';
 const lng = 'de-DE';
+const windowsGpuCnt = graphicsCardListByPlatform['Windows'].length;
+const linuxGpuCnt = graphicsCardListByPlatform['Linux'].length;
+const macGpuCnt = graphicsCardListByPlatform['macOS'].length;
+const windowsResCnt = screenResolutionsByPlatform['Windows'].length;
+const linuxResCnt = screenResolutionsByPlatform['Linux'].length;
+const macResCnt = screenResolutionsByPlatform['macOS'].length;
+
+export type CurrentFingerPrint = {
+  currentUserAgent: number;
+  currWinRes: number;
+  currLinuxRes: number;
+  currMacRes: number;
+  currWinGpu: number;
+  currLinuxGpu: number;
+  currMacGpu: number;
+  timezone: number;
+};
 
 const fingerPrints: {
-  [key: string]: {
-    currentUserAgent: number;
-    currWinRes: number;
-    currLinuxRes: number;
-    currMacRes: number;
-    currWinGpu: number;
-    currLinuxGpu: number;
-    currMacGpu: number;
-    timezone: number;
-  };
+  [key: string]: CurrentFingerPrint;
 } = {};
 
-const initFingerPrintForHost = (host: string) => {
+export const initFingerPrintForHost = (
+  host: string,
+  random?: boolean,
+  proxyType?: ProxyType,
+) => {
   if (!fingerPrints[host])
-    fingerPrints[host] = {
-      currentUserAgent: 0,
-      currWinRes: 0,
-      currLinuxRes: 0,
-      currMacRes: 0,
-      currWinGpu: 0,
-      currLinuxGpu: 0,
-      currMacGpu: 0,
-      timezone: 0,
-    };
+    if (random) {
+      fingerPrints[host] = {
+        currentUserAgent: Math.floor(Math.random() * UserAgentCnt),
+        currWinRes: Math.floor(Math.random() * windowsResCnt),
+        currLinuxRes: Math.floor(Math.random() * linuxResCnt),
+        currMacRes: Math.floor(Math.random() * macResCnt),
+        currWinGpu: Math.floor(Math.random() * windowsGpuCnt),
+        currLinuxGpu: Math.floor(Math.random() * linuxGpuCnt),
+        currMacGpu: Math.floor(Math.random() * macGpuCnt),
+        timezone: Math.floor(
+          Math.random() * (proxyType === 'de' ? 1 : timezones.length),
+        ),
+      };
+    } else {
+      fingerPrints[host] = {
+        currentUserAgent: 0,
+        currWinRes: 0,
+        currLinuxRes: 0,
+        currMacRes: 0,
+        currWinGpu: 0,
+        currLinuxGpu: 0,
+        currMacGpu: 0,
+        timezone: 0,
+      };
+    }
 };
 
 const isNextFingerPrint = (requestCount: number) =>
@@ -75,16 +102,13 @@ export const rotateTimezone = (
   const timezonesCnt = timezones.length;
   const timezone = fingerPrints[host].timezone;
   if (isNextFingerPrint(requestCount)) {
+    console.log('requestCount:', requestCount);
     fingerPrints[host].timezone = (timezone + 1) % timezonesCnt;
     return timezones[timezone];
   } else {
     return timezones[timezone];
   }
 };
-
-const windowsResCnt = screenResolutionsByPlatform['Windows'].length;
-const linuxResCnt = screenResolutionsByPlatform['Linux'].length;
-const macResCnt = screenResolutionsByPlatform['macOS'].length;
 
 export const rotateScreenResolution = (
   platform: 'Windows' | 'macOS' | 'Linux',
@@ -117,10 +141,6 @@ export const rotateScreenResolution = (
     return screenResolutions[currRes];
   }
 };
-
-const windowsGpuCnt = graphicsCardListByPlatform['Windows'].length;
-const linuxGpuCnt = graphicsCardListByPlatform['Linux'].length;
-const macGpuCnt = graphicsCardListByPlatform['macOS'].length;
 
 export const rotateGraphicUnit = (
   platform: 'Windows' | 'macOS' | 'Linux',
@@ -293,7 +313,6 @@ const setPageProperties = async ({
   const languages = languagesLists[requestCount % languagesLists.length];
   const language = languageList[requestCount % languageList.length];
 
-
   const voices = voicesList.slice(requestCount % voicesList.length, undefined);
 
   if (voices.length < 6 && requestCount) {
@@ -365,7 +384,7 @@ const setPageProperties = async ({
   });
 
   await page.evaluateOnNewDocument(() => {
-    // We can mock this in as much depth as we need for the test. 
+    // We can mock this in as much depth as we need for the test.
     console.log = function () {}; // Disable console.log temporarily
     // Override the Error stack getter to prevent detection
     Object.defineProperty(Error.prototype, 'stack', {
@@ -373,7 +392,6 @@ const setPageProperties = async ({
         return ''; // Return an empty string or a custom stack
       },
     });
- 
   });
 
   const graphicCard = rotateGraphicUnit(platform, requestCount, host);

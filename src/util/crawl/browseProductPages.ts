@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer1';
-import { Limit, ShopObject } from '../../types';
+import { Limit } from '../../types';
 import {
   clickBtn,
   deleteElementFromPage,
@@ -29,7 +29,7 @@ export async function browseProductpages(
   query?: Query,
 ) {
   const timeouts: NodeJS.Timeout[] = [];
-  const { paginationEl: paginationEls, waitUntil } = shop;
+  const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
 
   let { pagination, paginationEl } = await findPagination(
     page,
@@ -39,20 +39,16 @@ export async function browseProductpages(
   process.env.DEBUG === 'true' && console.log('pagination:', pagination);
   const limitPages = limit?.pages ? limit?.pages : 1;
 
-  if (shop.crawlActions && shop.crawlActions.length > 0) {
-    for (let i = 0; i < shop.crawlActions.length; i++) {
-      const action = shop.crawlActions[i];
-      const { type } = action;
-      if (
-        type === 'element' &&
-        'action' in action &&
-        action.action === 'delete' &&
-        'interval' in action
-      ) {
+  if (crawlActions && crawlActions.length > 0) {
+    for (let i = 0; i < crawlActions.length; i++) {
+      const action = crawlActions[i];
+      const { action: subAction, type, sel, interval } = action;
+
+      if (type === 'element' && subAction === 'delete' && interval) {
         timeouts.push(
           setInterval(
-            async () => await deleteElementFromPage(page, action.sel),
-            action.interval as number,
+            async () => await deleteElementFromPage(page, sel),
+            interval,
           ),
         );
       }
@@ -101,7 +97,7 @@ export async function browseProductpages(
           const pageNo = i + 1;
 
           if (i === 0) {
-            await crawlProducts(page, shop, addProductCb, pageInfo);
+            await crawlProducts(page, shop, addProductCb, pageInfo, pageNo);
           } else {
             let nextUrl = buildNextPageUrl(
               initialpageurl,
@@ -118,15 +114,12 @@ export async function browseProductpages(
               );
             }
             process.env.DEBUG && console.log('nextUrl:', nextUrl);
-
-            await Promise.all([
-              page
-                .goto(nextUrl, {
-                  waitUntil: waitUntil ? waitUntil.product : 'load',
-                })
-                .catch((e) => {}),
-              crawlProducts(page, shop, addProductCb, pageInfo),
-            ]);
+            await page
+              .goto(nextUrl, {
+                waitUntil: waitUntil ? waitUntil.product : 'load',
+              })
+              .catch((e) => {});
+            await crawlProducts(page, shop, addProductCb, pageInfo, pageNo);
             const blocked = await checkForBlockingSignals(
               page,
               true,
@@ -134,14 +127,12 @@ export async function browseProductpages(
               pageInfo.link,
             );
             if (blocked) {
-              await Promise.all([
-                page
-                  .goto(nextUrl, {
-                    waitUntil: waitUntil ? waitUntil.product : 'load',
-                  })
-                  .catch((e) => {}),
-                crawlProducts(page, shop, addProductCb, pageInfo),
-              ]);
+              await page
+                .goto(nextUrl, {
+                  waitUntil: waitUntil ? waitUntil.product : 'load',
+                })
+                .catch((e) => {});
+              await crawlProducts(page, shop, addProductCb, pageInfo, pageNo);
             }
           }
           if (i === noOfPages - 1) {
@@ -155,10 +146,12 @@ export async function browseProductpages(
       // type === 'infinite_scroll'
       const scrolling = await scrollToBottom(page);
       if (scrolling === 'finished') {
-        await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
-          timeouts.forEach((timeout) => clearInterval(timeout));
-          closePage(page).then();
-        });
+        await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(
+          () => {
+            timeouts.forEach((timeout) => clearInterval(timeout));
+            closePage(page).then();
+          },
+        );
         return 'crawled';
       }
     } else if (type === 'recursive-more-button') {
@@ -169,9 +162,7 @@ export async function browseProductpages(
         const btn = await waitForSelector(page, sel, undefined, true);
         if (btn) {
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
-          const shouldscroll = shop.crawlActions
-            ? shop.crawlActions.some((action) => action.type === 'scroll')
-            : false;
+          const shouldscroll = crawlActions.find((a) => a.type === 'scroll');
           if (shouldscroll) {
             await humanScroll(page);
           }
@@ -179,7 +170,7 @@ export async function browseProductpages(
           exists = false;
         }
       }
-      await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+      await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
@@ -195,14 +186,14 @@ export async function browseProductpages(
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
         }
       }
-      await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+      await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
       return 'crawled';
     }
   } else {
-    await crawlProducts(page, shop, addProductCb, pageInfo).finally(() => {
+    await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
       timeouts.forEach((timeout) => clearInterval(timeout));
       closePage(page).then();
     });

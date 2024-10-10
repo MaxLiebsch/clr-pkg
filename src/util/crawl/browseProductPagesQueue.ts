@@ -26,35 +26,31 @@ export async function browseProductPagesQueue(
   const { pages } = limit;
 
   const timeouts: NodeJS.Timeout[] = [];
-  const { paginationEl: paginationEls, waitUntil } = shop;
+  const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
 
-  if (shop.crawlActions && shop.crawlActions.length > 0) {
-    for (let i = 0; i < shop.crawlActions.length; i++) {
-      const action = shop.crawlActions[i];
-      if (
-        action.type === 'element' &&
-        'action' in action &&
-        action.action === 'delete' &&
-        'interval' in action
-      ) {
+  if (crawlActions && crawlActions.length > 0) {
+    for (let i = 0; i < crawlActions.length; i++) {
+      const action = crawlActions[i];
+      const { interval, action: subAction, type, sel, wait } = action;
+      if (type === 'element' && subAction === 'delete' && interval) {
         timeouts.push(
           setInterval(
-            async () => await deleteElementFromPage(page, action.sel),
-            action.interval as number,
+            async () => await deleteElementFromPage(page, sel),
+            interval as number,
           ),
         );
       }
-      if (action.type === 'scroll') {
+      if (type === 'scroll') {
         await humanScroll(page);
       }
-      if (action.type === 'button' && 'wait' in action) {
-        if (action?.action === 'waitBefore') {
+      if (type === 'button' && wait && subAction && sel) {
+        if (subAction === 'waitBefore') {
           await new Promise((r) => setTimeout(r, 600));
         }
         await clickBtn(
           page,
-          action.sel,
-          action.wait ?? false,
+          sel,
+          wait ?? false,
           waitUntil,
           'waitDuration' in action ? action.waitDuration : undefined,
         );
@@ -134,12 +130,16 @@ export async function browseProductPagesQueue(
         for (let i = 0; i < noOfPages; i++) {
           const pageNo = i + 1;
           if (i === 0) {
-            await crawlProducts(page, shop, addProduct, pageInfo).finally(
-              () => {
-                timeouts.forEach((timeout) => clearInterval(timeout));
-                closePage(page).then();
-              },
-            );
+            await crawlProducts(
+              page,
+              shop,
+              addProduct,
+              pageInfo,
+              pageNo,
+            ).finally(() => {
+              timeouts.forEach((timeout) => clearInterval(timeout));
+              closePage(page).then();
+            });
           } else {
             let nextUrl = buildNextPageUrl(
               initialPageUrl,
@@ -157,6 +157,7 @@ export async function browseProductPagesQueue(
             }
             process.env.DEBUG === 'true' &&
               console.log(initialPageUrl, 'nextUrl:', nextUrl);
+
             queue.pushTask(crawlProductsQueue, {
               ...request,
               retries: 0,
@@ -179,7 +180,7 @@ export async function browseProductPagesQueue(
     } else if (type === 'infinite_scroll') {
       const scrolling = await scrollToBottom(page);
       if (scrolling === 'finished') {
-        await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
+        await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
           timeouts.forEach((timeout) => clearInterval(timeout));
           closePage(page).then();
         });
@@ -190,7 +191,6 @@ export async function browseProductPagesQueue(
       while (exists && cnt < limit.pages - 1) {
         cnt++;
         const btn = await waitForSelector(page, sel, undefined, true);
-        console.log('btn:', btn);
         if (btn) {
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
           const shouldscroll = shop.crawlActions
@@ -203,7 +203,7 @@ export async function browseProductPagesQueue(
           exists = false;
         }
       }
-      await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
+      await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
@@ -219,14 +219,14 @@ export async function browseProductPagesQueue(
           await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
         }
       }
-      await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
+      await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
       return 'crawled';
     }
   } else {
-    await crawlProducts(page, shop, addProduct, pageInfo).finally(() => {
+    await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
       timeouts.forEach((timeout) => clearInterval(timeout));
       closePage(page).then();
     });

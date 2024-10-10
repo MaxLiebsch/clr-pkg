@@ -170,7 +170,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
             });
           await runActions(page, shop);
 
-          await crawlProducts(page, shop, addProductCb, pageInfo);
+          await crawlProducts(page, shop, addProductCb, pageInfo,1);
 
           await closePage(page);
 

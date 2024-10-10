@@ -2,6 +2,7 @@ import { Page } from 'puppeteer1';
 import {
   cleanUpHTML,
   extractPart,
+  humanScroll,
   myQuerySelectorAll,
   nestedProductName,
   removeNestedElementAndReturnText,
@@ -28,15 +29,23 @@ export const crawlProducts = async (
   shop: Shop,
   addProductCb: (product: ProductRecord) => Promise<void>,
   pageInfo: ICategory,
+  pageNo: number,
 ) => {
-  const { pauseOnProductPage } = shop;
+  const { pauseOnProductPage, productList, crawlActions } = shop;
   if (pauseOnProductPage && pauseOnProductPage.pause) {
     const { min, max } = pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
     await new Promise((r) => setTimeout(r, pause));
   }
 
-  const { productList } = shop;
+  process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
+
+  const shouldScroll = crawlActions.find((a) => a.type === 'scroll');
+
+  if (shouldScroll && pageNo && pageNo > 1) {
+    await humanScroll(page);
+  }
+
   for (let index = 0; index < productList.length; index++) {
     const { sel, product, timeout } = productList[index];
     const selector = await waitForSelector(page, sel, timeout ?? 5000, false);

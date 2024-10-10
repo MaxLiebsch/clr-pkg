@@ -5,7 +5,7 @@ import { paginationUrlBuilder } from './paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
-import { myQuerySelectorAll } from '../helpers';
+import { humanScroll, myQuerySelectorAll } from '../helpers';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
 
@@ -29,11 +29,13 @@ export const crawlProductsQueue = async (
   const { paginationEl: paginationEls } = shop;
 
   const paginationEl = shop.paginationEl[0];
+  const { calculation } = paginationEl;
+  const { dynamic } = calculation;
   const lastPage = pageNo === noOfPages;
 
   if (
-    shop.paginationEl.length &&
-    paginationEl.calculation?.dynamic &&
+    paginationEls.length &&
+    dynamic &&
     lastPage &&
     paginationType === 'pagination'
   ) {
@@ -90,6 +92,6 @@ export const crawlProductsQueue = async (
       }
     }
   }
-  await crawlProducts(page, shop, addProduct, pageInfo);
+  await crawlProducts(page, shop, addProduct, pageInfo, pageNo || 1);
   await closePage(page);
 };

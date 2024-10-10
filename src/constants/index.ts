@@ -175,14 +175,15 @@ export const languageList = [
 
 export const timezones = [
   'Europe/Kiev',
-  'America/New_York',
   'Europe/Amsterdam',
+  'America/New_York',
   'Europe/Moscow',
   'America/Phoenix',
   'Europe/Lisbon',
   'Europe/Kaliningrad',
   'America/Denver',
   'Europe/Moscow',
+  'Europe/Berlin',
   'America/Los_Angeles',
   'Europe/Kaliningrad',
   'America/Chicago',
