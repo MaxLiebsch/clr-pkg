@@ -819,6 +819,16 @@ export abstract class BaseQueue<
                   });
                   this.jumpToNextUserAgent(link);
                   page && (await this.resetCookies(page));
+                } else if (
+                  errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED ||
+                  errorType === ErrorType.ERR_TIMED_OUT
+                ) {
+                  terminationPrevConnections(
+                    requestId,
+                    link,
+                    allowedHosts,
+                    proxyType || 'mix',
+                  );
                 } else {
                   this.pauseQueue('error');
                 }
