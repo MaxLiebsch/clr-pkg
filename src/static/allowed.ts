@@ -5,6 +5,7 @@ export const allowed = [
   '1603811301.rsc.cdn77.org',
   'www.proshop.de',
   'www.digitalo.de',
+  "bot-detector.rebrowser.net",
   'www.notebooksbilliger.de',
   'www.notino.de',
   'www.flaconi.de',

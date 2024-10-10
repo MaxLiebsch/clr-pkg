@@ -293,29 +293,6 @@ const setPageProperties = async ({
   const languages = languagesLists[requestCount % languagesLists.length];
   const language = languageList[requestCount % languageList.length];
 
-  await page.evaluateOnNewDocument(
-    (navigatorPlatform, languages, language) => {
-      Object.defineProperty(navigator, 'language', {
-        get: function () {
-          return language;
-        },
-      });
-      Object.defineProperty(navigator, 'platform', {
-        get: function () {
-          return navigatorPlatform;
-        },
-        set: function (a) {},
-      });
-      Object.defineProperty(navigator, 'languages', {
-        get: function () {
-          return languages;
-        },
-      });
-    },
-    navigatorPlatform,
-    languages,
-    language,
-  );
 
   const voices = voicesList.slice(requestCount % voicesList.length, undefined);
 
@@ -388,9 +365,7 @@ const setPageProperties = async ({
   });
 
   await page.evaluateOnNewDocument(() => {
-    // We can mock this in as much depth as we need for the test.
-    //@ts-ignore
-    delete navigator.__proto__.webdriver;
+    // We can mock this in as much depth as we need for the test. 
     console.log = function () {}; // Disable console.log temporarily
     // Override the Error stack getter to prevent detection
     Object.defineProperty(Error.prototype, 'stack', {
@@ -398,52 +373,7 @@ const setPageProperties = async ({
         return ''; // Return an empty string or a custom stack
       },
     });
-
-    //@ts-ignore
-    window.navigator.chrome = {
-      //@ts-ignore
-      ...window.navigator.chrome,
-      webstore: {
-        onInstallStageChanged: {},
-        onDownloadProgress: {},
-      },
-      runtime: {
-        PlatformOs: {
-          MAC: 'mac',
-          WIN: 'win',
-          ANDROID: 'android',
-          CROS: 'cros',
-          LINUX: 'linux',
-          OPENBSD: 'openbsd',
-        },
-        PlatformArch: {
-          ARM: 'arm',
-          X86_32: 'x86-32',
-          X86_64: 'x86-64',
-        },
-        PlatformNaclArch: {
-          ARM: 'arm',
-          X86_32: 'x86-32',
-          X86_64: 'x86-64',
-        },
-        RequestUpdateCheckStatus: {
-          THROTTLED: 'throttled',
-          NO_UPDATE: 'no_update',
-          UPDATE_AVAILABLE: 'update_available',
-        },
-        OnInstalledReason: {
-          INSTALL: 'install',
-          UPDATE: 'update',
-          CHROME_UPDATE: 'chrome_update',
-          SHARED_MODULE_UPDATE: 'shared_module_update',
-        },
-        OnRestartRequiredReason: {
-          APP_UPDATE: 'app_update',
-          OS_UPDATE: 'os_update',
-          PERIODIC: 'periodic',
-        },
-      },
-    };
+ 
   });
 
   const graphicCard = rotateGraphicUnit(platform, requestCount, host);
@@ -468,7 +398,7 @@ const setPageProperties = async ({
     javascript?.serviceWorker === 'disabled'
   ) {
     await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'serviceWorker', {
+      Object.defineProperty(window, 'serviceWorker', {
         //@ts-ignore
         register: function () {
           return Promise.reject('Service Workers are disabled.');
