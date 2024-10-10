@@ -278,7 +278,6 @@ const setPageProperties = async ({
 
   const headers = {
     'sec-ch-ua-platform': platform,
-    'accept-encoding': acceptEncoding,
     'accept-language': `${lng},${lng_set1};q=0.9`,
   };
   await page.setExtraHTTPHeaders(headers);
