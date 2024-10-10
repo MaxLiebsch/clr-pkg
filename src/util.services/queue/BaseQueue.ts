@@ -37,7 +37,7 @@ import crypto from 'crypto';
 import EventEmitter from 'events';
 import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
-import { WaitUntil } from '../../types/shop';
+import { Shop, WaitUntil } from '../../types/shop';
 import {
   notifyProxyChange,
   registerRequest,
@@ -500,6 +500,38 @@ export abstract class BaseQueue<
     return page.reload();
   }
 
+  private terminateAndSetProxy = async ({
+    errorType,
+    link,
+    request,
+    shop,
+    eligableForPremiumProxy,
+    throwErr,
+  }: {
+    errorType: string;
+    eligableForPremiumProxy: boolean;
+    request: any;
+    link: string;
+    shop: Shop;
+    throwErr: boolean;
+  }) => {
+    const { allowedHosts, proxyType } = shop;
+    const { requestId } = request;
+    await terminationPrevConnections(
+      requestId,
+      link,
+      allowedHosts,
+      proxyType || 'mix',
+    );
+    if (eligableForPremiumProxy) {
+      request.prevProxyType = proxyType || 'mix';
+      request.proxyType = 'de';
+    }
+    if (throwErr) {
+      throw new Error(errorType);
+    }
+  };
+
   async wrapperFunction(
     task: Task,
     request: T,
@@ -619,20 +651,6 @@ export abstract class BaseQueue<
         proxyType,
       );
 
-      const terminateAndSetProxy = async (errorType: string) => {
-        await terminationPrevConnections(
-          requestId,
-          link,
-          allowedHosts,
-          proxyType || 'mix',
-        );
-        if (eligableForPremiumProxy) {
-          request.prevProxyType = proxyType || 'mix';
-          request.proxyType = 'de';
-        }
-        throw new Error(errorType);
-      };
-
       if (response) {
         const status = response.status();
         const handleError = async (
@@ -663,7 +681,14 @@ export abstract class BaseQueue<
           }
 
           if (status === 429) {
-            await terminateAndSetProxy(ErrorType.RateLimit);
+            await this.terminateAndSetProxy({
+              errorType: ErrorType.RateLimit,
+              request,
+              shop,
+              link,
+              eligableForPremiumProxy,
+              throwErr: true,
+            });
           }
 
           if (status === 403 || status >= 500) {
@@ -672,9 +697,17 @@ export abstract class BaseQueue<
             });
             const newStatus = newResponse?.status();
             if (newStatus !== 200) {
-              await terminateAndSetProxy(
-                status === 403 ? ErrorType.AccessDenied : ErrorType.ServerError,
-              );
+              await this.terminateAndSetProxy({
+                errorType:
+                  status === 403
+                    ? ErrorType.AccessDenied
+                    : ErrorType.ServerError,
+                eligableForPremiumProxy,
+                request,
+                shop,
+                link,
+                throwErr: true,
+              });
             }
           }
         };
@@ -701,7 +734,14 @@ export abstract class BaseQueue<
       );
 
       if (blocked) {
-        await terminateAndSetProxy(ErrorType.AccessDenied);
+        await this.terminateAndSetProxy({
+          errorType: ErrorType.AccessDenied,
+          request,
+          shop,
+          link,
+          eligableForPremiumProxy,
+          throwErr: true,
+        });
       }
 
       const message = await task(page, request);
@@ -769,6 +809,14 @@ export abstract class BaseQueue<
                 isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
               ) {
                 if (errorType === ErrorType.RateLimit) {
+                  this.terminateAndSetProxy({
+                    errorType,
+                    eligableForPremiumProxy,
+                    request,
+                    shop,
+                    link,
+                    throwErr: false,
+                  });
                   this.jumpToNextUserAgent(link);
                   page && (await this.resetCookies(page));
                 } else {
