@@ -473,7 +473,7 @@ export abstract class BaseQueue<
   ) => {
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
-      if (proxyType) {
+      if (proxyType && proxyType !== 'mix') {
         await notifyProxyChange(
           proxyType,
           pageInfo.link,
@@ -572,6 +572,7 @@ export abstract class BaseQueue<
           prevProxyType,
         );
       }
+
       let disAllowedResourceTypes = resourceTypes?.crawl;
       if (
         resourceTypes &&
