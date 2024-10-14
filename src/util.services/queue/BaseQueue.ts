@@ -817,6 +817,11 @@ export abstract class BaseQueue<
                   });
                   this.jumpToNextUserAgent(link);
                   page && (await this.resetCookies(page));
+                  
+                  if(type === 'CRAWL_SHOP'){
+                    this.pauseQueue('error');
+                  }
+                  
                 } else if (
                   errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED
                 ) {
