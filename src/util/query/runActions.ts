@@ -21,6 +21,10 @@ export async function runActions(
 
   let actions = actionTypeMap[type];
 
+  if (!actions) {
+    return;
+  }
+
   if (step) {
     actions = actions.filter((a) => a.step === step);
   }

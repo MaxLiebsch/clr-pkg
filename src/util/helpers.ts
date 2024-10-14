@@ -191,7 +191,7 @@ export const getProductCount = async (
             if (productsPerPage && cnt) {
               return cnt * productsPerPage;
             } else {
-              return cnt;
+              return  cnt || 0;
             }
           }
         }

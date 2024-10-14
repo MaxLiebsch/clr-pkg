@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { paginationUrlBuilder } from '../util/crawl/paginationURLBuilder';
+import { paginationUrlSchemaBuilder } from '../util/crawl/paginationURLBuilder';
 
 describe('Pagination Builder', () => {
   // test('reichelt.de generate page 3', async () => {
@@ -66,7 +66,7 @@ describe('Pagination Builder', () => {
 
   test('gameshop generate page 2', async () => {
     expect(
-      await paginationUrlBuilder(
+      await paginationUrlSchemaBuilder(
         'https://www.gamestop.de/SearchResult/Quicksearch?platform=68&productType=2',
         [
           {
@@ -101,7 +101,6 @@ describe('Pagination Builder', () => {
           },
         ],
         2,  
-        null,
       ),
     ).toBe(
       'https://www.gamestop.de/SearchResult/QuicksearchAjax?platform=68&productType=2&typesorting=0&sdirection=ascending&skippos=48&takenum=24',

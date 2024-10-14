@@ -58,7 +58,7 @@ const collectInternalLinks = (
 
   relativeLinks.each(function (i: number, e: any) {
     let href = $(this).attr('href');
-    if (href !== undefined && linkPassedURLShopCriteria(href, ap)) {
+    if (href !== undefined && linkPassedURLShopCriteria(href, ap || [])) {
       const link = href;
       if (
         !antiKeywords
@@ -66,7 +66,7 @@ const collectInternalLinks = (
           .some((el: string) => link.toLowerCase().indexOf(el) !== -1)
       ) {
         const _sensitizedURL = sanitizedURL(link, d, url);
-        const cleaned = removeRandomKeywordInURL(_sensitizedURL, ece);
+        const cleaned = removeRandomKeywordInURL(_sensitizedURL, ece || []);
         !links.includes(cleaned) && links.push(cleaned);
       }
     }
@@ -124,15 +124,15 @@ export const extractInfoFromScript = (
 ): string | undefined => {
   const selector = raw_selector.split(';')[0];
   const path = raw_selector.split(';')[1];
-  const regex = raw_selector.split(';')[2];
+  const regexp = raw_selector.split(';')[2];
   let parsedPath = path;
   let value;
   //@ts-ignore
   const jsonRaws = $(selector);
-  if (regex) {
+  if (regexp) {
     const match = extractRegexFromString(
       jsonRaws.text(),
-      new RegExp(regex, 'gm'),
+      new RegExp(regexp, 'gm'),
     );
     if (match) {
       return match.replace(/\D+/g, '');

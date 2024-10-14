@@ -4,7 +4,7 @@ import { extractInfoFromScript, extractRegexFromString } from '.';
 export const extractFromVariousLocations = (
   $: CheerioAPI,
   raw_selector: string,
-  regex?: RegExp,
+  regexp?: RegExp,
 ) => {
   let result: null | string = null;
   // _attribute;<selector>;<attribute>
@@ -23,8 +23,8 @@ export const extractFromVariousLocations = (
     const elem = $(raw_selector);
     if (elem.length > 0) {
       const content = elem.attr('content');
-      if (regex && content) {
-        const match = extractRegexFromString(content, regex);
+      if (regexp && content) {
+        const match = extractRegexFromString(content, regexp);
         if (match) {
           return match;
         }
@@ -41,10 +41,10 @@ export const extractFromVariousLocations = (
     }
   }
 
-  if (regex) {
+  if (regexp) {
     const elem = $(raw_selector);
     if (elem.length > 0) {
-      let match = elem.text().match(regex);
+      let match = elem.text().match(regexp);
       if (match) {
         return match[0];
       } else {

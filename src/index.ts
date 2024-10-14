@@ -60,6 +60,7 @@ export * from './static/ebay';
 // BROWSER
 export * from './util/browser/browsers';
 export * from './util/browser/getPage';
+export * from './util/browser/closePage'
 
 // SCAN
 export * from './util.services/queue/ScanQueue';
@@ -93,6 +94,11 @@ export * from './util.services/crawl/crawlSubpage';
 export * from './util/crawl/browseProductPages';
 export * from './util/crawl/paginationURLBuilder';
 export * from './util/crawl/getCategories';
+export * from "./util/crawl/buildNextPageUrl";
+export * from './util/crawl/findPaginationAppendix'
+export * from  './util/crawl/pagination/recursiveMoreButtonPgn';
+export * from './util/crawl/pagination/scrollAndClickPgn';
+export * from './util/crawl/pagination/InfinitScrollPgn';
 export * from './util/crawl/getPageNumberFromPagination';
 export * from './util/crawl/findPagination';
 export * from './util/crawl/crawlProducts';

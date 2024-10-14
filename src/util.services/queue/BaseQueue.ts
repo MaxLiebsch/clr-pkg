@@ -229,11 +229,7 @@ export abstract class BaseQueue<
     const listeners = this.eventEmitter.listeners(`${this.queueId}-finished`);
     this.queueStats.browserStarts += 1;
     try {
-      this.browser = await mainBrowser(
-        this.queueTask,
-        this.proxyAuth,
-        currentVersion,
-      );
+      this.browser = await mainBrowser(this.proxyAuth, currentVersion);
     } catch (error) {
       this.logError(`Browser crashed big time  ${error}`);
       await this.repair(`Browser crashed big time  ${error}`);
@@ -610,7 +606,8 @@ export abstract class BaseQueue<
         resourceTypes &&
         resourceTypes[resourceTypesPerTask[type]] !== undefined
       ) {
-        disAllowedResourceTypes = resourceTypes[resourceTypesPerTask[type]];
+        disAllowedResourceTypes =
+          resourceTypes[resourceTypesPerTask[type]] || [];
       }
       const pageAndPrint = await getPage({
         browser: this.browser!,
@@ -624,13 +621,14 @@ export abstract class BaseQueue<
       });
       page = pageAndPrint.page;
 
-      console.log(
-        getHost(link),
-        'requestCount: ',
-        this.requestCountPerHost[getHost(link)] || 0,
-        'print: ',
-        pageAndPrint.fingerprint,
-      );
+      process.env.DEBUG === 'true' &&
+        console.log(
+          getHost(link),
+          'requestCount: ',
+          this.requestCountPerHost[getHost(link)] || 0,
+          'print: ',
+          pageAndPrint.fingerprint,
+        );
 
       if (
         retries === 0 &&
@@ -825,8 +823,7 @@ export abstract class BaseQueue<
                   }
                   
                 } else if (
-                  errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED ||
-                  errorType === ErrorType.ERR_TIMED_OUT
+                  errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED
                 ) {
                   terminationPrevConnections(
                     requestId,
@@ -908,6 +905,10 @@ export abstract class BaseQueue<
         return ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
       case error.message.includes('net::ERR_TIMED_OUT'):
         return ErrorType.ERR_TIMED_OUT;
+      case error.message.includes('net::ERR_EMPTY_RESPONSE'):
+        return ErrorType.ERR_EMPTY_RESPONSE;
+      case error.message.includes('net::ERR_CONNECTION_CLOSED'):
+        return ErrorType.ERR_CONNECTION_CLOSED;
       default:
         return false;
     }

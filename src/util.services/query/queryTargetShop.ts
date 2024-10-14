@@ -154,9 +154,10 @@ export const queryTargetShops = async (
             prodInfo,
             isFinished,
             pageInfo: {
-              link: queryUrlSchema.length
-                ? queryURLBuilder(shop.queryUrlSchema, query).url
-                : entryPoints[0].url,
+              link:
+                queryUrlSchema && queryUrlSchema.length
+                  ? queryURLBuilder(queryUrlSchema, query).url
+                  : entryPoints[0].url,
               name: d,
             },
           });

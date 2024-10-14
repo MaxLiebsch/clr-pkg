@@ -10,14 +10,14 @@ import { ICategoryStats } from '../../types/Sitemap';
 
 export const scanShop = async (page: Page, request: ScanRequest) => {
   const { pageInfo, shop, queue, parentPath, infos } = request;
-  const { categories, d } = shop;
+  const { categories, d, manualCategories } = shop;
   const statService = StatService.getSingleton(d);
 
   const categLinks: ICategory[] = [];
   
   let foundCategories: ICategory[] | null = null;
-  if (shop.manualCategories.length) {
-    categLinks.push(...shop.manualCategories);
+  if (manualCategories && manualCategories.length) {
+    categLinks.push(...manualCategories);
   }
 
   // main categories only from manualCategories

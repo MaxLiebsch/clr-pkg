@@ -1,5 +1,5 @@
 export interface PaginationElement {
-  type: string;
+  type: 'pagination' | 'infinite_scroll'| 'recursive-more-button' | 'scroll-and-click';
   sel: string;
   nav: string;
   wait?: boolean;
@@ -27,6 +27,7 @@ export type PaginationUrlSchemaMethod =
 
 export interface PaginationUrlSchema {
   replace?: 'attach_end';
+  replaceRegexp?: string;
   withQuery?: boolean;
   parseAndReplace?: {
     regexp: string;
@@ -44,16 +45,16 @@ export interface PaginationUrlSchema {
       replace?: string;
     }[];
     startOffset?: number; // abfalleimer-348?take=48+60 the 48 is the startOffset, so that the next page will be 108, 168, etc.
-    offset: number;
+    offset?: number;
   };
 }
 
 export interface Calculation {
   method: PaginationCalculationMethod;
-  last: string;
+  last?: string;
   attribute?: string;
   productsPerPage?: number;
   textToMatch?: string;
   dynamic?: boolean;
-  sel: string;
+  sel?: string;
 }

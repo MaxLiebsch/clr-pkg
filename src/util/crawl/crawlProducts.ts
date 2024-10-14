@@ -23,6 +23,7 @@ import { get } from 'lodash';
 import { safeJSONParse } from '../extract/saveParseJSON';
 import { detectCurrency, safeParsePrice } from '../safeParsePrice';
 import { Shop } from '../../types/shop';
+import { NestedNameDetail } from '../../types/productInfoDetails';
 
 export const crawlProducts = async (
   page: Page,
@@ -108,24 +109,27 @@ export const crawlProducts = async (
             if (content === 'price') {
               foundEl = foundEl.replace(/\s/g, '');
             }
-            if (content === 'image' && 'regexp' in detail) {
+            if (content === 'image' && detail.regexp) {
               foundEl = extractPart(
                 foundEl,
-                detail.regexp!,
+                detail.regexp,
                 detail?.extractPart ?? 1,
               );
             }
             product[content] = cleanUpHTML(foundEl);
           }
         } else if (type === 'nested') {
-          const name = await nestedProductName(productEl, detail);
+          const name = await nestedProductName(
+            productEl,
+            detail as NestedNameDetail,
+          );
           if (name) {
             product[content] = name;
           }
         } else if (type === 'nested_remove') {
           const name = await removeNestedElementAndReturnText(
             productEl,
-            detail,
+            detail as NestedNameDetail,
           );
           if (name) {
             product[content] = name;
@@ -141,19 +145,19 @@ export const crawlProducts = async (
           }
         } else if (
           type === 'parse_json' &&
-          'key' in detail &&
-          'attr' in detail &&
-          'urls' in detail &&
-          'redirect_regex' in detail
+          detail.key &&
+          detail.attr &&
+          detail.urls &&
+          detail.redirect_regexp
         ) {
-          const { key, attr, urls, redirect_regex } = detail;
+          const { key, attr, urls, redirect_regexp } = detail;
           const el = await attrFromEleInEleHandle(productEl, sel, attr!);
           if (el) {
             const parsed = safeJSONParse(el);
             if (parsed) {
               const value = parsed[key!];
               if (value) {
-                const redirect = new RegExp(redirect_regex!);
+                const redirect = new RegExp(redirect_regexp);
                 if (redirect.test(value)) {
                   product[content] = urls.redirect.replace('<key>', value);
                 } else {
@@ -183,8 +187,8 @@ export const crawlProducts = async (
           if (el) {
             let foundAttr = el;
             if (type === 'href' || type === 'src' || type === 'srcset') {
-              if ('regexp' in detail && 'baseUrl' in detail) {
-                const regexp = new RegExp(detail.regexp!);
+              if (detail.regexp && detail.baseUrl) {
+                const regexp = new RegExp(detail.regexp);
                 if (regexp.test(foundAttr)) {
                   const match = foundAttr.match(regexp);
                   if (match) {
