@@ -13,36 +13,36 @@ import { ProxyType } from './proxyAuth';
 export interface Shop {
   mimic?: string;
   d: string; // domain
-  l: string; // link to shop
-  ne: string; // name
-  purlschema: string;
+  l?: string; // link to shop
+  ne?: string; // name
+  purlschema?: string;
   allowedHosts?: string[];
-  fetch: boolean; // fetch with get
+  fetch?: boolean; // fetch with get
   javascript?: {
     webWorker: status;
     serviceWorker: status;
     sharedWorker: status;
   };
   resourceTypes: {
-    product: ResourceTypes[];
+    product?: ResourceTypes[];
     crawl: ResourceTypes[];
   };
   entryPoints: EntryPoint[];
   leaveDomainAsIs?: boolean;
   waitUntil: WaitUntil;
-  kws: string[]; // keywords
-  ap: string[]; // anti pattern
-  ece: string[]; // escape characters
+  kws?: string[]; // keywords
+  ap?: string[]; // anti pattern
+  ece?: string[]; // escape characters
   proxyType: ProxyType;
   active: boolean; // shop is active
-  lastCrawlAt: string;
-  lastSelectorTestAt: string;
+  lastCrawlAt?: string;
+  lastSelectorTestAt?: string;
 
   /*                      QUERY                            */
 
-  actions: QueryAction[];
-  queryActions: QueryAction[];
-  queryUrlSchema: QueryURLSchema[];
+  actions?: QueryAction[];
+  queryActions?: QueryAction[];
+  queryUrlSchema?: QueryURLSchema[];
 
   /*                      CRAWL                            */
 
@@ -50,12 +50,12 @@ export interface Shop {
   categories: Categories;
   crawlActions: CrawlAction[];
   exceptions?: string[];
-  manualCategories: ICategory[];
+  manualCategories?: ICategory[];
   rules?: Rule[];
-  category: string[];
+  category?: string[];
   pauseOnProductPage?: { pause: boolean; max: number; min: number };
   paginationEl: PaginationElement[];
-  imgMeta: ImgMeta;
+  imgMeta?: ImgMeta;
 
   /*               PRODUCT DETAIL LOOKUP                    */
 
@@ -63,21 +63,21 @@ export interface Shop {
   /*                  PRODUCT DETAILS                       */
   hasEan: boolean;
   f?: string;
-  n: string; // product name
-  p: string[]; // price
-  a: string; // availability
-  ean: string; //  EAN
-  sku: string; // SKU
-  mku: string; // MKU
-  img: string[]; // image
-  s: {
+  n?: string; // product name
+  p?: string[]; // price
+  a?: string; // availability
+  ean?: string; //  EAN
+  sku?: string; // SKU
+  mku?: string; // MKU
+  img?: string[]; // image
+  s?: {
     gp: number; // Grundpreis Versand
     fs: number; // Minimum Order Free shipping
     wr: number; // Prescription free shipping if wr = 0
   };
-  pzn: string; // PZN
-  ps: string; //package size
-  m: string; //manufactuerer name
+  pzn?: string; // PZN
+  ps?: string; //package size
+  m?: string; //manufactuerer name
 }
 
 export type status = 'enabled' | 'disabled';

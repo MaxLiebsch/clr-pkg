@@ -25,7 +25,7 @@ export const queryEansOnEbyQueue = async (
 
   const { value: ean } = query.product;
 
-  await submitQuery(page, queryActions, waitUntil, query);
+  await submitQuery(page, queryActions || [], waitUntil, query);
 
   const notFound = await getInnerText(page, 'h3.srp-save-null-search__heading');
   if (notFound?.includes(ebyNotFoundText)) {

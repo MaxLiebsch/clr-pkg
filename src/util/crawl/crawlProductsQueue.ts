@@ -1,7 +1,7 @@
 import { Page, TimeoutError } from 'puppeteer1';
 import findPagination from './findPagination';
 import { getPageNumberFromPagination } from './getPageNumberFromPagination';
-import { paginationUrlBuilder } from './paginationURLBuilder';
+import { paginationUrlSchemaBuilder } from './paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
@@ -69,11 +69,10 @@ export const crawlProductsQueue = async (
             pageNo,
           );
           if (paginationEl?.paginationUrlSchema) {
-            nextUrl = await paginationUrlBuilder(
+            nextUrl = await paginationUrlSchemaBuilder(
               initialProductPageUrl,
               paginationEls,
               pageNo,
-              page,
               query?.product.value,
             );
           }

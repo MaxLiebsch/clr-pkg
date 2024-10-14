@@ -1,7 +1,7 @@
 import { proxies } from '../../constants';
 import { BrowserGroup, BrowserInfo } from '../../types';
 import { browserLoadChecker } from '../helpers';
-import puppeteer from 'puppeteer-extra';
+import puppeteer, { VanillaPuppeteer } from 'puppeteer-extra';
 import { LoggerService } from '../logger';
 import { QueueTask } from '../../types/QueueTask';
 import { hostname } from 'os';
@@ -154,7 +154,6 @@ export const mainBrowsers = async (
   });
 
 export const mainBrowser = async (
-  task: QueueTask,
   proxyAuth: { host: string },
   version: Versions,
 ) => {
@@ -175,59 +174,36 @@ export const mainBrowser = async (
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
-  } 
+  }
 
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
-  try {
-    const evasions = new Set([
-      'chrome.app',
-      'chrome.csi',
-      'chrome.loadTimes',
-      'chrome.runtime',
-      'defaultArgs',
-      'iframe.contentWindow',
-      'media.codecs',
-      'navigator.hardwareConcurrency',
-      'navigator.languages',
-      'navigator.permissions',
-      'navigator.plugins',
-      'navigator.webdriver',
-      'sourceurl',
-      'user-agent-override',
-      // 'webgl.vendor', set in the getPage function
-      'window.outerdimensions',
-    ]);
-    puppeteer.use(
-      StealthPlugin({
-        //@ts-ignore
-        enabledEvasions: evasions,
-      }),
-    );
-  } catch (error) {
-    console.log('error:', error);
-    if (error instanceof Error)
-      LoggerService.getSingleton().logger.info({
-        location: `'StealthPluginCatch`,
-        msg: error.message,
-        stack: error?.stack,
-        hostname: hostname(),
-        type: task.type,
-        typeId: task.id,
-        shopDomain: task.shopDomain,
-      });
-    else
-      LoggerService.getSingleton().logger.info({
-        location: `'StealthPluginCatch`,
-        msg: error,
-        hostname: hostname(),
-        type: task.type,
-        typeId: task.id,
-        shopDomain: task.shopDomain,
-      });
-  }
 
-  const options = {
+  const evasions = new Set([
+    'chrome.app',
+    'chrome.csi',
+    'chrome.loadTimes',
+    'chrome.runtime',
+    'defaultArgs',
+    'iframe.contentWindow',
+    'media.codecs',
+    'navigator.hardwareConcurrency',
+    'navigator.languages',
+    'navigator.permissions',
+    'navigator.plugins',
+    'navigator.webdriver',
+    'sourceurl',
+    'user-agent-override',
+    // 'webgl.vendor', set in the getPage function
+    'window.outerdimensions',
+  ]);
+  puppeteer.use(
+    StealthPlugin({
+      enabledEvasions: evasions,
+    }),
+  );
+
+  const options: VanillaPuppeteer['launch'] = {
     headless: process.env.HEADLESS === 'true' ? true : false,
     devtools: process.env.DEV_TOOLS === 'true' ? true : false,
     args,
@@ -235,7 +211,6 @@ export const mainBrowser = async (
     timeout: 600000,
     protocolTimeout: 60000,
   };
-  //@ts-ignore
   options['executablePath'] = provider.currentPuppeteer.executablePath();
   const browser = await puppeteer.launch(options);
 

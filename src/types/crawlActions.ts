@@ -34,7 +34,7 @@ export interface ButtonAction extends BaseAction {
 }
 
 export interface recursiveButtonAction extends BaseAction {
-  wait: boolean;
+  wait?: boolean;
   waitDuration?: number;
   target?: string;
   btn_sel?: string;

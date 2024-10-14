@@ -6,12 +6,15 @@ export type ActionType =
   | 'input'
   | 'select'
   | 'shadowroot-button'
+  | 'shadowroot-input'
+  | 'shadowroot-button-test'
   | 'recursive-button';
 
 export interface BaseAction {
   type: ActionType;
   action: string;
   sel: string;
+  input_sel?: string;
   name: string;
   step?: number;
 }

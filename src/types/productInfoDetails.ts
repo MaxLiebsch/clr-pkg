@@ -41,7 +41,7 @@ export interface IAttributeDetail extends DetailBase {
 export interface IParseJSONElementDetail extends DetailBase {
   path: string | string[];
   multiple: boolean;
-  regex?: string;
+  regexp?: string;
 }
 
 export interface IParseJSONDetail extends DetailBase {
@@ -51,7 +51,7 @@ export interface IParseJSONDetail extends DetailBase {
     redirect: string;
     default: string;
   };
-  redirect_regex: string;
+  redirect_regexp: string;
 }
 
 export interface ExistDetail extends DetailBase {}

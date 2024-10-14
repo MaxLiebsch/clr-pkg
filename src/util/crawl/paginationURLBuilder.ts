@@ -18,11 +18,10 @@ import { extractAttributePage } from '../helpers';
  * - Appending or replacing parts of the URL based on the pagination schema.
  */
 
-export const paginationUrlBuilder = async (
+export const paginationUrlSchemaBuilder = async (
   url: string,
   paginationEls: PaginationElement[],
   pageNo: number,
-  page: Page | null,
   query?: string,
 ) => {
   let resultUrl = url;
@@ -37,6 +36,7 @@ export const paginationUrlBuilder = async (
         withQuery,
         calculation: urlSchemaCalc,
         replace: urlSchemaReplace,
+        replaceRegexp,
         parseAndReplace,
       } = paginationUrlSchema;
       const {
@@ -59,20 +59,29 @@ export const paginationUrlBuilder = async (
         }
       }
 
-      if (urlSchemaCalcMethod === 'offset' && urlSchemaReplace) {
+      if (
+        urlSchemaCalcMethod === 'offset' &&
+        urlSchemaCalc.offset
+      ) {
         let offset = urlSchemaCalc.offset;
         let pageCalculation = (pageNo - startPointSubstractor) * offset;
 
         process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
         if (urlSchemaCalc.startOffset) {
-          pageCalculation = (pageNo - startPointSubstractor) * offset + urlSchemaCalc.startOffset;
+          pageCalculation =
+            (pageNo - startPointSubstractor) * offset +
+            urlSchemaCalc.startOffset;
         }
 
         const finalNavStr = `${navStr.replace('<page>', pageCalculation.toString())}`;
-        const replaceRegExp = new RegExp(urlSchemaReplace);
-        if (replaceRegExp.test(resultUrl)) {
-          return resultUrl.replace(replaceRegExp, finalNavStr);
+
+        if(replaceRegexp){
+          const replaceRegExp = new RegExp(replaceRegexp);
+          if(replaceRegExp.test(resultUrl)){
+            return resultUrl.replace(replaceRegExp, finalNavStr);
+          }
         }
+
         if (urlSchemaReplace === 'attach_end') {
           return resultUrl + finalNavStr;
         }

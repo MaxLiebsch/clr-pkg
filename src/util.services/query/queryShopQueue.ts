@@ -42,7 +42,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
     products.push(product);
   };
 
-  await submitQuery(page, queryActions, waitUntil, query);
+  await submitQuery(page, queryActions || [], waitUntil, query);
 
   const res = await browseProductpages(
     page,

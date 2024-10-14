@@ -8,7 +8,7 @@ import { CrawlerRequest } from '../../types/query-request';
 
 export const crawlShop = async (page: Page, request: CrawlerRequest) => {
   const { shop, limit } = request;
-  const { waitUntil, categories, crawlActions } = shop;
+  const { waitUntil, categories, crawlActions, manualCategories } = shop;
   const { mainCategory: mainCateg } = limit;
 
   await performCrawlAction(page, crawlActions, waitUntil);
@@ -16,8 +16,8 @@ export const crawlShop = async (page: Page, request: CrawlerRequest) => {
   const categLinks: ICategory[] = [];
 
   let foundCategories: ICategory[] | null = null;
-  if (shop.manualCategories.length) {
-    categLinks.push(...shop.manualCategories);
+  if (manualCategories && manualCategories.length) {
+    categLinks.push(...manualCategories);
   }
 
   // main categories only from manualCategories

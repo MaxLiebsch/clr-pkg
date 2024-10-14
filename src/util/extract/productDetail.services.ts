@@ -91,19 +91,15 @@ export class TableExtractor implements ExtractProductDetail {
 }
 export class TextDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: ITextDetail) {
-    const { sel, type, content } = detail;
+    const { sel, type, content, regexp } = detail;
     const el = await extractTextFromElementHandle(element, sel);
     if (el) {
       let foundEl = el;
       if (content === 'price') {
         foundEl = foundEl.replace(/\s/g, '');
       }
-      if (content === 'image' && 'regexp' in detail) {
-        foundEl = extractPart(
-          foundEl,
-          detail.regexp!,
-          detail?.extractPart ?? 1,
-        );
+      if (content === 'image' && regexp) {
+        foundEl = extractPart(foundEl, regexp, detail?.extractPart ?? 1);
       }
       return cleanUpHTML(foundEl);
     } else {
@@ -123,7 +119,7 @@ const returnValue = (content: Content, value: any) => {
 
 export class ParseJSONFromElementExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONElementDetail) {
-    const { path, sel, content } = detail;
+    const { path, sel, content, regexp } = detail;
     try {
       if (detail?.multiple) {
         const elements = await myQuerySelectorAllElementHandle(element, sel);
@@ -132,8 +128,8 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
             const element = elements[i];
             const el = await getElementHandleInnerText(element);
             if (!el) continue;
-            if (detail?.regex) {
-              const regExp = new RegExp(detail.regex);
+            if (regexp) {
+              const regExp = new RegExp(regexp);
               const match = el.match(regExp);
               if (match && match[1]) {
                 return match[1];
@@ -166,8 +162,8 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
       } else {
         const el = await getElementHandleInnerText(element);
         if (!el) return null;
-        if (detail?.regex) {
-          const regExp = new RegExp(detail.regex);
+        if (regexp) {
+          const regExp = new RegExp(regexp);
           const match = el.match(regExp);
           if (match && match[1]) {
             return match[1];
@@ -200,7 +196,7 @@ export class ParseJSONFromElementExtractor implements ExtractProductDetail {
 }
 export class ParseJSONDetailExtractor implements ExtractProductDetail {
   async extractDetail(element: ElementHandle, detail: IParseJSONDetail) {
-    const { key, attr, urls, redirect_regex, sel } = detail;
+    const { key, attr, urls, redirect_regexp, sel } = detail;
     try {
       const el = await attrFromEleInEleHandle(element, sel, attr);
       if (!el) return null;
@@ -211,7 +207,7 @@ export class ParseJSONDetailExtractor implements ExtractProductDetail {
       const value = get(parsed, key, null);
 
       if (value) {
-        const redirect = new RegExp(redirect_regex!);
+        const redirect = new RegExp(redirect_regexp);
         if (redirect.test(value)) {
           return urls.redirect.replace('<key>', value);
         } else {
@@ -233,10 +229,10 @@ export class AttributeDetailExtractor implements ExtractProductDetail {
     if (el) {
       let foundAttr = el;
       if (type === 'href' || type === 'src' || type === 'srcset') {
-        if ('regexp' in detail && 'baseUrl' in detail) {
-          const regex = new RegExp(regexp!);
+        if (regexp && detail.baseUrl) {
+          const regex = new RegExp(regexp);
           if (regex.test(foundAttr)) {
-            const match = foundAttr.match(regexp!);
+            const match = foundAttr.match(regexp);
             if (match) {
               foundAttr = baseUrl + match[0].trim();
             }

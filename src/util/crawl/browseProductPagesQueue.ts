@@ -7,7 +7,7 @@ import {
   scrollToBottom,
   waitForSelector,
 } from '../helpers';
-import { paginationUrlBuilder } from '../crawl/paginationURLBuilder';
+import { paginationUrlSchemaBuilder } from '../crawl/paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProductsQueue } from '../crawl/crawlProductsQueue';
 import findPagination from '../crawl/findPagination';
@@ -16,6 +16,10 @@ import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
+import { findPaginationAppendix } from './findPaginationAppendix';
+import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
+import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
+import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
 
 export async function browseProductPagesQueue(
   page: Page,
@@ -23,7 +27,6 @@ export async function browseProductPagesQueue(
 ) {
   const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
     request;
-  const { pages } = limit;
 
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
@@ -96,21 +99,7 @@ export async function browseProductPagesQueue(
       );
 
       if (pageCount) {
-        const findPaginationAppendix = paginationEls.find(
-          (el) =>
-            el?.paginationUrlSchema?.calculation?.method ===
-            'find_pagination_apendix',
-        );
-        if (findPaginationAppendix) {
-          const { calculation } = findPaginationAppendix.paginationUrlSchema!;
-          const { sel, type, replace } = calculation;
-          if (sel && type && replace) {
-            const elementText = await extractAttributePage(page, sel, type);
-            if (elementText) {
-              calculation.appendix = elementText;
-            }
-          }
-        }
+        await findPaginationAppendix(paginationEls, page);
         const noOfPages = calculatePageCount(limit, pageCount);
         switch (true) {
           case pageCount === 0:
@@ -147,11 +136,10 @@ export async function browseProductPagesQueue(
               pageNo,
             );
             if (paginationEl?.paginationUrlSchema) {
-              nextUrl = await paginationUrlBuilder(
+              nextUrl = await paginationUrlSchemaBuilder(
                 initialPageUrl,
                 paginationEls,
                 pageNo,
-                page,
                 query?.product.value,
               );
             }
@@ -178,7 +166,7 @@ export async function browseProductPagesQueue(
         }
       }
     } else if (type === 'infinite_scroll') {
-      const scrolling = await scrollToBottom(page);
+      const scrolling = await infinitSrollPgn({page}) 
       if (scrolling === 'finished') {
         await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
           timeouts.forEach((timeout) => clearInterval(timeout));
@@ -186,39 +174,27 @@ export async function browseProductPagesQueue(
         });
       }
     } else if (type === 'recursive-more-button') {
-      let exists = true;
-      let cnt = 0;
-      while (exists && cnt < limit.pages - 1) {
-        cnt++;
-        const btn = await waitForSelector(page, sel, undefined, true);
-        if (btn) {
-          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
-          const shouldscroll = shop.crawlActions
-            ? shop.crawlActions.some((action) => action.type === 'scroll')
-            : false;
-          if (shouldscroll) {
-            await humanScroll(page);
-          }
-        } else {
-          exists = false;
-        }
-      }
+      await recursiveMoreButtonPgn({
+        limit: limit.pages,
+        sel,
+        page,
+        shop,
+        wait,
+        waitUntil,
+      });
       await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
       });
       return 'crawled';
     } else if (type === 'scroll-and-click') {
-      let exists = true;
-      let cnt = 0;
-      while (exists && cnt < limit.pages - 1) {
-        cnt++;
-        await humanScroll(page);
-        const btn = await waitForSelector(page, sel, 500, true);
-        if (btn) {
-          await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
-        }
-      }
+      await scrollAndClickPgn({
+        limit: limit.pages,
+        page,
+        sel,
+        wait,
+        waitUntil,
+      });
       await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();

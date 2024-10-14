@@ -29,7 +29,7 @@ export const queryShop = async (
   };
 
   //Query products
-  await submitQuery(page, queryActions, waitUntil, query);
+  await submitQuery(page, queryActions || [], waitUntil, query);
 
   const res = await browseProductpages(
     page,

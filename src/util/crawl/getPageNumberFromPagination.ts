@@ -42,43 +42,40 @@ export const getPageNumberFromPagination = async (
   let pageCount = 0;
   if (!Object.keys(paginationEl).length) return pageCount;
 
-  const {
-    calculation: paginationCalc,
-    type,
-    sel: paginationSel,
-  } = paginationEl;
+  const { calculation: pgnCalc, sel: pgnSel } = paginationEl;
   const {
     method: calMethod,
     productsPerPage,
     attribute,
     textToMatch,
-    sel: paginationCalcSel,
+    sel: pgnCalcSel,
     last: lastSel,
-  } = paginationCalc;
-  if (calMethod === 'button') {
-    const pageButtons = await myQuerySelectorAll(page, paginationCalcSel);
+  } = pgnCalc;
+
+  if (calMethod === 'button' && pgnCalcSel) {
+    const pageButtons = await myQuerySelectorAll(page, pgnCalcSel);
     if (pageButtons) {
       pageCount = pageButtons.length;
     }
   }
-  if (calMethod === 'first_last') {
+  if (calMethod === 'first_last' && pgnCalcSel && lastSel) {
     const last = await getInnerText(page, lastSel);
     if (last) {
       pageCount = parseInt(last);
     } else {
-      const next = await getInnerText(page, paginationCalcSel);
+      const next = await getInnerText(page, pgnCalcSel);
       if (next) {
         pageCount = parseInt(next);
       }
     }
   }
-  if (calMethod === 'count') {
-    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
-    if (paginationEls) {
+  if (calMethod === 'count' && pgnCalcSel) {
+    const pgnEls = await myQuerySelectorAll(page, pgnCalcSel);
+    if (pgnEls) {
       let pagesCount = 0;
-      for (let index = 0; index < paginationEls.length; index++) {
-        const paginationEl = paginationEls[index];
-        const innerText = await getElementHandleInnerText(paginationEl);
+      for (let index = 0; index < pgnEls.length; index++) {
+        const pgnEl = pgnEls[index];
+        const innerText = await getElementHandleInnerText(pgnEl);
         if (innerText) {
           const parsedNumber = getNumber(innerText);
           if (parsedNumber && parsedNumber > pagesCount) {
@@ -90,13 +87,13 @@ export const getPageNumberFromPagination = async (
     }
   }
 
-  if (calMethod === 'match_text' && textToMatch) {
-    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
-    if (paginationEls) {
+  if (calMethod === 'match_text' && textToMatch && pgnCalcSel) {
+    const pgnEls = await myQuerySelectorAll(page, pgnCalcSel);
+    if (pgnEls) {
       let pagesCount = 0;
-      for (let index = 0; index < paginationEls.length; index++) {
-        const paginationEl = paginationEls[index];
-        const innerText = await getElementHandleInnerText(paginationEl);
+      for (let index = 0; index < pgnEls.length; index++) {
+        const pgnEl = pgnEls[index];
+        const innerText = await getElementHandleInnerText(pgnEl);
         if (innerText) {
           if (innerText.trim().includes(textToMatch))
             pagesCount = (currentPage ?? 0) + 1;
@@ -106,13 +103,13 @@ export const getPageNumberFromPagination = async (
     }
   }
 
-  if (calMethod === 'find_highest') {
-    const paginationEls = await myQuerySelectorAll(page, paginationCalcSel);
-    if (paginationEls) {
+  if (calMethod === 'find_highest' && pgnCalcSel) {
+    const pgnEls = await myQuerySelectorAll(page, pgnCalcSel);
+    if (pgnEls) {
       let pagesCount = 0;
-      for (let index = 0; index < paginationEls.length; index++) {
-        const paginationEl = paginationEls[index];
-        const innerText = await getElementHandleInnerText(paginationEl);
+      for (let index = 0; index < pgnEls.length; index++) {
+        const pgnEl = pgnEls[index];
+        const innerText = await getElementHandleInnerText(pgnEl);
         if (innerText) {
           const numbers = getNumbers(innerText);
           if (numbers) {
@@ -139,9 +136,9 @@ export const getPageNumberFromPagination = async (
   }
 
   if (calMethod === 'element_attribute' && attribute) {
-    const element = await extractAttributePage(page, paginationSel, attribute);
-    if (element && Number(element)) {
-      pageCount = parseInt(element);
+    const ele = await extractAttributePage(page, pgnSel, attribute);
+    if (ele && Number(ele)) {
+      pageCount = parseInt(ele);
     }
   }
 
