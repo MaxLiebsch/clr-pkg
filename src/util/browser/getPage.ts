@@ -102,7 +102,6 @@ export const rotateTimezone = (
   const timezonesCnt = timezones.length;
   const timezone = fingerPrints[host].timezone;
   if (isNextFingerPrint(requestCount)) {
-    console.log('requestCount:', requestCount);
     fingerPrints[host].timezone = (timezone + 1) % timezonesCnt;
     return timezones[timezone];
   } else {

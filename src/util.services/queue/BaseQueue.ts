@@ -891,8 +891,8 @@ export abstract class BaseQueue<
         };
       }
     } finally {
-      this.clearTimeout(id);
       if (page) await closePage(page);
+      this.clearTimeout(id);
     }
   }
   private parseError(error: Error) {
