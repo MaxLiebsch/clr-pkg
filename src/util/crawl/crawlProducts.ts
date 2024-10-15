@@ -24,6 +24,7 @@ import { safeJSONParse } from '../extract/saveParseJSON';
 import { detectCurrency, safeParsePrice } from '../safeParsePrice';
 import { Shop } from '../../types/shop';
 import { NestedNameDetail } from '../../types/productInfoDetails';
+import { sleep } from '../extract';
 
 export const crawlProducts = async (
   page: Page,
@@ -36,7 +37,7 @@ export const crawlProducts = async (
   if (pauseOnProductPage && pauseOnProductPage.pause) {
     const { min, max } = pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
-    await new Promise((r) => setTimeout(r, pause));
+    await sleep(pause); 
   }
 
   process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
