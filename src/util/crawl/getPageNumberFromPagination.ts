@@ -125,7 +125,7 @@ export const getPageNumberFromPagination = async (
     }
   }
   if (calMethod === 'estimate' && productCount && productsPerPage) {
-    pageCount = Math.floor(productCount / productsPerPage);
+    pageCount = Math.ceil(productCount / productsPerPage);
   }
 
   if (calMethod === 'product_count' && productsPerPage) {
