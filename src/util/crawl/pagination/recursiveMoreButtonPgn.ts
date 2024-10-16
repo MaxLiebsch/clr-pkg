@@ -22,7 +22,7 @@ export async function recursiveMoreButtonPgn({
 }: RecursiveMoreButtonPgnOpts) {
   let exists = true;
   let cnt = 0;
-  while (exists && cnt < limit - 1) {
+  while (exists && cnt < limit) {
     cnt++;
     const btn = await waitForSelector(page, sel, undefined, true);
     if (btn) {

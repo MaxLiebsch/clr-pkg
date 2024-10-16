@@ -19,7 +19,7 @@ export async function scrollAndClickPgn({
 }: ScrollAndClickPgnOpts) {
   let exists = true;
   let cnt = 0;
-  while (exists && cnt < limit - 1) {
+  while (exists && cnt < limit) {
     cnt++;
     await humanScroll(page);
     const btn = await waitForSelector(page, sel, 500, true);
