@@ -22,9 +22,9 @@ const findPagination = async (
 
   for (let index = 0; index < paginationEls.length; index++) {
     paginationEl = paginationEls[index];
-    const { sel } = paginationEl;
+    const { sel, visible } = paginationEl;
 
-    if (sel) pagination = await waitForSelector(page, sel);
+    if (sel) pagination = await waitForSelector(page, sel, 5000, !!visible);
 
     process.env.DEBUG && console.log('findPagination:pagination:', pagination);
 

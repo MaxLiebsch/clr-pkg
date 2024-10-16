@@ -2,6 +2,7 @@ export interface PaginationElement {
   type: 'pagination' | 'infinite_scroll'| 'recursive-more-button' | 'scroll-and-click';
   sel: string;
   nav: string;
+  visible?: boolean;
   wait?: boolean;
   initialUrl?: {
     type: string;
