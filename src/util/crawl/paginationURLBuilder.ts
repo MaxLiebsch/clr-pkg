@@ -59,28 +59,40 @@ export const paginationUrlSchemaBuilder = async (
         }
       }
 
-      if (
-        urlSchemaCalcMethod === 'offset' &&
-        urlSchemaCalc.offset
-      ) {
+      if (urlSchemaCalcMethod === 'offset' && urlSchemaCalc.offset) {
         let offset = urlSchemaCalc.offset;
         let pageCalculation = (pageNo - startPointSubstractor) * offset;
 
-        process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
         if (urlSchemaCalc.startOffset) {
           pageCalculation =
-            (pageNo - startPointSubstractor) * offset +
-            urlSchemaCalc.startOffset;
+          (pageNo - startPointSubstractor) * offset +
+          urlSchemaCalc.startOffset;
         }
-
+        
+        process.env.DEBUG === 'true' &&
+          console.log(
+            'paginationUrlbuilder: pageNo:',
+            pageNo,
+            'method:',
+            urlSchemaCalcMethod,
+            'offset:',
+            urlSchemaCalc.offset,
+            'paginationCalculation:',
+            pageCalculation,
+            'nav',
+            navStr,
+          );
         const finalNavStr = `${navStr.replace('<page>', pageCalculation.toString())}`;
 
-        if(replaceRegexp){
+        if (replaceRegexp) {
           const replaceRegExp = new RegExp(replaceRegexp);
-          if(replaceRegExp.test(resultUrl)){
+          if (replaceRegExp.test(resultUrl)) {
             return resultUrl.replace(replaceRegExp, finalNavStr);
           }
         }
+
+        process.env.DEBUG === 'true' &&
+          console.log('paginationUrlbuilder: nav afeter', finalNavStr);
 
         if (urlSchemaReplace === 'attach_end') {
           return resultUrl + finalNavStr;

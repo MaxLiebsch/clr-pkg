@@ -17,6 +17,8 @@ const sharedExtractorTypes = [
   'href',
   'src',
   'srcset',
+  'data-flix-ean',
+  'data-loadbee-gtin',
   'content',
   'data-srcset',
   'value',

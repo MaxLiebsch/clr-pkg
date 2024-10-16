@@ -1,3 +1,4 @@
+import path from 'path';
 import { TargetShop } from '../../types';
 import { CandidateProduct, Product } from '../../types/product';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
@@ -84,11 +85,11 @@ export function prefixLink(
   newSrc = newSrc.replaceAll(/[\n\r\t]/g, '');
 
   if (newSrc.startsWith('//')) {
-    return 'https:' + newSrc;
+    return new URL(newSrc).href;
   }
 
   if (!newSrc.startsWith('https://')) {
-    return 'https://www.' + shopDomain + newSrc;
+    return new URL(newSrc, 'https://www.' + shopDomain).href;
   }
   if (newSrc.startsWith('https://' + shopDomain) && !leaveDomainAsIs) {
     return newSrc.replace(shopDomain, `www.${shopDomain}`);

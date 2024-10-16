@@ -19,6 +19,8 @@ export interface IProductSelector {
 export type DetailType =
   | 'data-llsrc'
   | 'data-original'
+  | 'data-loadbee-gtin'
+  | 'data-flix-ean'
   | 'data-srcset'
   | 'srcset'
   | 'content'
