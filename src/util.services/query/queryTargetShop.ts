@@ -136,6 +136,7 @@ export const queryTargetShops = async (
             retries: 0,
             shop,
             log,
+            proxyType: shop.proxyType,
             requestId: uuid(),
             s_hash: s_hash as string,
             addProduct,

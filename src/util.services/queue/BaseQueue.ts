@@ -465,11 +465,11 @@ export abstract class BaseQueue<
     waitUntil: WaitUntil,
     requestId: string,
     allowedHosts: string[] = [],
-    proxyType?: ProxyType,
+    proxyType: ProxyType,
   ) => {
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
-      if (proxyType && proxyType !== 'mix') {
+      if (proxyType !== 'mix') {
         await notifyProxyChange(
           proxyType,
           pageInfo.link,
@@ -517,10 +517,10 @@ export abstract class BaseQueue<
       requestId,
       link,
       allowedHosts,
-      proxyType || 'mix',
+      proxyType,
     );
     if (eligableForPremiumProxy) {
-      request.prevProxyType = proxyType || 'mix';
+      request.prevProxyType = proxyType;
       request.proxyType = 'de';
     }
     if (throwErr) {
@@ -567,7 +567,7 @@ export abstract class BaseQueue<
         details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
         status: 'limit-reached',
         retries,
-        proxyType: proxyType || 'mix',
+        proxyType: proxyType ,
       };
     }
 
@@ -580,7 +580,7 @@ export abstract class BaseQueue<
         details: `⛔ Id: ${requestId} - Retries exceeded - ${domain} - Hash: ${hash}`,
         status: 'error-handled',
         retries,
-        proxyType: proxyType || 'mix',
+        proxyType,
       };
     }
 
@@ -673,7 +673,7 @@ export abstract class BaseQueue<
                 details: `❓ Id: ${requestId} - ${type} - ${domain} - Hash: ${hash}`,
                 status: 'not-found',
                 retries,
-                proxyType: proxyType || 'mix',
+                proxyType,
               };
             }
           }
@@ -756,7 +756,7 @@ export abstract class BaseQueue<
         details,
         status: 'page-completed',
         retries,
-        proxyType: proxyType || 'mix',
+        proxyType,
       };
     } catch (error) {
       process.env.DEBUG === 'true' &&
@@ -829,7 +829,7 @@ export abstract class BaseQueue<
                     requestId,
                     link,
                     allowedHosts,
-                    proxyType || 'mix',
+                    proxyType,
                   );
                 } else {
                   this.pauseQueue('error');
@@ -862,7 +862,7 @@ export abstract class BaseQueue<
                   details,
                   status: 'error-handled-timeout-exceded',
                   retries,
-                  proxyType: proxyType || 'mix',
+                  proxyType,
                 };
               }
             } else {
@@ -879,7 +879,7 @@ export abstract class BaseQueue<
             details,
             status: 'error-handled-domain-not-allowed',
             retries,
-            proxyType: proxyType || 'mix',
+            proxyType,
           };
         }
 
@@ -887,7 +887,7 @@ export abstract class BaseQueue<
           details,
           status: 'error-handled',
           retries,
-          proxyType: proxyType || 'mix',
+          proxyType,
         };
       }
     } finally {

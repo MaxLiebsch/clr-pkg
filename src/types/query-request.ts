@@ -16,7 +16,7 @@ export interface QRequest {
   retriesOnFail?: number;
   requestId: string;
   prevProxyType?: ProxyType;
-  proxyType?: ProxyType;
+  proxyType: ProxyType;
   shop: Shop;
   pageInfo: ICategory;
 }
