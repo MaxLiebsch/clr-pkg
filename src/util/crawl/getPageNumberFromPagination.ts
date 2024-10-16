@@ -131,7 +131,7 @@ export const getPageNumberFromPagination = async (
   if (calMethod === 'product_count' && productsPerPage) {
     const count = await getProductCount(page, shop.productList);
     if (count) {
-      pageCount = Math.floor(count / productsPerPage);
+      pageCount = Math.ceil(count / productsPerPage);
     }
   }
 
