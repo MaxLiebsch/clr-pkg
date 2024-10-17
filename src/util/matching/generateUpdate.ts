@@ -1,4 +1,4 @@
-import { UTCDate } from '@date-fns/utc';
+ 
 import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
@@ -75,7 +75,7 @@ export const generateUpdate = (
     if (category && number) {
       update['bsr'] = [
         {
-          createdAt: new UTCDate().toISOString(),
+          createdAt: new Date().toISOString(),
           category: category[0].replace(/[\\(\\)]/g, ''),
           number: safeParsePrice(number.join('')),
         },

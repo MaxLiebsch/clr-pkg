@@ -1,4 +1,4 @@
-import { UTCDate } from '@date-fns/utc';
+ 
 import { Query } from './aznQueries.js';
 import { DbProductRecord } from '../../types/product.js';
 import { ebayTier } from '../../static/ebay.js';
@@ -54,7 +54,7 @@ export const resetEbyProductQuery = (
   }
   if (eby_prop) {
     query['$set']!['eby_prop'] = eby_prop;
-    query['$set']!['qEbyUpdatedAt'] = new UTCDate().toISOString();
+    query['$set']!['qEbyUpdatedAt'] = new Date().toISOString();
   } else {
     query['$unset']['eby_prop'] = '';
     query['$unset']['qEbyUpdatedAt'] = '';
@@ -62,7 +62,7 @@ export const resetEbyProductQuery = (
 
   if (cat_prop) {
     query['$set']!['cat_prop'] = cat_prop;
-    query['$set']!['catUpdatedAt'] = new UTCDate().toISOString();
+    query['$set']!['catUpdatedAt'] = new Date().toISOString();
   } else {
     query['$unset']['cat_prop'] = '';
     query['$unset']['catUpdatedAt'] = '';

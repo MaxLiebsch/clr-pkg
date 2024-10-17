@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { SAVE_USAGE_INTERVAL } from '../constants';
-import { UTCDate } from '@date-fns/utc';
+ 
 
 interface ActivityPeriod {
   [key: string]: { activeTime: number };
@@ -10,7 +10,7 @@ export class ProcessTimeTracker {
   private isActive: boolean = false;
   private crawlerId: string;
   private lastActiveTime: number = 0;
-  private currenDate: Date = this.setToMidnightUTC(new UTCDate());
+  private currenDate: Date = this.setToMidnightUTC(new Date());
   private activityPeriods: Map<string, ActivityPeriod>;
   private taskType: string = 'DEFAULT';
   private mongoClient: Promise<MongoClient>;
@@ -37,8 +37,8 @@ export class ProcessTimeTracker {
   private setToMidnightUTC(date: Date) {
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new UTCDate(Date.UTC(year, month, day, 23, 59, 59, 999));
+    const day = date.getDate();
+    return new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
   }
   
   constructor(crawlerId: string, mongoClient: Promise<MongoClient>) {
@@ -65,7 +65,7 @@ export class ProcessTimeTracker {
     if (!this.isActive) {
       this.interval = this.intervalSave();
       this.taskType = taskType;
-      const now = new UTCDate();
+      const now = new Date();
       const currDate = this.getDate(this.currenDate);
       const newDate = this.getDate(now);
       if (currDate !== newDate) {
@@ -116,7 +116,7 @@ export class ProcessTimeTracker {
   markInactive() {
     clearInterval(this.interval);
     if (this.isActive) {
-      const now = new UTCDate();
+      const now = new Date();
       this.handleUpdateUsage(now)
       this.handleSaveUsage();
       this.lastActiveTime = now.getTime();
@@ -129,7 +129,7 @@ export class ProcessTimeTracker {
   }
 
   get activeTime() {
-    const now = new UTCDate();
+    const now = new Date();
     const date = this.getDate(now);
     const period = this.activityPeriods.get(date);
     return period?.activeTime ?? 0;
@@ -157,7 +157,7 @@ export class ProcessTimeTracker {
   private intervalSave() {
     return setInterval(async () => {
       if (this.isActive) {
-        const now = new UTCDate();
+        const now = new Date();
         this.handleUpdateUsage(now);
         this.lastActiveTime = now.getTime();
       }
@@ -166,14 +166,14 @@ export class ProcessTimeTracker {
   }
 
   private filterRecentActivityPeriods(): Map<string, ActivityPeriod> {
-    const now = new UTCDate();
-    const sevenDaysAgo = new UTCDate(
+    const now = new Date();
+    const sevenDaysAgo = new Date(
       now.getTime() - 7 * 24 * 60 * 60 * 1000,
     ).getTime();
 
     return new Map(
       [...this.activityPeriods].filter(
-        (date) => new UTCDate(date[0]).getTime() >= sevenDaysAgo,
+        (date) => new Date(date[0]).getTime() >= sevenDaysAgo,
       ),
     );
   }

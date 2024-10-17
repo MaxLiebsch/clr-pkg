@@ -8,7 +8,7 @@ import { closePage } from '../browser/closePage';
 import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { safeParsePrice } from '../safeParsePrice';
-import { UTCDate } from '@date-fns/utc';
+ 
 
 const de_bsrRegex =
   /Nr\. (\d{1,5}(?:[.,]\d{3})*(?:[.,]\d{2,4})|\d+) in (.+?)(?= \(|$)/g;
@@ -28,7 +28,7 @@ export function splitNumberAndCategory(input: string, lng: 'de' | 'en') {
       results.push({
         number: parseInt(match[1].replaceAll(/[,.]/g, '')),
         category: match[2].trim(),
-        createdAt: new UTCDate().toISOString(),
+        createdAt: new Date().toISOString(),
       });
     }
     return results;

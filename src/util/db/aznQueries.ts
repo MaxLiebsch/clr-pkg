@@ -1,4 +1,4 @@
-import { UTCDate } from '@date-fns/utc';
+ 
 import { DbProductRecord } from '../../types/product.js';
 import { keepaProperties } from '../../constants/index.js';
 import { aznCategoryMapping } from '../../static/azn.js';
@@ -62,7 +62,7 @@ export const resetAznProductQuery = (props = { info_prop: '' }) => {
       query['$set'] = {};
     }
     query['$set']['info_prop'] = info_prop;
-    query['$set']['infoUpdatedAt'] = new UTCDate().toISOString();
+    query['$set']['infoUpdatedAt'] = new Date().toISOString();
   } else {
     query['$unset']['info_prop'] = '';
     query['$unset']['infoUpdatedAt'] = '';

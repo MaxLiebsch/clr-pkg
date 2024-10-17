@@ -8,7 +8,7 @@ import {
   RelatedProducts,
 } from '../types/index';
 import { ObjectId } from 'mongodb';
-import { UTCDate } from '@date-fns/utc';
+ 
 
 export const saveMedication = async (
   candidate: Candidate,
@@ -95,15 +95,15 @@ export const saveMedication = async (
           {
             shopId: new ObjectId(shopId),
             c: pusher,
-            updatedAt: new UTCDate().toISOString(),
-            createdAt: new UTCDate().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
           },
         ],
         slug: '',
         size: 0,
         size_uc: '',
         rating: [],
-        createdAt: new UTCDate().toISOString(),
+        createdAt: new Date().toISOString(),
         ratingAvg: 0,
         html: '',
         published,

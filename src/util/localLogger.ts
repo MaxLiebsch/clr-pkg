@@ -77,7 +77,7 @@ export class LocalLogger {
     return logger;
   }
 
-  destroy(taskId: string) {
+  destroy(taskId: TaskTypes) {
     if (loggers[taskId]) {
       loggers[taskId].flush();
       delete loggers[taskId];
@@ -89,7 +89,7 @@ export class LocalLogger {
     const files = await jetpack.listAsync(this.logDirectory);
     const now = new Date().getTime();
     const fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
-    const sizeLimit = 20 * 1024 * 1024; // 20 MB in bytes
+    const sizeLimit = 15 * 1024 * 1024; // 20 MB in bytes
 
     if (!files) return;
     for (const file of files) {
@@ -101,8 +101,9 @@ export class LocalLogger {
         (now - new Date(stats.modifyTime!).getTime() > fiveDays ||
           stats.size > sizeLimit)
       ) {
-        await jetpack.removeAsync(filePath);
-        console.log(`Deleted old log file: ${filePath}`);
+        await jetpack.writeAsync(filePath, ''); // Recreate the file
+        console.log(`Recreated log file: ${filePath}`);
+
       }
     }
   }
