@@ -71,9 +71,8 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   wrapperFunction(
     task: Task,
     request: QueryRequest,
-    id: string
   ): Promise<WrapperFunctionResponse> {
-    return super.wrapperFunction(task, request,id);
+    return super.wrapperFunction(task, request);
   }
 
   // Push a new task to the queue

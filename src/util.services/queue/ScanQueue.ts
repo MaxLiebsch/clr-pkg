@@ -66,9 +66,8 @@ export class ScanQueue extends BaseQueue<ScanRequest> {
   wrapperFunction(
     task: Task,
     request: ScanRequest,
-    id: string,
   ): Promise<WrapperFunctionResponse> {
-    return super.wrapperFunction(task, request, id);
+    return super.wrapperFunction(task, request);
   }
 
   /*  CRAWLR QUEUE RELATED FUNCTIONS  */
