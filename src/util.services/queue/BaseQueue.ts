@@ -819,7 +819,12 @@ export abstract class BaseQueue<
                 allowedHosts,
                 proxyType,
               );
-            } else if (errorType !== ErrorType.EanOnEbyNotFound) {
+            } else if (
+              errorType !== ErrorType.EanOnEbyNotFound &&
+              errorType !== ErrorType.AznNotFound &&
+              errorType !== ErrorType.AznProductInfoEmpty &&
+              errorType !== ErrorType.AznUnexpectedError
+            ) {
               this.pauseQueue('error');
             }
           } else {
@@ -892,6 +897,14 @@ export abstract class BaseQueue<
   private parseError(error: Error | unknown) {
     const isError = error instanceof Error;
     switch (true) {
+      case isError && error.message === ErrorType.AznProductInfoEmpty:
+        return ErrorType.AznProductInfoEmpty;
+      case isError && error.message === ErrorType.AznUnexpectedError:
+        return ErrorType.AznUnexpectedError;
+      case isError && error.message === ErrorType.AznTimeout:
+        return ErrorType.AznTimeout;
+      case isError && error.message === ErrorType.AznNotFound:
+        return ErrorType.AznNotFound;
       case isError && error.message === ErrorType.EanOnEbyNotFound:
         return ErrorType.EanOnEbyNotFound;
       case isError && error.message === ErrorType.RateLimit:

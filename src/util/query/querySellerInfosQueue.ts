@@ -10,11 +10,12 @@ import {
   aznUnexpectedErrorText,
 } from '../../constants';
 import { closePage } from '../browser/closePage';
+import { ErrorType } from '../../util.services/queue/ErrorTypes';
 
 function timeoutPromise(timeout: number, ean: string): Promise<never> {
   return new Promise((_, reject) => {
     setTimeout(() => {
-      return reject(new Error(`Timeout: ${ean}`));
+      reject(new Error(ErrorType.AznTimeout));
     }, timeout);
   });
 }
@@ -59,7 +60,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
 
   if (unexpectedError && unexpectedError.includes(aznUnexpectedErrorText)) {
     if (retries <= RETRY_LIMIT) {
-      throw new Error(`${targetShopId} - Unexpected Error: ${ean}`);
+      throw new Error(ErrorType.AznUnexpectedError);
     } else {
       onNotFound && (await onNotFound('notFound'));
     }
@@ -78,7 +79,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     (notFound.includes(aznNotFoundText) || notFound.includes(aznNoFittingText))
   ) {
     if (retries < RETRY_LIMIT) {
-      throw new Error(`${targetShopId} - Not found: ${ean}`);
+      throw new Error(ErrorType.AznNotFound);
     } else {
       onNotFound && (await onNotFound('notFound'));
     }
@@ -128,7 +129,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
       await addProductInfo({ productInfo: rawProductInfos, url });
   } else {
     if (retries < RETRY_LIMIT) {
-      throw new Error(`${targetShopId} - Product Info seems empty: ${ean}`); //Retry logic
+      throw new Error(ErrorType.AznProductInfoEmpty); //Retry logic
     } else {
       onNotFound && (await onNotFound('notFound'));
     }
@@ -142,9 +143,8 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
   const { query } = request;
   const { value: ean } = query.product;
   const timeoutTime = Math.random() * (25000 - 20000) + 20000;
-  const res = await Promise.race([
+  await Promise.race([
     querySellerInfos(page, request),
     timeoutPromise(timeoutTime, ean),
   ]);
-  return res;
 }

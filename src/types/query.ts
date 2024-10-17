@@ -9,7 +9,7 @@ export interface Query {
     vehicleType?: VehicleType
     subVehicleType?: SubVehicleType
     model: Model
-    product: Product,
+    product: QueryProduct,
     
   }
   export interface Year {
@@ -38,7 +38,7 @@ export interface Query {
     value: string
   }
   
-  export interface Product {
+  export interface QueryProduct {
     key: string;
     value: string
   }

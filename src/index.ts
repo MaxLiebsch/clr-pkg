@@ -17,6 +17,7 @@ export * from './types/product';
 export * from './types/shop';
 export * from './types/Sitemap';
 export * from './types/query-request';
+export * from './types/query'
 export * from './types/keepa'
 
 export * from './util/queryURLBuilder';

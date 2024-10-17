@@ -16,6 +16,13 @@ export const errorLog: ErrorLog = {
   NotFound: { count: 0, lastOccurred: null },
   ProtocolError: { count: 0, lastOccurred: null },
   EanOnEbyNotFound: { count: 0, lastOccurred: null },
+  AznTimeout: { count: 0, lastOccurred: null },
+  AznProductInfoEmpty: { count: 0, lastOccurred: null },
+  AznUnexpectedError: { count: 0, lastOccurred: null },
+  AznNotFound: {
+    count: 0,
+    lastOccurred: null,
+  },
   Missing: {
     count: 0,
     lastOccurred: null,
@@ -39,6 +46,10 @@ export const errorTypeCount: { [key in ErrorType]: number } = {
   ProtocolError: 0,
   Missing: 0,
   EanOnEbyNotFound: 0,
+  AznProductInfoEmpty: 0,
+  AznNotFound: 0,
+  AznTimeout: 0,
+  AznUnexpectedError: 0,
 };
 
 export type ErrorTypes =
@@ -57,7 +68,11 @@ export type ErrorTypes =
   | 'Missing'
   | 'NotFound'
   | 'ProtocolError'
-  | 'EanOnEbyNotFound';
+  | 'EanOnEbyNotFound'
+  | 'AznProductInfoEmpty'
+  | 'AznNotFound'
+  | 'AznTimeout'
+  | 'AznUnexpectedError';
 
 export enum ErrorType {
   'NavigatingFrameDetached' = 'NavigatingFrameDetached',
@@ -76,4 +91,8 @@ export enum ErrorType {
   'NotFound' = 'NotFound',
   'ProtocolError' = 'ProtocolError',
   'EanOnEbyNotFound' = 'EanOnEbyNotFound',
+  'AznProductInfoEmpty' = 'AznProductInfoEmpty',
+  'AznNotFound' = 'AznNotFound',
+  'AznTimeout' = 'AznTimeout',
+  'AznUnexpectedError' = 'AznUnexpectedError',
 }

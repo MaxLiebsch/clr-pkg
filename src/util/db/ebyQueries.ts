@@ -1,5 +1,5 @@
  
-import { Query } from './aznQueries.js';
+import { UpdateQuery } from './aznQueries.js';
 import { DbProductRecord } from '../../types/product.js';
 import { ebayTier } from '../../static/ebay.js';
 
@@ -43,7 +43,7 @@ export const resetEbyProductQuery = (
   props = { eby_prop: '', cat_prop: '' },
 ) => {
   const { eby_prop, cat_prop } = props;
-  const query: Query = {
+  const query: UpdateQuery = {
     $unset: {
       ...ebyUnsetProperties,
     },

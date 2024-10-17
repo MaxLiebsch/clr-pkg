@@ -42,14 +42,14 @@ export const aznUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
   dealAznTaskId: '',
 };
 
-export type Query = {
+export type UpdateQuery = {
   $unset: { [key: string]: string };
   $set?: { [key: string]: any };
 };
 
 export const resetAznProductQuery = (props = { info_prop: '' }) => {
   const { info_prop } = props;
-  const query: Query = {
+  const query: UpdateQuery = {
     $unset: { ...aznUnsetProperties },
   };
 
