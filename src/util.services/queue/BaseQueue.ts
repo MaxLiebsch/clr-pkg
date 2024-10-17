@@ -654,8 +654,15 @@ export abstract class BaseQueue<
           if (status === 404) {
             const errorType = ErrorType.NotFound;
             this.queueStats.errorTypeCount[errorType] += 1;
-            if (retries < MAX_RETRIES_NOT_FOUND) {
-              throw new Error(ErrorType.NotFound);
+            if (retries <= MAX_RETRIES_NOT_FOUND) {
+              await this.terminateAndSetProxy({
+                errorType,
+                request,
+                shop,
+                link,
+                eligableForPremiumProxy,
+                throwErr: true,
+              });
             } else {
               if ('onNotFound' in request && request?.onNotFound) {
                 await request.onNotFound('notFound');
@@ -750,156 +757,159 @@ export abstract class BaseQueue<
         proxyType,
       };
     } catch (error) {
+      const errorType = this.parseError(error);
       process.env.DEBUG === 'true' &&
         console.log('WrapperFunction:Error:', error);
-      if (!this.taskFinished) {
-        if (!this.repairing) {
-          if (error instanceof Error) {
-            if (
-              error.message === ErrorType.RateLimit ||
-              error.message === ErrorType.AccessDenied ||
-              error.message === ErrorType.ServerError ||
-              error.message === ErrorType.NotFound
-            ) {
-              if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
-                this.pauseQueue('error');
-              } else {
-                const errorType = error.message as ErrorType;
-                this.queueStats.errorTypeCount[errorType] += 1;
-                if (
-                  isErrorFrequent(
-                    errorType,
-                    ACCESS_DENIED_FREQUENCE,
-                    this.errorLog,
-                  )
-                ) {
-                  this.criticalErrorCount += 1;
-                  this.jumpToNextUserAgent(link);
-                  page && (await this.resetCookies(page));
-                } else {
-                  this.errorLog[errorType].count += 1;
-                  this.errorLog[errorType].lastOccurred = Date.now();
-                }
-              }
-            }
-            if (
-              `${error}`.includes('Protocol error') ||
-              `${error}`.includes('ProtocolError')
-            ) {
-              console.log('Restart browser because of protocol error');
-              const errorType = ErrorType.ProtocolError;
-              this.queueStats.errorTypeCount[errorType] += 1;
+      if (this.taskFinished) return;
+
+      if (!this.repairing) {
+        if (error instanceof Error) {
+          if (
+            error.message === ErrorType.RateLimit ||
+            error.message === ErrorType.AccessDenied ||
+            error.message === ErrorType.ServerError ||
+            error.message === ErrorType.NotFound
+          ) {
+            if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
+              this.jumpToNextUserAgent(link);
               this.pauseQueue('error');
-            }
-            const errorType = this.parseError(error);
-            if (errorType) {
+            } else {
+              const errorType = error.message as ErrorType;
               this.queueStats.errorTypeCount[errorType] += 1;
               if (
-                isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)
+                isErrorFrequent(
+                  errorType,
+                  ACCESS_DENIED_FREQUENCE,
+                  this.errorLog,
+                )
               ) {
-                if (errorType === ErrorType.RateLimit) {
-                  this.terminateAndSetProxy({
-                    errorType,
-                    eligableForPremiumProxy,
-                    request,
-                    shop,
-                    link,
-                    throwErr: false,
-                  });
-                  this.jumpToNextUserAgent(link);
-                  page && (await this.resetCookies(page));
-
-                  if (type === 'CRAWL_SHOP') {
-                    this.pauseQueue('error');
-                  }
-                } else if (
-                  errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED
-                ) {
-                  terminationPrevConnections(
-                    requestId,
-                    link,
-                    allowedHosts,
-                    proxyType,
-                  );
-                } else {
-                  this.pauseQueue('error');
-                }
+                this.criticalErrorCount += 1;
+                this.jumpToNextUserAgent(link);
+                page && (await this.resetCookies(page));
               } else {
                 this.errorLog[errorType].count += 1;
                 this.errorLog[errorType].lastOccurred = Date.now();
               }
             }
-          } else {
-            let errorType = ErrorType.UnknowError;
+          }
+          if (errorType === ErrorType.ProtocolError) {
+            this.queueStats.errorTypeCount[errorType] += 1;
             this.pauseQueue('error');
+          }
+          if (isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)) {
+            if (errorType === ErrorType.RateLimit) {
+              await this.terminateAndSetProxy({
+                errorType,
+                eligableForPremiumProxy,
+                request,
+                shop,
+                link,
+                throwErr: false,
+              });
+              this.jumpToNextUserAgent(link);
+              page && (await this.resetCookies(page));
+
+              if (type === 'CRAWL_SHOP') {
+                this.pauseQueue('error');
+              }
+            } else if (errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED) {
+              terminationPrevConnections(
+                requestId,
+                link,
+                allowedHosts,
+                proxyType,
+              );
+            } else {
+              this.pauseQueue('error');
+            }
+          } else {
             this.errorLog[errorType].count += 1;
             this.errorLog[errorType].lastOccurred = Date.now();
-            this.queueStats.errorTypeCount[errorType] += 1;
           }
+        } else {
+          const errorType = ErrorType.UnknowError;
+          this.pauseQueue('error');
+          this.errorLog[errorType].count += 1;
+          this.errorLog[errorType].lastOccurred = Date.now();
+          this.queueStats.errorTypeCount[errorType] += 1;
         }
-        const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
+      }
 
-        if (isDomainAllowed(pageInfo.link)) {
-          if (error instanceof Error) {
-            if (`${error}`.includes('TimeoutError: Navigation timeout')) {
-              if (retries < 1) {
-                this.pushTask(task, { ...request, retries: retries + 1 });
-              } else {
-                if ('onNotFound' in request && request?.onNotFound) {
-                  request.onNotFound('timeout');
-                }
-                return {
-                  details,
-                  status: 'error-handled-timeout-exceded',
-                  retries,
-                  proxyType,
-                };
-              }
-            } else {
+      const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
+      
+      if (isDomainAllowed(pageInfo.link)) {
+        if (error instanceof Error) {
+          if (errorType === ErrorType.Timeout) {
+            if (retries < (retriesOnFail || MAX_RETRIES)) {
+              await this.terminateAndSetProxy({
+                errorType,
+                request,
+                shop,
+                link,
+                throwErr: false,
+                eligableForPremiumProxy,
+              });
               this.pushTask(task, { ...request, retries: retries + 1 });
+            } else {
+              if ('onNotFound' in request && request?.onNotFound) {
+                request.onNotFound('timeout');
+              }
+              return {
+                details,
+                status: 'error-handled-timeout-exceded',
+                retries,
+                proxyType,
+              };
             }
           } else {
             this.pushTask(task, { ...request, retries: retries + 1 });
           }
         } else {
-          if ('onNotFound' in request && request?.onNotFound) {
-            await request.onNotFound('domainNotAllowed');
-          }
-          return {
-            details,
-            status: 'error-handled-domain-not-allowed',
-            retries,
-            proxyType,
-          };
+          this.pushTask(task, { ...request, retries: retries + 1 });
         }
-
+      } else {
+        if ('onNotFound' in request && request?.onNotFound) {
+          await request.onNotFound('domainNotAllowed');
+        }
         return {
           details,
-          status: 'error-handled',
+          status: 'error-handled-domain-not-allowed',
           retries,
           proxyType,
         };
       }
+
+      return {
+        details,
+        status: 'error-handled',
+        retries,
+        proxyType,
+      };
     } finally {
       if (page) await closePage(page);
     }
   }
-  private parseError(error: Error) {
+  private parseError(error: Error | unknown) {
     switch (true) {
-      case error.message.includes('Navigating frame was detached'):
+      case `${error}`.includes('TimeoutError'):
+        return ErrorType.Timeout;
+      case `${error}`.includes('Protocol error') ||
+        `${error}`.includes('ProtocolError'):
+        return ErrorType.ProtocolError;
+      case `${error}`.includes('Navigating frame was detached'):
         return ErrorType.NavigatingFrameDetached;
-      case error.message.includes('net::ERR_HTTP2_PROTOCOL_ERROR'):
+      case `${error}`.includes('net::ERR_HTTP2_PROTOCOL_ERROR'):
         return ErrorType.RateLimit;
-      case error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED'):
+      case `${error}`.includes('net::ERR_TUNNEL_CONNECTION_FAILED'):
         return ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
-      case error.message.includes('net::ERR_TIMED_OUT'):
+      case `${error}`.includes('net::ERR_TIMED_OUT'):
         return ErrorType.ERR_TIMED_OUT;
-      case error.message.includes('net::ERR_EMPTY_RESPONSE'):
+      case `${error}`.includes('net::ERR_EMPTY_RESPONSE'):
         return ErrorType.ERR_EMPTY_RESPONSE;
-      case error.message.includes('net::ERR_CONNECTION_CLOSED'):
+      case `${error}`.includes('net::ERR_CONNECTION_CLOSED'):
         return ErrorType.ERR_CONNECTION_CLOSED;
       default:
-        return false;
+        return ErrorType.UnknowError;
     }
   }
 
@@ -934,7 +944,7 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    
+
     console.log('Running: ', this.running, 'Queue:', this.queue.length);
 
     if (shuffleTasks.includes(this.queueTask.type)) {

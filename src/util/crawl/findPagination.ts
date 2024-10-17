@@ -26,7 +26,7 @@ const findPagination = async (
 
     if (sel) pagination = await waitForSelector(page, sel, 5000, !!visible);
 
-    process.env.DEBUG && console.log('findPagination:pagination:', pagination);
+    process.env.DEBUG === 'true' && console.log('findPagination:pagination:', pagination);
 
     if (pagination) break;
   }
