@@ -8,7 +8,7 @@ export function isErrorFrequent(
   errorLog: ErrorLog,
 ) {
   const currentTime = Date.now();
-  const lastOccurred = errorLog[errorType].lastOccurred;
+  const lastOccurred = errorLog[errorType]?.lastOccurred;
   if (
     lastOccurred &&
     currentTime - lastOccurred < duration &&

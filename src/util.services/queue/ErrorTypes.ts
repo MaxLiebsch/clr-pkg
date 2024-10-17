@@ -1,4 +1,6 @@
-export const errorTypes = {
+import { ErrorLog } from './isErrorFrequent';
+
+export const errorLog: ErrorLog = {
   NavigatingFrameDetached: { count: 0, lastOccurred: null },
   RequestingMainFramTooEarly: { count: 0, lastOccurred: null },
   ERR_TIMED_OUT: { count: 0, lastOccurred: null },
@@ -10,11 +12,17 @@ export const errorTypes = {
   ServerError: { count: 0, lastOccurred: null },
   UnknowError: { count: 0, lastOccurred: null },
   RateLimit: { count: 0, lastOccurred: null },
+  Timeout: { count: 0, lastOccurred: null },
   NotFound: { count: 0, lastOccurred: null },
-  ProtocolError: { count: 0, lastOccurred: null }
+  ProtocolError: { count: 0, lastOccurred: null },
+  EanOnEbyNotFound: { count: 0, lastOccurred: null },
+  Missing: {
+    count: 0,
+    lastOccurred: null,
+  },
 };
 
-export const errorTypeCount = {
+export const errorTypeCount: { [key in ErrorType]: number } = {
   NavigatingFrameDetached: 0,
   RequestingMainFramTooEarly: 0,
   ERR_TIMED_OUT: 0,
@@ -29,7 +37,27 @@ export const errorTypeCount = {
   Timeout: 0,
   NotFound: 0,
   ProtocolError: 0,
+  Missing: 0,
+  EanOnEbyNotFound: 0,
 };
+
+export type ErrorTypes =
+  | 'NavigationFrameDetached'
+  | 'RequestingMainFramTooEarly'
+  | 'ERR_TIMED_OUT'
+  | 'ERR_TUNNEL_CONNECTION_FAILED'
+  | 'ERR_EMPTY_RESPONSE'
+  | 'ERR_CONNECTION_CLOSED'
+  | 'ERR_HTTP2_PROTOCOL_ERROR'
+  | 'AccessDenied'
+  | 'ServerError'
+  | 'UnknowError'
+  | 'RateLimit'
+  | 'Timeout'
+  | 'Missing'
+  | 'NotFound'
+  | 'ProtocolError'
+  | 'EanOnEbyNotFound';
 
 export enum ErrorType {
   'NavigatingFrameDetached' = 'NavigatingFrameDetached',
@@ -47,4 +75,5 @@ export enum ErrorType {
   'Missing' = 'Missing',
   'NotFound' = 'NotFound',
   'ProtocolError' = 'ProtocolError',
+  'EanOnEbyNotFound' = 'EanOnEbyNotFound',
 }

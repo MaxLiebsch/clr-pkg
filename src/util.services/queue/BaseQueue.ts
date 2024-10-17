@@ -13,7 +13,7 @@ import {
 import { prefixLink } from '../../util/matching/compare_helper';
 import { avgNoPagesPerSession, getPage } from '../../util/browser/getPage';
 import { checkForBlockingSignals } from './checkForBlockingSignals';
-import { ErrorType, errorTypeCount, errorTypes } from './ErrorTypes';
+import { ErrorType, errorTypeCount, errorLog } from './ErrorTypes';
 import {
   ACCESS_DENIED_FREQUENCE,
   DEFAULT_PAGE_TIMEOUT,
@@ -145,7 +145,7 @@ export abstract class BaseQueue<
   /*
   if the timeouts need to be applied later
   */
-  private errorLog: ErrorLog = errorTypes;
+  private errorLog: ErrorLog = errorLog;
   private criticalErrorCount: number = 0;
   private eventEmitter: EventEmitter = globalEventEmitter;
   public total = 0;
@@ -380,7 +380,7 @@ export abstract class BaseQueue<
         event,
       });
     }
-    this.errorLog = errorTypes;
+    this.errorLog = errorLog;
     this.criticalErrorCount = 0;
     return this.queueTask;
   }
@@ -758,6 +758,7 @@ export abstract class BaseQueue<
       };
     } catch (error) {
       const errorType = this.parseError(error);
+
       process.env.DEBUG === 'true' &&
         console.log('WrapperFunction:Error:', error);
       if (this.taskFinished) return;
@@ -765,16 +766,15 @@ export abstract class BaseQueue<
       if (!this.repairing) {
         if (error instanceof Error) {
           if (
-            error.message === ErrorType.RateLimit ||
-            error.message === ErrorType.AccessDenied ||
-            error.message === ErrorType.ServerError ||
-            error.message === ErrorType.NotFound
+            errorType === ErrorType.RateLimit ||
+            errorType === ErrorType.AccessDenied ||
+            errorType === ErrorType.ServerError ||
+            errorType === ErrorType.NotFound
           ) {
             if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
               this.jumpToNextUserAgent(link);
               this.pauseQueue('error');
             } else {
-              const errorType = error.message as ErrorType;
               this.queueStats.errorTypeCount[errorType] += 1;
               if (
                 isErrorFrequent(
@@ -819,7 +819,7 @@ export abstract class BaseQueue<
                 allowedHosts,
                 proxyType,
               );
-            } else {
+            } else if (errorType !== ErrorType.EanOnEbyNotFound) {
               this.pauseQueue('error');
             }
           } else {
@@ -836,7 +836,7 @@ export abstract class BaseQueue<
       }
 
       const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
-      
+
       if (isDomainAllowed(pageInfo.link)) {
         if (error instanceof Error) {
           if (errorType === ErrorType.Timeout) {
@@ -890,7 +890,18 @@ export abstract class BaseQueue<
     }
   }
   private parseError(error: Error | unknown) {
+    const isError = error instanceof Error;
     switch (true) {
+      case isError && error.message === ErrorType.EanOnEbyNotFound:
+        return ErrorType.EanOnEbyNotFound;
+      case isError && error.message === ErrorType.RateLimit:
+        return ErrorType.RateLimit;
+      case isError && error.message === ErrorType.AccessDenied:
+        return ErrorType.AccessDenied;
+      case isError && error.message === ErrorType.ServerError:
+        return ErrorType.ServerError;
+      case isError && error.message === ErrorType.NotFound:
+        return ErrorType.NotFound;
       case `${error}`.includes('TimeoutError'):
         return ErrorType.Timeout;
       case `${error}`.includes('Protocol error') ||

@@ -5,6 +5,7 @@ import { QueryRequest } from '../../types/query-request';
 import { getInnerText } from '../../util/helpers';
 import { ebyNotFoundText, MAX_RETRIES_LOOKUP_EAN } from '../../constants';
 import { closePage } from '../../util/browser/closePage';
+import { ErrorType } from '../queue/ErrorTypes';
 
 export const queryEansOnEbyQueue = async (
   page: Page,
@@ -30,7 +31,7 @@ export const queryEansOnEbyQueue = async (
   const notFound = await getInnerText(page, 'h3.srp-save-null-search__heading');
   if (notFound?.includes(ebyNotFoundText)) {
     if (retries < MAX_RETRIES_LOOKUP_EAN) {
-      throw new Error(`${targetShop?.name} - ${ean} not found on Eby`);
+      throw new Error(ErrorType.EanOnEbyNotFound);
     } else {
       onNotFound && (await onNotFound('notFound'));
     }
