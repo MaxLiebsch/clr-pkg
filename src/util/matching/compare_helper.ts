@@ -82,10 +82,10 @@ export function prefixLink(
 
   let newSrc = src;
 
-  newSrc = newSrc.replaceAll(/[\n\r\t]/g, '');
+  newSrc = newSrc.replaceAll(/[\n\r\t]/g, '')
 
   if (newSrc.startsWith('//')) {
-    return new URL(newSrc).href;
+    return 'https:' + newSrc;
   }
 
   if (!newSrc.startsWith('https://')) {
