@@ -41,6 +41,7 @@ import {
   requestCompleted,
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
+import { isValidURL } from '../../util/isURLvalid';
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -536,6 +537,19 @@ export abstract class BaseQueue<
       retriesOnFail,
     } = request;
     const { link } = pageInfo;
+
+    const isLinkValidUrl = isValidURL(link);
+
+    if(!isLinkValidUrl) {
+      return {
+        details: `⛔ Id: ${requestId} - Invalid URL - ${link}`,
+        status: 'error-handled',
+        retries,
+        proxyType,
+      };
+    }
+
+
     this.initRequestCountPerHost(link);
     const {
       waitUntil,
