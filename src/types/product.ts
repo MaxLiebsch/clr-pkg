@@ -44,7 +44,8 @@ export type Content =
   | 'costs.strg.2_hy'
   | 'a_prc_test_1'
   | 'a_prc_test_2'
-  | 'a_prc_test_3'| 'e_prc'
+  | 'a_prc_test_3'
+  | 'e_prc';
 
 export interface Product {
   createdAt?: string;
@@ -86,7 +87,6 @@ export interface DbProduct {
   eanList: string[];
   curr?: string;
   sdmn: string;
-  bsr: BSR[];
   ctgry: string[];
   mnfctr: string;
   hasMnfctr: boolean;
@@ -165,6 +165,7 @@ export type AznProps =
   | 'a_orgn'
   | 'a_hash'
   | 'tax'
+  | 'a_useCurrPrice'
   | 'a_mrgn'
   | 'a_mrgn_pct'
   | 'a_w_mrgn'
@@ -184,6 +185,50 @@ export type AznProps =
   | 'azn_taskId'
   | 'dealAznUpdatedAt'
   | 'dealAznTaskId';
+
+export interface AznProduct {
+  availUpdatedAt?: string;
+  // AZN properties
+  a_pblsh?: Boolean;
+  a_nm?: string;
+  a_lnk?: string;
+  a_cur?: string;
+  a_img?: string;
+  asin?: string;
+  a_prc?: number;
+  costs?: Costs;
+  a_uprc?: number;
+  bsr?: BSR[];
+  a_qty?: number;
+  a_orgn?: string;
+  a_hash?: string;
+  tax?: number;
+  a_mrgn?: number;
+  a_useCurrPrice?: boolean;
+  a_mrgn_pct?: number;
+  a_w_mrgn?: number;
+  a_w_mrgn_pct?: number;
+  a_p_w_mrgn?: number;
+  a_p_w_mrgn_pct?: number;
+  a_p_mrgn?: number;
+  a_vrfd?: Verification;
+  a_p_mrgn_pct?: number;
+  // lookup info
+  info_taskId?: string;
+  infoUpdatedAt?: string;
+  info_prop?: string;
+  // keepa properties
+  keepaEanUpdatedAt?: string;
+  keepaEan_lckd?: boolean;
+  keepaUpdatedAt?: string;
+  keepa_lckd?: boolean;
+  // scrape listing
+  aznUpdatedAt?: string;
+  azn_taskId?: string;
+  // dealazn properties
+  dealAznUpdatedAt?: string;
+  dealAznTaskId?: string;
+}
 
 export type EbyProps =
   | 'e_pblsh'
@@ -253,46 +298,8 @@ export interface KeepaProperties {
 export interface DbProductRecord
   extends KeepaProperties,
     WithId<Document>,
-    DbProduct {
+    DbProduct, AznProduct {
   availUpdatedAt?: string;
-  // AZN properties
-  a_pblsh?: Boolean;
-  a_nm?: string;
-  a_lnk?: string;
-  a_cur?: string;
-  a_img?: string;
-  asin?: string;
-  a_prc?: number;
-  costs?: Costs;
-  a_uprc?: number;
-  a_qty?: number;
-  a_orgn?: string;
-  a_hash?: string;
-  tax?: number;
-  a_mrgn?: number;
-  a_mrgn_pct?: number;
-  a_w_mrgn?: number;
-  a_w_mrgn_pct?: number;
-  a_p_w_mrgn?: number;
-  a_p_w_mrgn_pct?: number;
-  a_p_mrgn?: number;
-  a_vrfd?: Verification;
-  a_p_mrgn_pct?: number;
-  // lookup info
-  info_taskId?: string;
-  infoUpdatedAt?: string;
-  info_prop?: string;
-  // keepa properties
-  keepaEanUpdatedAt?: string;
-  keepaEan_lckd?: boolean;
-  keepaUpdatedAt?: string;
-  keepa_lckd?: boolean;
-  // scrape listing
-  aznUpdatedAt?: string;
-  azn_taskId?: string;
-  // dealazn properties
-  dealAznUpdatedAt?: string;
-  dealAznTaskId?: string;
 
   // Eby properties
   e_pblsh?: boolean;

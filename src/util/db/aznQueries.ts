@@ -1,9 +1,9 @@
  
-import { DbProductRecord } from '../../types/product.js';
+import { AznProduct } from '../../types/product.js';
 import { keepaProperties } from '../../constants/index.js';
 import { aznCategoryMapping } from '../../static/azn.js';
 
-export const aznUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
+export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   a_pblsh: '',
   a_nm: '',
   a_lnk: '',
@@ -19,6 +19,7 @@ export const aznUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
   a_hash: '',
   tax: '',
   a_mrgn: '',
+  a_useCurrPrice: '',
   a_mrgn_pct: '',
   a_w_mrgn: '',
   a_w_mrgn_pct: '',
