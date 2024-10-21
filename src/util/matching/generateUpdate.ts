@@ -19,14 +19,14 @@ export const generateUpdate = (
     infoMap.set(info.key, info.value);
   });
   let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
-  
+
   const {
     avgPrice,
     a_useCurrPrice,
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
   } = getAznAvgPrice(product, a_prc);
-  
+
   if (newSellPrice <= 1) throw new Error('a_prc is 0');
 
   const costs = {
@@ -85,12 +85,12 @@ export const generateUpdate = (
   if (sellerRank) {
     const category = sellerRank.match(/\((.*?)\)/g);
     const number = sellerRank.match(/\d+/g);
-    if (category && number) {
+    if (category && category.length && number && number.length) {
       update['bsr'] = [
         {
           createdAt: new Date().toISOString(),
-          category: category[0].replace(/[\\(\\)]/g, ''),
-          number: safeParsePrice(number.join('')),
+          category: category[0].replace(/[\\(\\)]/g, '') || 'Unbekannt',
+          number: safeParsePrice(number.join('') || '100000000'),
         },
       ];
     } else {
