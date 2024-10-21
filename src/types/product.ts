@@ -36,6 +36,8 @@ export type Content =
   | 'year'
   | 'totalOfferCount'
   | 'buyBoxIsAmazon'
+  | 'a_rating'
+  | 'a_reviewcnt'
   | 'costs.azn'
   | 'costs.varc'
   | 'tax'
@@ -166,6 +168,8 @@ export type AznProps =
   | 'a_hash'
   | 'tax'
   | 'a_useCurrPrice'
+  | 'a_reviewcnt'
+  | 'a_rating'
   | 'a_mrgn'
   | 'a_mrgn_pct'
   | 'a_w_mrgn'
@@ -201,6 +205,8 @@ export interface AznProduct {
   bsr?: BSR[];
   a_qty?: number;
   a_orgn?: string;
+  a_reviewcnt?: number;
+  a_rating?: number;
   a_hash?: string;
   tax?: number;
   a_mrgn?: number;
