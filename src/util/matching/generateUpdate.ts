@@ -1,4 +1,3 @@
-import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
@@ -11,7 +10,9 @@ export const generateUpdate = (
   productInfo: AddProductInfo[],
   product: DbProductRecord,
 ) => {
-  const { prc: buyPrice, a_qty, qty } = product;
+  let { prc: buyPrice, a_qty, qty } = product;
+
+  a_qty = a_qty || 1;
 
   const infoMap = new Map();
   productInfo.forEach((info) => {
@@ -25,7 +26,7 @@ export const generateUpdate = (
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
   } = getAznAvgPrice(product, a_prc);
-
+  
   if (newSellPrice <= 1) throw new Error('a_prc is 0');
 
   const costs = {
@@ -52,7 +53,7 @@ export const generateUpdate = (
   // prc * (a_qty / qty) //EK  //QTY Zielshop/QTY Herkunftsshop
   // a_prc VK
   const arbitrage = calculateAznArbitrage(
-    buyPrice * (a_qty! / qty),
+    buyPrice * (a_qty / qty),
     a_useCurrPrice ? newSellPrice : avgPrice,
     costs,
     tax,

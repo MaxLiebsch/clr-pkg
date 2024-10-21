@@ -7,7 +7,7 @@ export const getAznAvgPrice = (
 ) => {
   let avgPrice = 0;
   let a_useCurrPrice = true;
-
+  
   let {
     avg30_ansprcs,
     avg30_ahsprcs,
@@ -16,7 +16,7 @@ export const getAznAvgPrice = (
     a_uprc,
     a_qty,
   } = product;
-
+  
   if (avg30_ahsprcs && avg30_ahsprcs > 0) {
     avgPrice = avg30_ahsprcs;
   } else if (avg30_ansprcs && avg30_ansprcs > 0) {
@@ -26,19 +26,19 @@ export const getAznAvgPrice = (
   } else if (avg90_ansprcs && avg90_ansprcs > 0) {
     avgPrice = avg90_ansprcs;
   }
-
+  
   avgPrice = roundToTwoDecimals(avgPrice / 100);
-
+  
   if (newSellPrice < avgPrice) {
     a_useCurrPrice = false;
   }
-
-  if (newSellPrice === 0 && avgPrice > 0) {
+  
+  if (newSellPrice <= 1 && avgPrice > 0) {
     newSellPrice = avgPrice;
-    a_uprc = roundToTwoDecimals(avgPrice / a_qty!);
+    a_uprc = roundToTwoDecimals(avgPrice / (a_qty || 1));
   } else if (newSellPrice > 0) {
-    a_uprc = roundToTwoDecimals(newSellPrice / a_qty!);
+    a_uprc = roundToTwoDecimals(newSellPrice / (a_qty || 1));
   }
-
+  
   return { a_useCurrPrice, a_prc: newSellPrice, a_uprc, avgPrice };
 };
