@@ -20,6 +20,8 @@ export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   tax: '',
   a_mrgn: '',
   a_useCurrPrice: '',
+  a_rating: '',
+  a_reviewcnt: '',
   a_mrgn_pct: '',
   a_w_mrgn: '',
   a_w_mrgn_pct: '',
