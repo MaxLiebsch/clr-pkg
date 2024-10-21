@@ -42,6 +42,7 @@ import {
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
 import { isValidURL } from '../../util/isURLvalid';
+
 type Task = (page: Page, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
@@ -540,7 +541,7 @@ export abstract class BaseQueue<
 
     const isLinkValidUrl = isValidURL(link);
 
-    if(!isLinkValidUrl) {
+    if (!isLinkValidUrl) {
       return {
         details: `⛔ Id: ${requestId} - Invalid URL - ${link}`,
         status: 'error-handled',
@@ -548,7 +549,6 @@ export abstract class BaseQueue<
         proxyType,
       };
     }
-
 
     this.initRequestCountPerHost(link);
     const {
@@ -837,7 +837,8 @@ export abstract class BaseQueue<
               errorType !== ErrorType.EanOnEbyNotFound &&
               errorType !== ErrorType.AznNotFound &&
               errorType !== ErrorType.AznProductInfoEmpty &&
-              errorType !== ErrorType.AznUnexpectedError
+              errorType !== ErrorType.AznUnexpectedError &&
+              errorType !== ErrorType.AznTimeout
             ) {
               this.pauseQueue('error');
             }
@@ -911,6 +912,8 @@ export abstract class BaseQueue<
   private parseError(error: Error | unknown) {
     const isError = error instanceof Error;
     switch (true) {
+      case isError && error.message === ErrorType.AznSizeNotAvailable:
+        return ErrorType.AznSizeNotAvailable;
       case isError && error.message === ErrorType.AznProductInfoEmpty:
         return ErrorType.AznProductInfoEmpty;
       case isError && error.message === ErrorType.AznUnexpectedError:

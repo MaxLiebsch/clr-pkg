@@ -15,6 +15,7 @@ export const DEFAULT_PAGE_TIMEOUT = 60000;
 export const EAN_PAGE_TIMEOUT = 120000;
 export const amazonTransportFee = 0.25;
 export const MAX_RETRIES_LOOKUP_EAN = 1;
+export const MAX_RETRIES_LOOKUP_INFO = 2;
 export const SAVE_USAGE_INTERVAL = 1000 * 60 * 5; // 5 minutes
 export const MINIMUM_PENDING_PRODUCTS = 1;
 export const keepaTimeSummand = 21564000;
@@ -994,6 +995,7 @@ export const availability = [
 export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
 export const aznNoFittingText =
   'Keine passenden Produkte gefunden. Aktualisieren Sie die Seite oder versuchen Sie es später erneut.';
+export const aznSizeText = 'Produktabmessungen konnten nicht abgerufen werden.';
 export const ebyNotFoundText = 'Keine exakten Treffer gefunden';
 export const aznUnexpectedErrorText = 'Ein unerwarteter Fehler ist aufgetreten';
 

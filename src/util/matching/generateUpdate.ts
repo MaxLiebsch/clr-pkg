@@ -1,24 +1,32 @@
- 
 import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';
 import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
 import { createHash } from '../hash';
 import { AddProductInfo } from '../../types/query-request';
+import { DbProductRecord } from '../../types/product';
+import { getAznAvgPrice } from '../getAznAvgPrice';
 
 export const generateUpdate = (
   productInfo: AddProductInfo[],
-  buyPrice: number,
-  a_qty: number,
-  qty: number,
+  product: DbProductRecord,
 ) => {
+  const { prc: buyPrice, a_qty, qty } = product;
+
   const infoMap = new Map();
   productInfo.forEach((info) => {
     infoMap.set(info.key, info.value);
   });
   let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
+  
+  const {
+    avgPrice,
+    a_useCurrPrice,
+    a_prc: newSellPrice,
+    a_uprc: newSellUPrice,
+  } = getAznAvgPrice(product, a_prc);
 
-  if (a_prc === 0) throw new Error('a_prc is 0');
+  if (newSellPrice <= 1) throw new Error('a_prc is 0');
 
   const costs = {
     azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
@@ -32,10 +40,11 @@ export const generateUpdate = (
 
   const asin = infoMap.get('asin');
   const a_nm = infoMap.get('name');
+  const a_rating = infoMap.get('a_rating');
+  const a_reviewcnt = infoMap.get('a_reviewcnt');
 
   const tax = infoMap.get('tax');
   const totalOfferCount = infoMap.get('totalOfferCount');
-  let a_uprc = roundToTwoDecimals(a_prc / a_qty);
 
   const sellerRank = infoMap.get('sellerRank');
   const image = infoMap.get('a_img');
@@ -43,8 +52,8 @@ export const generateUpdate = (
   // prc * (a_qty / qty) //EK  //QTY Zielshop/QTY Herkunftsshop
   // a_prc VK
   const arbitrage = calculateAznArbitrage(
-    buyPrice * (a_qty / qty),
-    a_prc,
+    buyPrice * (a_qty! / qty),
+    a_useCurrPrice ? newSellPrice : avgPrice,
     costs,
     tax,
   );
@@ -56,9 +65,11 @@ export const generateUpdate = (
     a_hash,
     a_nm,
     asin,
-    a_prc,
-    a_uprc,
+    a_prc: newSellPrice,
+    a_uprc: newSellUPrice,
     a_qty,
+    ...(a_rating && { a_rating: Number(a_rating) }),
+    ...(a_reviewcnt && { a_reviewcnt: Number(a_reviewcnt) }),
     ...(tax && { tax: Number(tax) }),
     ...(totalOfferCount && { totalOfferCount: getNumber(totalOfferCount) }),
     ...(image && { a_img: image }),
@@ -67,6 +78,7 @@ export const generateUpdate = (
     }),
     ...arbitrage,
     costs,
+    a_useCurrPrice,
   };
 
   if (sellerRank) {

@@ -3,6 +3,8 @@ import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
 import { Query } from '../../types/query';
 import { Shop } from '../../types/shop';
+import { get } from 'underscore';
+import { sleep } from '../extract';
 
 export async function runActions(
   page: Page,
@@ -89,7 +91,11 @@ export async function runActions(
         }
       }
       if (query) {
-        if (type === 'shadowroot-input' && 'input_sel' in action) {
+        if (
+          type === 'shadowroot-input' &&
+          'input_sel' in action &&
+          'what' in action
+        ) {
           const { sel, input_sel } = action;
           const inputHandle = await page.evaluateHandle(
             (sel, input_sel) => {
@@ -113,10 +119,23 @@ export async function runActions(
 
           if (!inputHandle) return console.error('inputHandle not found');
           await (inputHandle as ElementHandle<HTMLInputElement>).focus();
+
+          if ('clear' in action && action.clear) {
+            await (inputHandle as ElementHandle<HTMLInputElement>).evaluate(
+              (element) => {
+                element.value = '';
+              },
+            );
+          }
           await (inputHandle as ElementHandle<HTMLInputElement>).type(
-            query.product.value,
+            get(query, action.what[0].split('.'), 'blub') as string,
             { delay: 50 },
           );
+          if ('blur' in action && action.blur) {
+            await (inputHandle as ElementHandle<HTMLInputElement>).evaluate(
+              (element) => element.blur(),
+            );
+          }
         }
       }
       if (type === 'shadowroot-button-test' && 'btn_sel' in action) {

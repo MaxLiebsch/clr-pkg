@@ -1,8 +1,9 @@
 import { Page } from 'puppeteer1';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../../util/helpers';
 
-import { Brand, Model, QueryProduct, Query } from '../../types/query';
+import { Query } from '../../types/query';
 import { get } from 'underscore';
+import { get as lodashGet } from 'lodash';
 import { QueryAction } from '../../types/queryActions';
 import { WaitUntil } from '../../types/shop';
 
@@ -56,14 +57,14 @@ export async function submitQuery(
             waitUntil: waitUntil ? waitUntil.product : 'networkidle2',
           }),
           await selector
-            .select((query[action.what] as Brand | Model | QueryProduct).key)
+            .select(lodashGet(query, action.what, '') as string)
             .catch((e) => {
               console.log(e);
             }),
         ]);
       } else {
         await selector
-          .select((query[action.what] as Brand | Model | QueryProduct).key)
+          .select(lodashGet(query, action.what, '') as string)
           .catch((e) => {
             console.log(e);
           });
@@ -84,7 +85,7 @@ export async function submitQuery(
         }
       } else {
         let _query = action.what
-          .map((key) => (query[key] as Brand | Model | QueryProduct).value)
+          .map((key) => lodashGet(query, action.what, '') as string)
           .join(' ');
 
         if (action.wait) {

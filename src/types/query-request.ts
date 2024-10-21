@@ -55,13 +55,18 @@ export interface AddProductInfoProps {
   url: string;
 }
 
-export type NotFoundCause = 'notFound' | 'domainNotAllowed' | 'timeout' | 'exceedsLimit';
+export type NotFoundCause =
+  | 'notFound'
+  | 'domainNotAllowed'
+  | 'timeout'
+  | 'exceedsLimit';
 
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
   log?: any;
   addProduct: (product: ProductRecord) => Promise<void>;
   extendedLookUp?: boolean;
+  resolveTimeout?: () => void;
   s_hash: string;
   targetRetailerList?: TargetShop[];
   targetShop?: TargetShop;

@@ -19,6 +19,7 @@ const sharedExtractorTypes = [
   'srcset',
   'data-flix-ean',
   'data-loadbee-gtin',
+  'value',
   'content',
   'data-srcset',
   'value',

@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer1';
 import { ProxyAuth } from '../../types/proxyAuth';
-import { DbProduct, DbProductRecord, ProductRecord } from '../../types/product';
+import { DbProductRecord, ProductRecord } from '../../types/product';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
@@ -13,7 +13,7 @@ export interface ProdInfo {
   nmSubSegments: string[];
 }
 
-type Task = (page: Page, request: QueryRequest) => Promise<void>;
+type Task = (page: Page, request: QueryRequest) => Promise<string | undefined | void>;
 
 export class QueryQueue extends BaseQueue<QueryRequest> {
   /*

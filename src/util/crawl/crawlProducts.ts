@@ -37,7 +37,7 @@ export const crawlProducts = async (
   if (pauseOnProductPage && pauseOnProductPage.pause) {
     const { min, max } = pauseOnProductPage;
     let pause = Math.floor(Math.random() * max) + min;
-    await sleep(pause); 
+    await sleep(pause);
   }
 
   process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
@@ -87,11 +87,7 @@ export const crawlProducts = async (
           .evaluate((el) => el.getAttribute('href'))
           .catch((e) => {});
         if (href) {
-          if (href?.startsWith('https://')) {
-            product.link = href;
-          } else {
-            product.link = 'https://' + shop.d + href;
-          }
+          product.link = prefixLink(href, shop.d, shop.leaveDomainAsIs);
         }
       }
 

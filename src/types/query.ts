@@ -1,6 +1,6 @@
 
 
-export type QueryKeys = 'brand' | 'model' | 'product' | 'year' |'subVehicleType' | 'vehicleType'
+export type QueryKeys = 'brand' | 'model' | 'product.price' | 'product.key' | 'product.value' | 'year' |'subVehicleType' | 'vehicleType'
 
 export interface Query {
     category: string
@@ -41,6 +41,7 @@ export interface Query {
   export interface QueryProduct {
     key: string;
     value: string
+    price?: string
   }
 
 

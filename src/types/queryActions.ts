@@ -45,6 +45,8 @@ export interface SelectAction extends BaseAction {
 export interface InputAction extends BaseAction {
   what: QueryKeys[];
   wait: boolean;
+  blur?: boolean;
+  clear?: boolean;
 }
 
 export type QueryAction =
