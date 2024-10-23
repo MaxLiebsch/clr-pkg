@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer1';
-import { browseProductpages } from '../../util/crawl/browseProductPages';
+import { browseProductPages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { QueryRequest } from '../../types/query-request';
 import { getInnerText } from '../../util/helpers';
@@ -39,7 +39,7 @@ export const queryEansOnEbyQueue = async (
     return;
   }
 
-  const res = await browseProductpages(
+  const res = await browseProductPages(
     page,
     shop,
     addProduct,

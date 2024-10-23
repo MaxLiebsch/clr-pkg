@@ -9,6 +9,7 @@ interface RecursiveMoreButtonPgnOpts {
   wait?: boolean;
   waitUntil: WaitUntil;
   shop: Shop;
+  visible?: boolean;
   expect?: any;
 }
 
@@ -18,24 +19,27 @@ export async function recursiveMoreButtonPgn({
   sel,
   wait,
   waitUntil,
+  visible,
   shop,
 }: RecursiveMoreButtonPgnOpts) {
   let exists = true;
   let cnt = 0;
+  let lastScrollPosition = 0;
   while (exists && cnt < limit) {
     cnt++;
-    const btn = await waitForSelector(page, sel, undefined, true);
+    const btn = await waitForSelector(page, sel, undefined, Boolean(visible));
     if (btn) {
       await clickBtn(page, sel, wait ?? false, waitUntil, undefined);
       const shouldscroll = shop.crawlActions
         ? shop.crawlActions.some((action) => action.type === 'scroll')
         : false;
       if (shouldscroll) {
-        await humanScroll(page);
+        lastScrollPosition = await humanScroll(page,lastScrollPosition);
+        process.env.DEBUG === 'true' && console.log('lastScrollPosition:', lastScrollPosition);
       }
     } else {
       exists = false;
     }
   }
-  return {cnt, exists}
+  return { cnt, exists };
 }

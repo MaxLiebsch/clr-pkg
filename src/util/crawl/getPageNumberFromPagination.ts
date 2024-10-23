@@ -36,8 +36,8 @@ export const getPageNumberFromPagination = async (
   page: Page,
   shop: Shop,
   paginationEl: PaginationElement,
+  productCount: number | null,
   currentPage?: number,
-  productCount?: number | null,
 ) => {
   let pageCount = 0;
   if (!Object.keys(paginationEl).length) return pageCount;

@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer1';
-import { browseProductpages } from '../../util/crawl/browseProductPages';
+import { browseProductPages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { Product, ProductRecord } from '../../types/product';
 import { closePage } from '../../util/browser/closePage';
@@ -44,7 +44,7 @@ export const queryShopQueue = async (page: Page, request: QueryRequest) => {
 
   await submitQuery(page, queryActions || [], waitUntil, query);
 
-  const res = await browseProductpages(
+  const res = await browseProductPages(
     page,
     shop,
     extendedLookUp ? addProductCb : addProduct,

@@ -68,7 +68,7 @@ export async function browseProductPagesQueue(
   );
 
   if (pagination) {
-    const { type, sel, wait, initialUrl } = paginationEl;
+    const { type, sel, wait, initialUrl, visible, endOfPageSel } = paginationEl;
     if (type === 'pagination') {
       let initialPageUrl = page.url();
       if (initialUrl) {
@@ -94,8 +94,8 @@ export async function browseProductPagesQueue(
         page,
         shop,
         paginationEl,
+        productCount === undefined ? null : productCount,
         1,
-        productCount,
       );
 
       if (pageCount) {
@@ -166,7 +166,7 @@ export async function browseProductPagesQueue(
         }
       }
     } else if (type === 'infinite_scroll') {
-      const scrolling = await infinitSrollPgn({page}) 
+      const scrolling = await infinitSrollPgn({ page });
       if (scrolling === 'finished') {
         await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
           timeouts.forEach((timeout) => clearInterval(timeout));
@@ -180,6 +180,7 @@ export async function browseProductPagesQueue(
         page,
         shop,
         wait,
+        visible,
         waitUntil,
       });
       await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
@@ -188,12 +189,22 @@ export async function browseProductPagesQueue(
       });
       return 'crawled';
     } else if (type === 'scroll-and-click') {
+      const pageCount = await getPageNumberFromPagination(
+        page,
+        shop,
+        paginationEl,
+        productCount === undefined ? null : productCount,
+        1,
+      );
       await scrollAndClickPgn({
         limit: limit.pages,
         page,
         sel,
+        visible,
+        endOfPageSel,
         wait,
         waitUntil,
+        pageCount,
       });
       await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));

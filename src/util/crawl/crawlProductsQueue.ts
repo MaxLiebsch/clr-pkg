@@ -1,11 +1,11 @@
-import { Page, TimeoutError } from 'puppeteer1';
+import { Page } from 'puppeteer1';
 import findPagination from './findPagination';
 import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { paginationUrlSchemaBuilder } from './paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
 import { CrawlerRequest } from '../../types/query-request';
-import { humanScroll, myQuerySelectorAll } from '../helpers';
+import { myQuerySelectorAll } from '../helpers';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
 
@@ -56,8 +56,8 @@ export const crawlProductsQueue = async (
         page,
         shop,
         paginationEl,
+        productCount === undefined ? null : productCount,
         noOfPages,
-        productCount,
       );
       if (pageCount && pageNo && initialProductPageUrl) {
         const noOfPages = calculatePageCount(limit, pageCount);

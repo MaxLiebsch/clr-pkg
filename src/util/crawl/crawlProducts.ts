@@ -54,7 +54,12 @@ export const crawlProducts = async (
     if (!selector) continue;
 
     const productEls = await myQuerySelectorAll(page, product.sel);
+    process.env.DEBUG === 'true' &&
+      !productEls &&
+      console.log('productEls missing in ', pageInfo.link);
     if (!productEls) continue;
+    process.env.DEBUG === 'true' &&
+      console.log('productEls:', productEls.length, ' in ', pageInfo.link);
 
     const { type, details } = product;
     for (let i = 0; i < productEls.length; i++) {
@@ -259,7 +264,6 @@ export const crawlProducts = async (
       if (product.mnfctr) {
         product.hasMnfctr = true;
       }
-
       await addProductCb(product);
     }
   }

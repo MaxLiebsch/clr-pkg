@@ -9,6 +9,14 @@ import { Rule } from './rules';
 import { PaginationElement } from './paginationElement';
 import { ImgMeta } from '.';
 import { ProxyType } from './proxyAuth';
+import { ErrorTypes } from '../util.services/queue/ErrorTypes';
+
+
+export interface PageErrors {
+  text: string;
+  sel: string;
+  errorType: ErrorTypes
+}
 
 export interface Shop {
   mimic?: string;
@@ -52,6 +60,7 @@ export interface Shop {
   exceptions?: string[];
   manualCategories?: ICategory[];
   rules?: Rule[];
+  pageErrors?: PageErrors[];
   category?: string[];
   pauseOnProductPage?: { pause: boolean; max: number; min: number };
   paginationEl: PaginationElement[];

@@ -505,8 +505,7 @@ export async function scrollToBottom(page: Page) {
   return 'finished';
 }
 
-export async function humanScroll(page: Page) {
-  let lastScrollPosition = 0;
+export async function humanScroll(page: Page, lastScrollPosition = 0) {
   let newScrollPosition = 0;
   const maxScrollPosition = await page
     .evaluate(() => document.body.scrollHeight)
@@ -542,7 +541,7 @@ export async function humanScroll(page: Page) {
 
     lastScrollPosition = newScrollPosition;
   }
-  return 'finished';
+  return lastScrollPosition;
 }
 
 export const slug = function (str: string) {

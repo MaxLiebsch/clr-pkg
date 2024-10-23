@@ -16,7 +16,7 @@ const findPagination = async (
   let pagination: ElementHandle<Element> | null = null;
   let paginationEl = paginationEls[0];
 
-  if (paginationEl.calculation.method === 'estimate') {
+  if (paginationEl?.findPaginationStrategy === 'estimate') {
     return { pagination: true, paginationEl };
   }
 
@@ -24,9 +24,11 @@ const findPagination = async (
     paginationEl = paginationEls[index];
     const { sel, visible } = paginationEl;
 
-    if (sel) pagination = await waitForSelector(page, sel, 5000, !!visible);
+    if (sel)
+      pagination = await waitForSelector(page, sel, 5000, Boolean(visible));
 
-    process.env.DEBUG === 'true' && console.log('findPagination:pagination:', pagination);
+    process.env.DEBUG === 'true' &&
+      console.log('findPagination:pagination:', pagination);
 
     if (pagination) break;
   }

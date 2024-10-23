@@ -20,6 +20,7 @@ export * from './types/query-request';
 export * from './types/query'
 export * from './types/keepa'
 
+//UTIL
 export * from './util/queryURLBuilder';
 export * from './util/extract/index';
 export * from './util/sanitize/index';
@@ -45,6 +46,7 @@ export * from './util/ProcessTImeTracker';
 export * from './util/parseAsinFromUrl';
 export * from './util/parseEsinFromUrl';
 export * from './util/transformProduct';
+export * from './util/extract/extractSellerRank'
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';
 export * from './util/matching/packageRecognition';
@@ -52,8 +54,8 @@ export * from './util/matching/calculateArbitrage';
 export * from './util/matching/calculateAznArbitrage';
 export * from './util/matching/calculateEbyArbitrage';
 export * from './util/matching/parseEbyCategories';
-export * from './util/calculateMonthlySales';
 export * from './util/matching/generateUpdate';
+export * from './util/calculateMonthlySales';
 export * from './util/browser/yieldBrowserVersion';
 export * from './static/allowed';
 export * from './static/blocked';

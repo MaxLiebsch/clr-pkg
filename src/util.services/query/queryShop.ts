@@ -2,7 +2,7 @@ import { Page } from 'puppeteer1';
 import { ProductRecord } from '../../types/product';
 import { ShopObject } from '../../types';
 import { Query } from '../../types/query';
-import { browseProductpages } from '../../util/crawl/browseProductPages';
+import { browseProductPages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { closePage } from '../../util/browser/closePage';
 
@@ -31,7 +31,7 @@ export const queryShop = async (
   //Query products
   await submitQuery(page, queryActions || [], waitUntil, query);
 
-  const res = await browseProductpages(
+  const res = await browseProductPages(
     page,
     shop,
     addProduct,

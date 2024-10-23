@@ -4,6 +4,7 @@ import {
   clickBtn,
   deleteElementFromPage,
   extractAttributePage,
+  getProductCount,
   humanScroll,
   scrollToBottom,
   waitForSelector,
@@ -24,7 +25,7 @@ import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
 import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
 import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
 
-export async function browseProductpages(
+export async function browseProductPages(
   page: Page,
   shop: Shop,
   addProductCb: (product: ProductRecord) => Promise<void>,
@@ -33,7 +34,7 @@ export async function browseProductpages(
   query?: Query,
 ) {
   const timeouts: NodeJS.Timeout[] = [];
-  const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
+  const { paginationEl: paginationEls, waitUntil, crawlActions, productList } = shop;
 
   let { pagination, paginationEl } = await findPagination(
     page,
@@ -42,6 +43,8 @@ export async function browseProductpages(
   );
   process.env.DEBUG === 'true' && console.log('pagination:', pagination);
   const limitPages = limit?.pages ? limit?.pages : 1;
+
+  const productCount = await getProductCount(page, productList);
 
   if (crawlActions && crawlActions.length > 0) {
     for (let i = 0; i < crawlActions.length; i++) {
@@ -63,7 +66,7 @@ export async function browseProductpages(
   }
 
   if (pagination && limitPages > 0) {
-    const { type, sel, wait } = paginationEl;
+    const { type, sel, wait, visible, endOfPageSel } = paginationEl;
 
     if (type === 'pagination') {
       const initialpageurl = page.url();
@@ -72,6 +75,7 @@ export async function browseProductpages(
         page,
         shop,
         paginationEl,
+        productCount,
       );
       process.env.DEBUG && console.log('pageCount:', pageCount);
 
@@ -149,6 +153,7 @@ export async function browseProductpages(
         page,
         shop,
         wait,
+        visible,
         waitUntil,
       });
       await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
@@ -157,12 +162,22 @@ export async function browseProductpages(
       });
       return 'crawled';
     } else if (type === 'scroll-and-click') {
+      const pageCount = await getPageNumberFromPagination(
+        page,
+        shop,
+        paginationEl,
+        productCount === undefined ? null : productCount,
+        1,
+      );
       await scrollAndClickPgn({
         limit: limitPages,
         page,
         sel,
         wait,
+        endOfPageSel,
+        visible,
         waitUntil,
+        pageCount
       });
       await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
