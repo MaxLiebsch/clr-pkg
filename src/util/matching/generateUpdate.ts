@@ -11,7 +11,7 @@ export const generateUpdate = (
   productInfo: AddProductInfo[],
   product: DbProductRecord,
 ) => {
-  let { prc: buyPrice, a_qty, qty } = product;
+  let { prc: buyPrice, a_qty, qty, bsr } = product;
 
   a_qty = a_qty || 1;
 
@@ -82,6 +82,6 @@ export const generateUpdate = (
     costs,
     a_useCurrPrice,
   };
-  extractSellerRank(sellerRank, update);
+  extractSellerRank(sellerRank, update, bsr);
   return update;
 };
