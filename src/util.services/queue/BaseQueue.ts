@@ -16,6 +16,7 @@ import { checkForBlockingSignals } from './checkForBlockingSignals';
 import { ErrorType, errorTypeCount, errorLog } from './ErrorTypes';
 import {
   ACCESS_DENIED_FREQUENCE,
+  CHROME_VERSIONS,
   DEFAULT_PAGE_TIMEOUT,
   EAN_PAGE_TIMEOUT,
   MAX_CRITICAL_ERRORS,
@@ -225,7 +226,7 @@ export abstract class BaseQueue<
     const currentVersion = this.versionChooser.next().value as Versions;
     this.queueStats.browserStarts += 1;
     try {
-      this.browser = await mainBrowser(this.proxyAuth, currentVersion);
+      this.browser = await mainBrowser(this.proxyAuth, CHROME_VERSIONS[0]);
     } catch (error) {
       this.logError(`Browser crashed big time  ${error}`);
       await this.repair(`Browser crashed big time  ${error}`);
