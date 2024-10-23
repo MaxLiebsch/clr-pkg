@@ -3,6 +3,7 @@ import { closePage } from '../browser/closePage';
 import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { runActions } from './runActions';
+import { getInnerText } from '../helpers';
 
 export async function queryProductPageQueue(page: Page, request: QueryRequest) {
   const { addProductInfo, shop } = request;
@@ -16,8 +17,18 @@ export async function queryProductPageQueue(page: Page, request: QueryRequest) {
     await new Promise((r) => setTimeout(r, pause));
   }
 
-  if(shop.crawlActions && shop.crawlActions.length) {
-    await runActions(page, shop, 'crawl')
+  if (shop?.crawlActions && shop.crawlActions.length) {
+    await runActions(page, shop, 'crawl');
+  }
+
+  if (shop?.pageErrors && shop.pageErrors.length) {
+    shop.pageErrors.forEach(async (error) => {
+      const text = await getInnerText(page, error.sel);
+      if (text && text.includes(error.text)) {
+        closePage(page);
+        throw new Error(error.errorType);
+      }
+    });
   }
 
   if (product) {

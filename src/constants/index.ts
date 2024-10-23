@@ -10,7 +10,7 @@ export const MAX_RETRIES_NOT_FOUND = 2;
 export const RANDOM_TIMEOUT_MIN = 3000;
 export const RANDOM_TIMEOUT_MAX = 8000;
 export const RECURSIVE_BUTTON_SAFEGUARD = 10; // 10 * 16 = 160 shops should be enough...
-export const MAX_CRITICAL_ERRORS = 7;
+export const MAX_CRITICAL_ERRORS = 25;
 export const DEFAULT_PAGE_TIMEOUT = 60000;
 export const EAN_PAGE_TIMEOUT = 120000;
 export const amazonTransportFee = 0.25;
@@ -991,7 +991,7 @@ export const availability = [
   'sofort verfügbar',
   'verfügbar',
 ];
-
+export const aznProblemText = 'Leider ist ein Fehler aufgetreten. Bitte lade die Seite neu und versuche es noch einmal.'
 export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
 export const aznNoFittingText =
   'Keine passenden Produkte gefunden. Aktualisieren Sie die Seite oder versuchen Sie es später erneut.';
