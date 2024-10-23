@@ -3,8 +3,9 @@ import { calculateAznArbitrage } from './calculateAznArbitrage';
 import { getNumber } from './compare_helper';
 import { createHash } from '../hash';
 import { AddProductInfo } from '../../types/query-request';
-import { DbProductRecord } from '../../types/product';
+import { BSR, DbProductRecord } from '../../types/product';
 import { getAznAvgPrice } from '../getAznAvgPrice';
+import { extractSellerRank } from '../extract/extractSellerRank';
 
 export const generateUpdate = (
   productInfo: AddProductInfo[],
@@ -61,7 +62,7 @@ export const generateUpdate = (
   const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
   const a_hash = createHash(a_lnk);
 
-  const update: { [key: string]: any } = {
+  const update: { [key in keyof DbProductRecord]: any } = {
     a_lnk,
     a_hash,
     a_nm,
@@ -69,8 +70,8 @@ export const generateUpdate = (
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
     a_qty,
-    ...(a_rating && { a_rating: Number(a_rating) }),
-    ...(a_reviewcnt && { a_reviewcnt: Number(a_reviewcnt) }),
+    ...(a_rating && { a_rating: safeParsePrice(a_rating) }),
+    ...(a_reviewcnt && { a_reviewcnt: safeParsePrice(a_reviewcnt) }),
     ...(tax && { tax: Number(tax) }),
     ...(totalOfferCount && { totalOfferCount: getNumber(totalOfferCount) }),
     ...(image && { a_img: image }),
@@ -81,23 +82,6 @@ export const generateUpdate = (
     costs,
     a_useCurrPrice,
   };
-
-  if (sellerRank) {
-    const category = sellerRank.match(/\((.*?)\)/g);
-    const number = sellerRank.match(/\d+/g);
-    if (category && category.length && number && number.length) {
-      update['bsr'] = [
-        {
-          createdAt: new Date().toISOString(),
-          category: category[0].replace(/[\\(\\)]/g, '') || 'Unbekannt',
-          number: safeParsePrice(number.join('') || '100000000'),
-        },
-      ];
-    } else {
-      update['bsr'] = [];
-    }
-  } else {
-    update['bsr'] = [];
-  }
+  extractSellerRank(sellerRank, update);
   return update;
 };
