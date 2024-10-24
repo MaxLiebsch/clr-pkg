@@ -183,38 +183,19 @@ export const getSIUints = (str: string) => {
 };
 
 export const findBestMatch = (
-  foundProds: CandidateProduct[],
+  foundProducts: CandidateProduct[],
   prodInfo: ProdInfo,
 ) => {
   let bestMatchIndex = -1;
   let highScore = 0;
-  const { procProd, dscrptnSegments, nmSubSegments } = prodInfo;
+  const { procProd, dscrptnSegments } = prodInfo;
   const { nm, prc, mnfctr } = procProd;
   const nameSplit = segmentString(nm);
 
-  foundProds.forEach((product, index) => {
+  foundProducts.forEach((product, index) => {
     const curr_prc = safeParsePrice(product.price);
     const mrgn = roundToTwoDecimals(curr_prc - prc);
-    const curr_mrgn_pct = roundToTwoDecimals((mrgn / prc) * 100);
     let score = 0;
-
-    // switch (true) {
-    //   case curr_mrgn_pct < -50:
-    //     score += -4;
-    //     break;
-    //   case curr_mrgn_pct >= -50 && curr_mrgn_pct < -30:
-    //     score += -3;
-    //     break;
-    //   case curr_mrgn_pct >= -30 && curr_mrgn_pct < 30:
-    //     score += +2;
-    //     break;
-    //   case curr_mrgn_pct >= 30 && curr_mrgn_pct <= 50:
-    //     score += -3;
-    //     break;
-    //   case curr_mrgn_pct > 50:
-    //     score += -4;
-    //     break;
-    // }
 
     dscrptnSegments.forEach((giveWord: string) => {
       if (product.nameSegments.includes(giveWord)) {
@@ -237,7 +218,7 @@ export const findBestMatch = (
       bestMatchIndex = index;
     }
   });
-  return bestMatchIndex >= 0 ? foundProds[bestMatchIndex] : null;
+  return bestMatchIndex >= 0 ? foundProducts[bestMatchIndex] : null;
 };
 
 interface ResultObject {

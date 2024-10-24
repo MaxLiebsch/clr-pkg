@@ -40,6 +40,7 @@ export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   // scrape listing
   aznUpdatedAt: '',
   azn_taskId: '',
+  azn_prop: '',
   // dealazn properties
   dealAznUpdatedAt: '',
   dealAznTaskId: '',

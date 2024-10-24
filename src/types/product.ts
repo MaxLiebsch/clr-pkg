@@ -186,6 +186,7 @@ export type AznProps =
   | 'keepaUpdatedAt'
   | 'keepa_lckd'
   | 'aznUpdatedAt'
+  | 'azn_prop'
   | 'azn_taskId'
   | 'dealAznUpdatedAt'
   | 'dealAznTaskId';
@@ -231,6 +232,7 @@ export interface AznProduct {
   // scrape listing
   aznUpdatedAt?: string;
   azn_taskId?: string;
+  azn_prop?: string;
   // dealazn properties
   dealAznUpdatedAt?: string;
   dealAznTaskId?: string;
