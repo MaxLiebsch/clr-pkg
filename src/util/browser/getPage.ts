@@ -64,7 +64,7 @@ export const initFingerPrintForHost = (
         currLinuxGpu: Math.floor(Math.random() * linuxGpuCnt),
         currMacGpu: Math.floor(Math.random() * macGpuCnt),
         timezone: Math.floor(
-          Math.random() * (proxyType === 'de' ? 1 : timezones.length),
+          Math.random() * (proxyType === 'de' ? 0 : timezones.length),
         ),
       };
     } else {

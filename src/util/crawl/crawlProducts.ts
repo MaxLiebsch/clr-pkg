@@ -40,7 +40,7 @@ export const crawlProducts = async (
     await sleep(pause);
   }
 
-  process.env.DEBUG === 'true' && console.log('pageNo:', pageNo);
+  process.env.DEBUG === 'true' && console.log('pageNo:', pageNo, pageInfo.link);
 
   const shouldScroll = crawlActions.find((a) => a.type === 'scroll');
 

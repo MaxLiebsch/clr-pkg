@@ -7,7 +7,7 @@ export const MAX_RESTART_DELAY = 5;
 export const MAX_RETRIES = 500;
 export const RETRY_LIMIT_MATCH_PRODUCTS = 5;
 export const MAX_RETRIES_NOT_FOUND = 2;
-export const RANDOM_TIMEOUT_MIN = 3000;
+export const RANDOM_TIMEOUT_MIN = 4000;
 export const RANDOM_TIMEOUT_MAX = 8000;
 export const RECURSIVE_BUTTON_SAFEGUARD = 10; // 10 * 16 = 160 shops should be enough...
 export const MAX_CRITICAL_ERRORS = 25;

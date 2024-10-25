@@ -26,8 +26,8 @@ export async function browseProductPagesQueue(
   request: CrawlerRequest,
 ) {
   const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
-    request;
-
+  request;
+  
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
 

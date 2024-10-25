@@ -22,6 +22,8 @@ import {
   MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
   MAX_RETRIES_NOT_FOUND,
+  RANDOM_TIMEOUT_MAX,
+  RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
   refererList,
 } from '../../constants';
@@ -43,6 +45,7 @@ import {
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
 import { isValidURL } from '../../util/isURLvalid';
+import { createLabeledTimeout } from './createLabeledTimeout';
 
 type Task = (page: Page, request: any) => Promise<any>;
 
@@ -57,6 +60,8 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'SCAN_SHOP',
   'MATCH_PRODUCTS',
 ];
+
+const timeoutTasks: TaskTypes[] = [];
 
 const shuffleTasks: TaskTypes[] = [
   'CRAWL_EAN',
@@ -135,6 +140,7 @@ export abstract class BaseQueue<
   private concurrency: number;
   private browser: Browser | null = null;
   private queueTask: QueueTask;
+  private timeouts: { timeout: NodeJS.Timeout; id: string }[] = [];
   private proxyAuth: ProxyAuth;
   private uniqueLinks: string[] = [];
   private repairing: Boolean = false;
@@ -161,6 +167,7 @@ export abstract class BaseQueue<
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
     this.queueId = crypto.randomUUID();
+    this.timeouts = [];
     this.queueTask = {
       ...task,
     };
@@ -233,6 +240,11 @@ export abstract class BaseQueue<
   }
   async disconnect(taskFinished = false): Promise<void> {
     this.taskFinished = taskFinished;
+
+    if (taskFinished) {
+      this.timeouts.forEach((timeout) => clearTimeout(timeout.timeout));
+      this.timeouts = [];
+    }
     try {
       if (this.browser?.connected && !taskFinished) {
         const pages = await this.browser.pages(); // Get all open pages
@@ -436,6 +448,14 @@ export abstract class BaseQueue<
     }
   }
 
+  private clearTimeout = (id: string) => {
+    const timeout = this.timeouts.find((timeout) => timeout.id === id);
+    if (timeout) {
+      clearTimeout(timeout.timeout);
+      this.timeouts = this.timeouts.filter((timeout) => timeout.id !== id);
+    }
+  };
+
   private resetCookies = async (page: Page) => {
     this.queueStats.resetedSession += 1;
     // Clear cookies
@@ -525,6 +545,7 @@ export abstract class BaseQueue<
   async wrapperFunction(
     task: Task,
     request: T,
+    id: string,
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
     let { type } = this.queueTask;
@@ -907,8 +928,55 @@ export abstract class BaseQueue<
       };
     } finally {
       if (page) await closePage(page);
+      this.clearTimeout(id);
     }
   }
+
+  private wrapperFunctionThen = async (result: WrapperFunctionResponse) => {
+    this.running--;
+    await this.syncRunningAndOpenPages();
+    this.next();
+    if (result) {
+      const { retries, status, proxyType } = result;
+      switch (true) {
+        case status === 'not-found':
+          this.queueStats.statusHeuristic['not-found'] += 1;
+          break;
+        case status === 'error-handled':
+          this.queueStats.proxyTypes[proxyType] += 1;
+          this.queueStats.statusHeuristic['error-handled'] += 1;
+          break;
+        case status === 'page-completed':
+          this.queueStats.proxyTypes[proxyType] += 1;
+          this.queueStats.statusHeuristic['page-completed'] += 1;
+          break;
+        case status === 'limit-reached':
+          this.queueStats.statusHeuristic['limit-reached'] += 1;
+          break;
+      }
+      switch (true) {
+        case retries === 0:
+          this.queueStats.retriesHeuristic['0'] += 1;
+          break;
+        case retries >= 0 && retries < 10:
+          this.queueStats.retriesHeuristic['1-9'] += 1;
+          break;
+        case retries >= 10 && retries < 50:
+          this.queueStats.retriesHeuristic['10-49'] += 1;
+          break;
+        case retries >= 50 && retries < 100:
+          this.queueStats.retriesHeuristic['50-99'] += 1;
+          break;
+        case retries >= 100 && retries < 500:
+          this.queueStats.retriesHeuristic['100-499'] += 1;
+          break;
+      }
+    }
+    console.log(
+      ` Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
+    );
+  };
+
   private parseError(error: Error | unknown) {
     const isError = error instanceof Error;
     switch (true) {
@@ -954,6 +1022,10 @@ export abstract class BaseQueue<
     }
   }
 
+  private randomTimeout(min: number, max: number) {
+    return Math.random() * (max - min) + min;
+  }
+
   pushTask(task: Task, request: T) {
     this.queue.push({ task, request });
     this.next();
@@ -997,52 +1069,42 @@ export abstract class BaseQueue<
     }
     const nextRequest = this.queue.shift();
     if (nextRequest) {
-      this.wrapperFunction(nextRequest.task, nextRequest.request).then(
-        async (result: WrapperFunctionResponse) => {
-          this.running--;
-          await this.syncRunningAndOpenPages();
-          this.next();
-          if (result) {
-            const { retries, status, proxyType } = result;
-            switch (true) {
-              case status === 'not-found':
-                this.queueStats.statusHeuristic['not-found'] += 1;
-                break;
-              case status === 'error-handled':
-                this.queueStats.proxyTypes[proxyType] += 1;
-                this.queueStats.statusHeuristic['error-handled'] += 1;
-                break;
-              case status === 'page-completed':
-                this.queueStats.proxyTypes[proxyType] += 1;
-                this.queueStats.statusHeuristic['page-completed'] += 1;
-                break;
-              case status === 'limit-reached':
-                this.queueStats.statusHeuristic['limit-reached'] += 1;
-                break;
+      const id = crypto.randomBytes(8).toString('hex');
+      if (timeoutTasks.includes(this.queueTask.type)) {
+        const timeoutTime = this.randomTimeout(
+          RANDOM_TIMEOUT_MIN,
+          RANDOM_TIMEOUT_MAX,
+        );
+        const timeout = createLabeledTimeout(
+          async () => {
+            await this.syncRunningAndOpenPages();
+            console.log(
+              'Timeout: ',
+              timeoutTime,
+              'Id: ',
+              id,
+              'Running: ',
+              this.running,
+            );
+            if (this.running >= this.concurrency) {
+              this.pushTask(nextRequest.task, nextRequest.request);
+            } else {
+              this.wrapperFunction(
+                nextRequest.task,
+                nextRequest.request,
+                id,
+              ).then(this.wrapperFunctionThen);
             }
-            switch (true) {
-              case retries === 0:
-                this.queueStats.retriesHeuristic['0'] += 1;
-                break;
-              case retries >= 0 && retries < 10:
-                this.queueStats.retriesHeuristic['1-9'] += 1;
-                break;
-              case retries >= 10 && retries < 50:
-                this.queueStats.retriesHeuristic['10-49'] += 1;
-                break;
-              case retries >= 50 && retries < 100:
-                this.queueStats.retriesHeuristic['50-99'] += 1;
-                break;
-              case retries >= 100 && retries < 500:
-                this.queueStats.retriesHeuristic['100-499'] += 1;
-                break;
-            }
-          }
-          console.log(
-            ` Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
-          );
-        },
-      );
+          },
+          timeoutTime,
+          id,
+        );
+        this.timeouts.push(timeout);
+      } else {
+        this.wrapperFunction(nextRequest.task, nextRequest.request, id).then(
+          this.wrapperFunctionThen,
+        );
+      }
     }
   }
 }
