@@ -1039,17 +1039,15 @@ export abstract class BaseQueue<
       this.eventEmitter.emit(`${this.queueId}-finished`, {
         queueId: this.queueId,
       });
-    } else {
-      if (
-        this.totalReached === false &&
-        this.total === this.actualProductLimit &&
-        (this.total !== 0 || this.actualProductLimit !== 0)
-      ) {
-        this.totalReached = true;
-        this.eventEmitter.emit(`${this.queueId}-finished`, {
-          queueId: this.queueId,
-        });
-      }
+    } else if (
+      this.totalReached === false &&
+      this.total === this.actualProductLimit &&
+      (this.total !== 0 || this.actualProductLimit !== 0)
+    ) {
+      this.totalReached = true;
+      this.eventEmitter.emit(`${this.queueId}-finished`, {
+        queueId: this.queueId,
+      });
     }
     if (
       this.pause ||
