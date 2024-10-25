@@ -932,9 +932,8 @@ export abstract class BaseQueue<
     }
   }
 
-  private wrapperFunctionThen = async (result: WrapperFunctionResponse) => {
+  private wrapperFunctionThen = (result: WrapperFunctionResponse) => {
     this.running--;
-    await this.syncRunningAndOpenPages();
     this.next();
     if (result) {
       const { retries, status, proxyType } = result;
@@ -1076,14 +1075,6 @@ export abstract class BaseQueue<
         const timeout = createLabeledTimeout(
           async () => {
             await this.syncRunningAndOpenPages();
-            console.log(
-              'Timeout: ',
-              timeoutTime,
-              'Id: ',
-              id,
-              'Running: ',
-              this.running,
-            );
             if (this.running >= this.concurrency) {
               this.pushTask(nextRequest.task, nextRequest.request);
             } else {
