@@ -1,4 +1,4 @@
-import { Browser, HTTPResponse, Page } from 'puppeteer1';
+import { Browser, HTTPResponse, Page } from 'rebrowser-puppeteer';
 import { ProxyAuth, ProxyType } from '../../types/proxyAuth';
 import { ErrorLog, isErrorFrequent } from '../queue/isErrorFrequent';
 import { QueueStats, QueueTask, TaskTypes } from '../../types/QueueTask';
@@ -47,7 +47,7 @@ import {
 import { isValidURL } from '../../util/isURLvalid';
 import { createLabeledTimeout } from './createLabeledTimeout';
 
-type Task = (page: Page, request: any) => Promise<any>;
+type Task = (page: any, request: any) => Promise<any>;
 
 const usePremiumProxyTasks: TaskTypes[] = [
   'CRAWL_SHOP',

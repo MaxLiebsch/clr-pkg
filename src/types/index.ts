@@ -1,7 +1,7 @@
 import { ChildProcess } from 'child_process';
 import { Document, ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
-import { Browser } from 'puppeteer1';
+import { Browser } from 'rebrowser-puppeteer';
 
 import { Shop } from './shop';
 

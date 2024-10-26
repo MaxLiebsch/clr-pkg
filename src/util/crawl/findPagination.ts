@@ -1,4 +1,4 @@
-import { ElementHandle, Page } from 'puppeteer1';
+import { ElementHandle, Page } from 'rebrowser-puppeteer';
 import { Limit } from '../../types';
 import { waitForSelector } from '../helpers';
 import { PaginationElement } from '../../types/paginationElement';

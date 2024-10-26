@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { ProductRecord } from '../../types/product';
 import { ShopObject } from '../../types';
 import { Query } from '../../types/query';

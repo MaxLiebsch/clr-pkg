@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { browseProductPages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
 import { QueryRequest } from '../../types/query-request';

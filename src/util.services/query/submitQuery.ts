@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../../util/helpers';
 
 import { Query } from '../../types/query';

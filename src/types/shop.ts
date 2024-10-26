@@ -1,4 +1,3 @@
-import { PuppeteerLifeCycleEvent } from 'puppeteer1';
 import { QueryAction } from './queryActions';
 import { QueryURLSchema } from './query';
 import { Detail, ProductList } from './productList';
@@ -10,6 +9,7 @@ import { PaginationElement } from './paginationElement';
 import { ImgMeta } from '.';
 import { ProxyType } from './proxyAuth';
 import { ErrorTypes } from '../util.services/queue/ErrorTypes';
+import { PuppeteerLifeCycleEvent } from 'rebrowser-puppeteer';
 
 
 export interface PageErrors {

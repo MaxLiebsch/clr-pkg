@@ -1,4 +1,4 @@
-import { ElementHandle, Page, TimeoutError } from 'puppeteer1';
+import { ElementHandle, Page, TimeoutError } from 'rebrowser-puppeteer';
 import { BrowserGroup, BrowserInfo, ChildProcessInfo } from '../types/index';
 import { getNumber } from '../util/matching/compare_helper';
 import { load } from 'cheerio';

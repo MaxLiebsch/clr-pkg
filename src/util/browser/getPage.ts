@@ -1,23 +1,16 @@
-import { Browser, Page, ResourceType } from 'puppeteer1';
+import { Browser, Page, ResourceType } from 'rebrowser-puppeteer';
 import {
-  acceptEncodingList,
-  acceptList,
   graphicsCardListByPlatform,
-  languageList,
-  languagesLists,
   screenResolutionsByPlatform,
   timezones,
   userAgentList,
-  voicesList,
 } from '../../constants';
 import { shouldAbortRequest } from './pageHelper';
 import { Rule } from '../../types/rules';
-import { VersionProvider } from '../versionProvider';
 import { allowed } from '../../static/allowed';
 import { Shop } from '../../types/shop';
 import { ProxyType } from '../../types/proxyAuth';
 
-const WebGlVendor = require('puppeteer-extra-plugin-stealth/evasions/webgl.vendor');
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
@@ -212,7 +205,7 @@ const setPageProperties = async ({
   rules,
   host,
   proxyType,
-}: PagePropertiesOptions): Promise<FingerPrint> => {
+}: PagePropertiesOptions): Promise<any> => {
   const { javascript } = shop;
   let _timezones = proxyType === 'de' ? ['Europe/Berlin'] : timezones;
 
@@ -251,210 +244,210 @@ const setPageProperties = async ({
     }
   });
 
-  const userAgentMeta = rotateUserAgent(requestCount, host);
+  // const userAgentMeta = rotateUserAgent(requestCount, host);
 
-  const { agent, platformVersion } = userAgentMeta;
+  // const { agent, platformVersion } = userAgentMeta;
 
-  let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
-  let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64 X11' = 'Win32';
-  let architecture: 'x64' | 'x86' | 'arm' = 'x64';
+  // let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
+  // let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64 X11' = 'Win32';
+  // let architecture: 'x64' | 'x86' | 'arm' = 'x64';
 
-  if (agent.includes('X11')) {
-    platform = 'Linux';
-    navigatorPlatform = 'Linux x86_64 X11';
-    architecture = 'x86';
-  }
-  if (agent.includes('Macintosh')) {
-    architecture = 'x64';
-    platform = 'macOS';
-    navigatorPlatform = 'MacIntel';
-    architecture = 'arm';
-  }
-  const version =
-    VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
+  // if (agent.includes('X11')) {
+  //   platform = 'Linux';
+  //   navigatorPlatform = 'Linux x86_64 X11';
+  //   architecture = 'x86';
+  // }
+  // if (agent.includes('Macintosh')) {
+  //   architecture = 'x64';
+  //   platform = 'macOS';
+  //   navigatorPlatform = 'MacIntel';
+  //   architecture = 'arm';
+  // }
+  // const version =
+  //   VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
 
-  let _agent = agent.replaceAll('<version>', version);
+  // let _agent = agent.replaceAll('<version>', version);
 
-  const agentMeta = {
-    architecture,
-    mobile: false,
-    brands: [
-      { brand: 'Chromium', version },
-      { brand: 'Google Chrome', version },
-      { brand: 'Not-A.Brand', version: '99' },
-    ],
-    model: '',
-    platform,
-    platformVersion,
-  };
+  // const agentMeta = {
+  //   architecture,
+  //   mobile: false,
+  //   brands: [
+  //     { brand: 'Chromium', version },
+  //     { brand: 'Google Chrome', version },
+  //     { brand: 'Not-A.Brand', version: '99' },
+  //   ],
+  //   model: '',
+  //   platform,
+  //   platformVersion,
+  // };
 
-  await page.setUserAgent(_agent, agentMeta);
+  // await page.setUserAgent(_agent, agentMeta);
 
-  const acceptEncoding =
-    acceptEncodingList[requestCount % acceptEncodingList.length];
+  // const acceptEncoding =
+  //   acceptEncodingList[requestCount % acceptEncodingList.length];
 
-  const accept = acceptList[requestCount % acceptList.length];
+  // const accept = acceptList[requestCount % acceptList.length];
 
-  const headers = {
-    'sec-ch-ua-platform': platform,
-    'accept-language': `${lng},${lng_set1};q=0.9`,
-  };
-  await page.setExtraHTTPHeaders(headers);
+  // const headers = {
+  //   'sec-ch-ua-platform': platform,
+  //   'accept-language': `${lng},${lng_set1};q=0.9`,
+  // };
+  // await page.setExtraHTTPHeaders(headers);
 
-  const viewPort = rotateScreenResolution(platform, requestCount, host);
+  // const viewPort = rotateScreenResolution(platform, requestCount, host);
 
-  await page.setViewport(viewPort);
+  // await page.setViewport(viewPort);
 
   const timezone = rotateTimezone(requestCount, host, _timezones);
 
   await page.emulateTimezone(timezone);
 
-  const languages = languagesLists[requestCount % languagesLists.length];
-  const language = languageList[requestCount % languageList.length];
+  // const languages = languagesLists[requestCount % languagesLists.length];
+  // const language = languageList[requestCount % languageList.length];
 
-  const voices = voicesList.slice(requestCount % voicesList.length, undefined);
+  // const voices = voicesList.slice(requestCount % voicesList.length, undefined);
 
-  if (voices.length < 6 && requestCount) {
-    let i = 0;
-    while (voices.length < 5) {
-      voices.push(voicesList[i]);
-      i++;
-    }
-  }
-  if (voices.some((voice) => !voice.default)) {
-    voices[0].default = true;
-  }
+  // if (voices.length < 6 && requestCount) {
+  //   let i = 0;
+  //   while (voices.length < 5) {
+  //     voices.push(voicesList[i]);
+  //     i++;
+  //   }
+  // }
+  // if (voices.some((voice) => !voice.default)) {
+  //   voices[0].default = true;
+  // }
 
-  await page.evaluateOnNewDocument((voices) => {
-    Object.defineProperty(speechSynthesis, 'getVoices', {
-      get: function () {
-        return () => voices;
-      },
-    });
-  }, voices);
+  // await page.evaluateOnNewDocument((voices) => {
+  //   Object.defineProperty(speechSynthesis, 'getVoices', {
+  //     get: function () {
+  //       return () => voices;
+  //     },
+  //   });
+  // }, voices);
 
-  await page.evaluateOnNewDocument(() => {
-    const originalQuery = window.navigator.permissions.query;
-    //@ts-ignore
-    return (window.navigator.permissions.query = (parameters) => {
-      if (parameters.name === 'notifications') {
-        return Promise.resolve({ state: 'prompt' });
-      } else if (parameters.name === 'geolocation') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'accelerometer') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'background-fetch') {
-        return Promise.resolve({ state: 'granted' });
-        //@ts-ignore
-      } else if (parameters.name === 'background-sync') {
-        return Promise.resolve({ state: 'granted' });
-        //@ts-ignore
-      } else if (parameters.name === 'clipboard-write') {
-        return Promise.resolve({ state: 'granted' });
-        //@ts-ignore
-      } else if (parameters.name === 'display-capture') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'camera') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'microphone') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'clipboard-read') {
-        return Promise.resolve({ state: 'granted' });
-        //@ts-ignore
-      } else if (parameters.name === 'gyroscope') {
-        return Promise.resolve({ state: 'granted' });
-        //@ts-ignore
-      } else if (parameters.name === 'midi') {
-        return Promise.resolve({ state: 'granted' });
-      } else if (parameters.name === 'persistent-storage') {
-        return Promise.resolve({ state: 'prompt' });
-        //@ts-ignore
-      } else if (parameters.name === 'magnetometer') {
-        return Promise.resolve({ state: 'granted' });
-      } else {
-        return originalQuery(parameters);
-      }
-    });
-  });
+  // await page.evaluateOnNewDocument(() => {
+  //   const originalQuery = window.navigator.permissions.query;
+  //   //@ts-ignore
+  //   return (window.navigator.permissions.query = (parameters) => {
+  //     if (parameters.name === 'notifications') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //     } else if (parameters.name === 'geolocation') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'accelerometer') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'background-fetch') {
+  //       return Promise.resolve({ state: 'granted' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'background-sync') {
+  //       return Promise.resolve({ state: 'granted' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'clipboard-write') {
+  //       return Promise.resolve({ state: 'granted' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'display-capture') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'camera') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'microphone') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'clipboard-read') {
+  //       return Promise.resolve({ state: 'granted' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'gyroscope') {
+  //       return Promise.resolve({ state: 'granted' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'midi') {
+  //       return Promise.resolve({ state: 'granted' });
+  //     } else if (parameters.name === 'persistent-storage') {
+  //       return Promise.resolve({ state: 'prompt' });
+  //       //@ts-ignore
+  //     } else if (parameters.name === 'magnetometer') {
+  //       return Promise.resolve({ state: 'granted' });
+  //     } else {
+  //       return originalQuery(parameters);
+  //     }
+  //   });
+  // });
 
-  await page.evaluateOnNewDocument(() => {
-    // We can mock this in as much depth as we need for the test.
-    console.log = function () {}; // Disable console.log temporarily
-    // Override the Error stack getter to prevent detection
-    Object.defineProperty(Error.prototype, 'stack', {
-      get: function () {
-        return ''; // Return an empty string or a custom stack
-      },
-    });
-  });
+  // await page.evaluateOnNewDocument(() => {
+  //   // We can mock this in as much depth as we need for the test.
+  //   console.log = function () {}; // Disable console.log temporarily
+  //   // Override the Error stack getter to prevent detection
+  //   Object.defineProperty(Error.prototype, 'stack', {
+  //     get: function () {
+  //       return ''; // Return an empty string or a custom stack
+  //     },
+  //   });
+  // });
 
-  const graphicCard = rotateGraphicUnit(platform, requestCount, host);
+  // const graphicCard = rotateGraphicUnit(platform, requestCount, host);
 
-  await new WebGlVendor(graphicCard).onPageCreated(page);
+  // await new WebGlVendor(graphicCard).onPageCreated(page);
 
-  if (
-    javascript?.webWorker === undefined ||
-    javascript?.webWorker === 'disabled'
-  ) {
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(window, 'Worker', {
-        get: function () {
-          throw new Error('Web Workers are disabled.');
-        },
-      });
-    });
-  }
+  // if (
+  //   javascript?.webWorker === undefined ||
+  //   javascript?.webWorker === 'disabled'
+  // ) {
+  //   await page.evaluateOnNewDocument(() => {
+  //     Object.defineProperty(window, 'Worker', {
+  //       get: function () {
+  //         throw new Error('Web Workers are disabled.');
+  //       },
+  //     });
+  //   });
+  // }
 
-  if (
-    javascript?.serviceWorker === undefined ||
-    javascript?.serviceWorker === 'disabled'
-  ) {
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(window, 'serviceWorker', {
-        //@ts-ignore
-        register: function () {
-          return Promise.reject('Service Workers are disabled.');
-        },
-      });
-    });
-  }
-  if (
-    javascript?.sharedWorker === undefined ||
-    javascript?.sharedWorker === 'disabled'
-  ) {
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(window, 'SharedWorker', {
-        get: function () {
-          throw new Error('Shared Workers are disabled.');
-        },
-      });
-    });
-  }
+  // if (
+  //   javascript?.serviceWorker === undefined ||
+  //   javascript?.serviceWorker === 'disabled'
+  // ) {
+  //   await page.evaluateOnNewDocument(() => {
+  //     Object.defineProperty(window, 'serviceWorker', {
+  //       //@ts-ignore
+  //       register: function () {
+  //         return Promise.reject('Service Workers are disabled.');
+  //       },
+  //     });
+  //   });
+  // }
+  // if (
+  //   javascript?.sharedWorker === undefined ||
+  //   javascript?.sharedWorker === 'disabled'
+  // ) {
+  //   await page.evaluateOnNewDocument(() => {
+  //     Object.defineProperty(window, 'SharedWorker', {
+  //       get: function () {
+  //         throw new Error('Shared Workers are disabled.');
+  //       },
+  //     });
+  //   });
+  // }
 
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(window, 'Websocket', {
-      get: function () {
-        throw new Error('Websocket are disabled.');
-      },
-    });
-  });
+  // await page.evaluateOnNewDocument(() => {
+  //   Object.defineProperty(window, 'Websocket', {
+  //     get: function () {
+  //       throw new Error('Websocket are disabled.');
+  //     },
+  //   });
+  // });
 
-  return {
-    agent: _agent,
-    viewPort,
-    graphicCard,
-    timezone,
-    languages,
-    language,
-    accept,
-    acceptEncoding,
-    voices: '',
-  };
+  // return {
+  //   agent: _agent,
+  //   viewPort,
+  //   graphicCard,
+  //   timezone,
+  //   languages,
+  //   language,
+  //   accept,
+  //   acceptEncoding,
+  //   voices: '',
+  // };
 };
 
 interface GetPageOptions {

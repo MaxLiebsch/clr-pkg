@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { ICategory, getCategories } from '../../util/crawl/getCategories';
 import { subPageLoop } from './crawlSubPageLoop';
 import { performCrawlAction } from '../../util/crawl/performCrawlaction';

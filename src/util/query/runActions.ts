@@ -1,4 +1,4 @@
-import { ElementHandle, Page } from 'puppeteer1';
+import { ElementHandle, Page } from 'rebrowser-puppeteer';
 import { clickBtn, clickShadowBtn, waitForSelector } from '../helpers';
 import { RECURSIVE_BUTTON_SAFEGUARD } from '../../constants';
 import { Query } from '../../types/query';

@@ -1,13 +1,8 @@
 import { proxies } from '../../constants';
 import { BrowserGroup, BrowserInfo } from '../../types';
 import { browserLoadChecker } from '../helpers';
-import puppeteer, { VanillaPuppeteer } from 'puppeteer-extra';
-import { LoggerService } from '../logger';
-import { QueueTask } from '../../types/QueueTask';
-import { hostname } from 'os';
 import { VersionProvider, Versions } from '../versionProvider';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import fetch from 'node-fetch';
+import puppeteer from 'rebrowser-puppeteer'
 
 let _browsers: BrowserGroup = {};
 
@@ -93,6 +88,18 @@ export const browserHealthCheck = async (browsers?: BrowserGroup) => {
   }
 };
 
+const args = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--lang=de',
+  '--disable-gpu',
+  '--disable-webrtc',
+  '--disable-blink-features=AutomationControlled',
+  '--webrtc-ip-handling-policy=disable_non_proxied_udp',
+  '--force-webrtc-ip-handling-policy',
+  '--start-maximized',
+];
+
 export const mainBrowsers = async (
   range: number[],
   passwordAuth: boolean = false,
@@ -104,36 +111,10 @@ export const mainBrowsers = async (
       .reduce(async (acc: any, proxy, index) => {
         const _proxy = passwordAuth ? process.env.PROXY_URL : proxy;
         const proxySetting = '--proxy-server=' + _proxy;
-        const args = [
-          '--no-sandbox',
-          '--disable-gpu',
-          '--disable-setuid-sandbox',
-          '--disable-web-security',
-          '--disable-blink-features=AutomationControlled',
-          '--disable-webrtc',
-          '--webrtc-ip-handling-policy=disable_non_proxied_udp',
-          '--force-webrtc-ip-handling-policy',
-          '--start-maximized',
-        ];
+    
         if (!proxyPerPage) args.push(proxySetting);
         const res = await acc;
-        try {
-          puppeteer.use(StealthPlugin());
-        } catch (error) {
-          if (error instanceof Error)
-            LoggerService.getSingleton().logger.info({
-              location: `'StealthPluginCatch`,
-              msg: error.message,
-              stack: error?.stack,
-              hostname: hostname(),
-            });
-          else
-            LoggerService.getSingleton().logger.info({
-              location: `'StealthPluginCatch`,
-              msg: error,
-              hostname: hostname(),
-            });
-        }
+        
         const b = await puppeteer.launch({
           headless: process.env.NODE_ENV === 'production' ? true : false,
           args,
@@ -157,19 +138,6 @@ export const mainBrowser = async (
   proxyAuth: { host: string },
   version: Versions,
 ) => {
-  const args = [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--lang=de',
-    '--disable-gpu',
-    '--disable-webrtc',
-    '--disable-blink-features=AutomationControlled',
-    '--webrtc-ip-handling-policy=disable_non_proxied_udp',
-    '--force-webrtc-ip-handling-policy',
-    '--disable-web-security',
-    '--start-maximized',
-    'javascript:close()',
-  ];
 
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
@@ -179,31 +147,9 @@ export const mainBrowser = async (
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
 
-  const evasions = new Set([
-    'chrome.app',
-    'chrome.csi',
-    'chrome.loadTimes',
-    'chrome.runtime',
-    'defaultArgs',
-    'iframe.contentWindow',
-    'media.codecs',
-    'navigator.hardwareConcurrency',
-    'navigator.languages',
-    'navigator.permissions',
-    'navigator.plugins',
-    'navigator.webdriver',
-    'sourceurl',
-    'user-agent-override',
-    // 'webgl.vendor', set in the getPage function
-    'window.outerdimensions',
-  ]);
-  puppeteer.use(
-    StealthPlugin({
-      enabledEvasions: evasions,
-    }),
-  );
+  
 
-  const options: VanillaPuppeteer['launch'] = {
+  const options: any = {
     headless: process.env.HEADLESS === 'true' ? true : false,
     devtools: process.env.DEV_TOOLS === 'true' ? true : false,
     args,

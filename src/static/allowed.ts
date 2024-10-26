@@ -47,6 +47,7 @@ export const allowed = [
   'www.kaufland.de',
   'www.mediamarkt.de',
   // "fingerprintjs.github.io",
+  // 'demo.fingerprint.com',
   // "dnsleaktest.com",
   // "eu.api.fpjs.io",
   // "fpjscdn.net",

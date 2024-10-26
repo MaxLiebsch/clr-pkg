@@ -1,4 +1,4 @@
-import { ElementHandle } from 'puppeteer1';
+import { ElementHandle } from 'rebrowser-puppeteer';
 import {
   Details,
   ExistDetail,

@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { getProductCount } from '../..';
 import { getCategories } from '../../util/crawl/getCategories';
 import { subPageLoop } from './crawlSubPageLoop';

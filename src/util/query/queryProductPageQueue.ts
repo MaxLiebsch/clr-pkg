@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { closePage } from '../browser/closePage';
 import { QueryRequest } from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';

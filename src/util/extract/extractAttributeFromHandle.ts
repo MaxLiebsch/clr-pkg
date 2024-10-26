@@ -1,4 +1,4 @@
-import { ElementHandle } from 'puppeteer1';
+import { ElementHandle } from 'rebrowser-puppeteer';
 
 export const extractAttributeElementHandle = async (
   elementHandle: ElementHandle,

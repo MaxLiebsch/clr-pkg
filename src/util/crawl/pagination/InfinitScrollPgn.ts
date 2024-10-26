@@ -1,4 +1,4 @@
-import { Page } from "puppeteer1";
+import { Page } from "rebrowser-puppeteer";
 import { scrollToBottom } from "../../helpers";
 
 export async function infinitSrollPgn({page}: {page: Page}){

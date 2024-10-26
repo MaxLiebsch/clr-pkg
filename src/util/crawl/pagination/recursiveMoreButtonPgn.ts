@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer1';
+import { Page } from 'rebrowser-puppeteer';
 import { clickBtn, humanScroll, waitForSelector } from '../../helpers';
 import { Shop, WaitUntil } from '../../../types/shop';
 
