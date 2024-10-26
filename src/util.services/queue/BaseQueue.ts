@@ -61,6 +61,8 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'MATCH_PRODUCTS',
 ];
 
+const useSupremeProxyTasks: TaskTypes[] = ['CRAWL_EAN'];
+
 const timeoutTasks: TaskTypes[] = [];
 
 const shuffleTasks: TaskTypes[] = [
@@ -174,6 +176,7 @@ export abstract class BaseQueue<
     this.queueStats = {
       visitedPages: [],
       proxyTypes: {
+        'de-p': 0,
         de: 0,
         mix: 0,
       },
@@ -533,9 +536,21 @@ export abstract class BaseQueue<
     const { allowedHosts, proxyType } = shop;
     const { requestId } = request;
     await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
+    const eligableForSupreme = useSupremeProxyTasks.includes(
+      this.queueTask.type,
+    );
     if (eligableForPremiumProxy) {
       request.prevProxyType = proxyType;
       request.proxyType = 'de';
+    }
+    if (
+      eligableForPremiumProxy &&
+      eligableForSupreme &&
+      request.proxyType !== 'mix' &&
+      request.retries > 2
+    ) {
+      request.prevProxyType = proxyType;
+      request.proxyType = 'de-p';
     }
     if (throwErr) {
       throw new Error(errorType);
