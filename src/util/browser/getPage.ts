@@ -1,5 +1,7 @@
 import { Browser, Page, ResourceType } from 'rebrowser-puppeteer';
 import {
+  acceptEncodingList,
+  acceptList,
   graphicsCardListByPlatform,
   screenResolutionsByPlatform,
   timezones,
@@ -283,16 +285,10 @@ const setPageProperties = async ({
 
   await page.setUserAgent(_agent, agentMeta);
 
-  // const acceptEncoding =
-  //   acceptEncodingList[requestCount % acceptEncodingList.length];
-
-  // const accept = acceptList[requestCount % acceptList.length];
-
-  // const headers = {
-  //   'sec-ch-ua-platform': platform,
-  //   'accept-language': `${lng},${lng_set1};q=0.9`,
-  // };
-  // await page.setExtraHTTPHeaders(headers);
+  const headers = {
+    'accept-language': `${lng},${lng_set1};q=0.9`,
+  };
+  await page.setExtraHTTPHeaders(headers);
 
   const viewPort = rotateScreenResolution(platform, requestCount, host);
 
