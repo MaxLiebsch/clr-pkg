@@ -12,7 +12,6 @@ import { Shop } from '../../types/shop';
 import { ProxyType } from '../../types/proxyAuth';
 import { VersionProvider } from '../versionProvider';
 
-
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
 //Durchschnittliche Sitzungsdauer 6:55 Amazon, 6:52 Instagram
@@ -245,44 +244,44 @@ const setPageProperties = async ({
     }
   });
 
-  // const userAgentMeta = rotateUserAgent(requestCount, host);
+  const userAgentMeta = rotateUserAgent(requestCount, host);
 
-  // const { agent, platformVersion } = userAgentMeta;
+  const { agent, platformVersion } = userAgentMeta;
 
-  // let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
-  // let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64 X11' = 'Win32';
-  // let architecture: 'x64' | 'x86' | 'arm' = 'x64';
+  let platform: 'Windows' | 'macOS' | 'Linux' = 'Windows';
+  let navigatorPlatform: 'MacIntel' | 'Win32' | 'Linux x86_64 X11' = 'Win32';
+  let architecture: 'x64' | 'x86' | 'arm' = 'x64';
 
-  // if (agent.includes('X11')) {
-  //   platform = 'Linux';
-  //   navigatorPlatform = 'Linux x86_64 X11';
-  //   architecture = 'x86';
-  // }
-  // if (agent.includes('Macintosh')) {
-  //   architecture = 'x64';
-  //   platform = 'macOS';
-  //   navigatorPlatform = 'MacIntel';
-  //   architecture = 'arm';
-  // }
-  // const version =
-  //   VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
+  if (agent.includes('X11')) {
+    platform = 'Linux';
+    navigatorPlatform = 'Linux x86_64 X11';
+    architecture = 'x86';
+  }
+  if (agent.includes('Macintosh')) {
+    architecture = 'x64';
+    platform = 'macOS';
+    navigatorPlatform = 'MacIntel';
+    architecture = 'arm';
+  }
+  const version =
+    VersionProvider.getSingleton().currentPuppeteerVersion.split('.')[0];
 
-  // let _agent = agent.replaceAll('<version>', version);
+  let _agent = agent.replaceAll('<version>', version);
 
-  // const agentMeta = {
-  //   architecture,
-  //   mobile: false,
-  //   brands: [
-  //     { brand: 'Chromium', version },
-  //     { brand: 'Google Chrome', version },
-  //     { brand: 'Not-A.Brand', version: '99' },
-  //   ],
-  //   model: '',
-  //   platform,
-  //   platformVersion,
-  // };
+  const agentMeta = {
+    architecture,
+    mobile: false,
+    brands: [
+      { brand: 'Chromium', version },
+      { brand: 'Google Chrome', version },
+      { brand: 'Not-A.Brand', version: '99' },
+    ],
+    model: '',
+    platform,
+    platformVersion,
+  };
 
-  // await page.setUserAgent(_agent, agentMeta);
+  await page.setUserAgent(_agent, agentMeta);
 
   // const acceptEncoding =
   //   acceptEncodingList[requestCount % acceptEncodingList.length];
@@ -295,9 +294,9 @@ const setPageProperties = async ({
   // };
   // await page.setExtraHTTPHeaders(headers);
 
-  // const viewPort = rotateScreenResolution(platform, requestCount, host);
+  const viewPort = rotateScreenResolution(platform, requestCount, host);
 
-  // await page.setViewport(viewPort);
+  await page.setViewport(viewPort);
 
   const timezone = rotateTimezone(requestCount, host, _timezones);
 
@@ -391,52 +390,52 @@ const setPageProperties = async ({
 
   // await new WebGlVendor(graphicCard).onPageCreated(page);
 
-  // if (
-  //   javascript?.webWorker === undefined ||
-  //   javascript?.webWorker === 'disabled'
-  // ) {
-  //   await page.evaluateOnNewDocument(() => {
-  //     Object.defineProperty(window, 'Worker', {
-  //       get: function () {
-  //         throw new Error('Web Workers are disabled.');
-  //       },
-  //     });
-  //   });
-  // }
+  if (
+    javascript?.webWorker === undefined ||
+    javascript?.webWorker === 'disabled'
+  ) {
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'Worker', {
+        get: function () {
+          throw new Error('Web Workers are disabled.');
+        },
+      });
+    });
+  }
 
-  // if (
-  //   javascript?.serviceWorker === undefined ||
-  //   javascript?.serviceWorker === 'disabled'
-  // ) {
-  //   await page.evaluateOnNewDocument(() => {
-  //     Object.defineProperty(window, 'serviceWorker', {
-  //       //@ts-ignore
-  //       register: function () {
-  //         return Promise.reject('Service Workers are disabled.');
-  //       },
-  //     });
-  //   });
-  // }
-  // if (
-  //   javascript?.sharedWorker === undefined ||
-  //   javascript?.sharedWorker === 'disabled'
-  // ) {
-  //   await page.evaluateOnNewDocument(() => {
-  //     Object.defineProperty(window, 'SharedWorker', {
-  //       get: function () {
-  //         throw new Error('Shared Workers are disabled.');
-  //       },
-  //     });
-  //   });
-  // }
+  if (
+    javascript?.serviceWorker === undefined ||
+    javascript?.serviceWorker === 'disabled'
+  ) {
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'serviceWorker', {
+        //@ts-ignore
+        register: function () {
+          return Promise.reject('Service Workers are disabled.');
+        },
+      });
+    });
+  }
+  if (
+    javascript?.sharedWorker === undefined ||
+    javascript?.sharedWorker === 'disabled'
+  ) {
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'SharedWorker', {
+        get: function () {
+          throw new Error('Shared Workers are disabled.');
+        },
+      });
+    });
+  }
 
-  // await page.evaluateOnNewDocument(() => {
-  //   Object.defineProperty(window, 'Websocket', {
-  //     get: function () {
-  //       throw new Error('Websocket are disabled.');
-  //     },
-  //   });
-  // });
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(window, 'Websocket', {
+      get: function () {
+        throw new Error('Websocket are disabled.');
+      },
+    });
+  });
 
   // return {
   //   agent: _agent,
