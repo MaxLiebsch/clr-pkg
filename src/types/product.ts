@@ -122,7 +122,9 @@ export interface BSR {
 }
 
 export interface Costs {
+  prvsn?: number;
   tpt: number;
+  ktpt: number; // keepa transport fee per units
   varc: number;
   azn: number;
   strg_1_hy: number;
@@ -162,6 +164,10 @@ export type AznProps =
   | 'asin'
   | 'a_prc'
   | 'costs'
+  | 'drops30'
+  | 'drops90'
+  | 'iwhd'
+  | 'pwhd'
   | 'a_uprc'
   | 'a_qty'
   | 'a_orgn'
@@ -191,6 +197,12 @@ export type AznProps =
   | 'dealAznUpdatedAt'
   | 'dealAznTaskId';
 
+export interface Dimensions {
+  height: number;
+  length: number;
+  weight: number;
+}
+
 export interface AznProduct {
   availUpdatedAt?: string;
   // AZN properties
@@ -198,10 +210,14 @@ export interface AznProduct {
   a_nm?: string;
   a_lnk?: string;
   a_cur?: string;
+  drops30?: number;
+  drops90?: number;
   a_img?: string;
   asin?: string;
   a_prc?: number;
   costs?: Costs;
+  iwhd?: Dimensions;
+  pwhd?: Dimensions;
   a_uprc?: number;
   bsr?: BSR[];
   a_qty?: number;
@@ -277,6 +293,8 @@ export interface KeepaProperties {
   categories?: number[] | null;
   k_eanList?: string[];
   brand?: string;
+  iwhd?: Dimensions;
+  pwhd?: Dimensions;
   numberOfItems?: number;
   availabilityAmazon?: string;
   categoryTree?: { name: string; catId: number }[] | null;
@@ -306,7 +324,8 @@ export interface KeepaProperties {
 export interface DbProductRecord
   extends KeepaProperties,
     WithId<Document>,
-    DbProduct, AznProduct {
+    DbProduct,
+    AznProduct {
   availUpdatedAt?: string;
 
   // Eby properties
