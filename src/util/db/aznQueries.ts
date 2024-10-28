@@ -1,7 +1,7 @@
- 
 import { AznProduct } from '../../types/product.js';
 import { keepaProperties } from '../../constants/index.js';
 import { aznCategoryMapping } from '../../static/azn.js';
+import { LookupInfoProps } from '../../types/process/index.js';
 
 export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   a_pblsh: '',
@@ -55,8 +55,11 @@ export type UpdateQuery = {
   $set?: { [key: string]: any };
 };
 
-export const resetAznProductQuery = (props = { info_prop: '' }) => {
-  const { info_prop } = props;
+export const resetAznProductQuery = (props?: {
+  info_prop: LookupInfoProps;
+}) => {
+  const { info_prop } = props || {};
+
   const query: UpdateQuery = {
     $unset: { ...aznUnsetProperties },
   };

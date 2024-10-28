@@ -50,9 +50,15 @@ export interface AddProductInfo {
   value: string;
 }
 
+export type LookupInfoCause =
+  | 'incompleteInfo'
+  | 'completeInfo'
+  | 'missingSellerRank'
+
 export interface AddProductInfoProps {
   productInfo: AddProductInfo[] | null;
   url: string;
+  cause?: LookupInfoCause;
 }
 
 export type NotFoundCause =
@@ -61,6 +67,10 @@ export type NotFoundCause =
   | 'timeout'
   | 'exceedsLimit';
 
+export type OnNotFound = (cause: NotFoundCause) => Promise<void>;
+
+export type AddProductInfoFn =  ({ productInfo, url, cause }: AddProductInfoProps) => Promise<void>
+
 export interface QueryRequest extends QRequest {
   queue: QueryQueue;
   log?: any;
@@ -68,6 +78,7 @@ export interface QueryRequest extends QRequest {
   extendedLookUp?: boolean;
   resolveTimeout?: () => void;
   s_hash: string;
+  productInfo?: AddProductInfo[];
   targetRetailerList?: TargetShop[];
   targetShop?: TargetShop;
   prodInfo?: ProdInfo;
@@ -75,8 +86,8 @@ export interface QueryRequest extends QRequest {
   lookupRetryLimit?: number;
   query: Query;
   isFinished?: (interm?: IntermediateProdInfo) => Promise<void>;
-  addProductInfo?: ({ productInfo, url }: AddProductInfoProps) => Promise<void>;
-  onNotFound?: (cause: NotFoundCause) => Promise<void>;
+  addProductInfo?: AddProductInfoFn;
+  onNotFound?: OnNotFound;
 }
 
 export interface CrawlerRequest extends QRequest {

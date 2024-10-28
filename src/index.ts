@@ -19,6 +19,7 @@ export * from './types/Sitemap';
 export * from './types/query-request';
 export * from './types/query'
 export * from './types/keepa'
+export * from './types/process'
 
 //UTIL
 export * from './util/queryURLBuilder';

@@ -124,7 +124,7 @@ export interface BSR {
 export interface Costs {
   prvsn?: number;
   tpt: number;
-  ktpt: number; // keepa transport fee per units
+  ktpt?: number; // keepa transport fee per units
   varc: number;
   azn: number;
   strg_1_hy: number;

@@ -1,5 +1,12 @@
 import { Page } from 'rebrowser-puppeteer';
-import { QueryRequest } from '../../types/query-request';
+import {
+  AddProductInfo,
+  AddProductInfoFn,
+  LookupInfoCause,
+  NotFoundCause,
+  OnNotFound,
+  QueryRequest,
+} from '../../types/query-request';
 import { PageParser } from '../extract/productDetailPageParser.gateway';
 import { runActions } from './runActions';
 import { extractAttributePage } from '../helpers';
@@ -40,46 +47,74 @@ function timeoutPromise(timeout: number) {
   return { promise, timeoutId, earlyResolve };
 }
 
+async function handleProductInfo({
+  productInfo,
+  request,
+  addProductInfo,
+  lookupInfoCause,
+  onNotFound,
+  url,
+  ean,
+}: {
+  productInfo: AddProductInfo[];
+  request: QueryRequest;
+  addProductInfo?: AddProductInfoFn;
+  onNotFound?: OnNotFound;
+  lookupInfoCause?: LookupInfoCause;
+  ean: string;
+  url: string;
+}) {
+  if (!productInfo.length) {
+    onNotFound && (await onNotFound('notFound'));
+    return `${ean} not found on sc`;
+  } else {
+    const sellerRank = productInfo.find((info) => info.key === 'sellerRank');
+    const aznCosts = productInfo.find((info) => info.key === 'costs.azn');
+    if (sellerRank && sellerRank.value !== '-' && aznCosts) {
+      addProductInfo &&
+        (await addProductInfo({
+          productInfo: productInfo,
+          url,
+          cause: 'completeInfo',
+        }));
+      return `${ean} found`;
+    }
+    if (sellerRank && sellerRank.value === '-') {
+      addProductInfo &&
+        (await addProductInfo({
+          productInfo: productInfo,
+          url,
+          cause: 'missingSellerRank',
+        }));
+      return `${ean} missingSellerRank`;
+    }
+    addProductInfo &&
+      (await addProductInfo({
+        productInfo: productInfo,
+        url,
+        cause: 'incompleteInfo',
+      }));
+    return `${ean} incompleteInfo`;
+  }
+}
+
 async function querySellerInfos(page: Page, request: QueryRequest) {
-  const startTime = Date.now();
-  const {
-    addProductInfo,
-    shop,
-    query,
-    lookupRetryLimit,
-    onNotFound,
-    retries,
-    targetShop,
-  } = request;
+  const { addProductInfo, shop, query, lookupRetryLimit, onNotFound, retries } =
+    request;
+
+  let lookupInfoCause: LookupInfoCause | undefined = undefined;
 
   const RETRY_LIMIT =
     typeof lookupRetryLimit === 'number'
       ? lookupRetryLimit
       : MAX_RETRIES_LOOKUP_INFO;
 
-  const targetShopId = targetShop?.name;
   const { value: ean } = query.product;
-  const rawProductInfos: { key: string; value: string }[] = [];
+  const rawProductInfos: AddProductInfo[] = [];
   const { product } = shop;
 
   if (shop.queryActions && shop.queryActions.length) {
     await runActions(page, shop, 'query', query, 1);
-  }
-
-  const unexpectedError = await extractAttributePage(
-    page,
-    'kat-alert[variant=warning]',
-    'description',
-  );
-
-  if (unexpectedError && unexpectedError.includes(aznUnexpectedErrorText)) {
-    if (retries < RETRY_LIMIT) {
-      throw new Error(ErrorType.AznUnexpectedError);
-    } else {
-      onNotFound && (await onNotFound('notFound'));
-    }
-    await closePage(page);
-    return;
   }
 
   const notFound = await extractAttributePage(
@@ -90,17 +125,41 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
 
   if (
     notFound &&
-    (notFound.includes(aznNotFoundText) ||
-      notFound.includes(aznNoFittingText) ||
-      notFound.includes(aznSizeText))
+    (notFound.includes(aznNotFoundText) || notFound.includes(aznNoFittingText))
   ) {
     if (retries < RETRY_LIMIT) {
       throw new Error(ErrorType.AznNotFound);
-    } else {
-      onNotFound && (await onNotFound('notFound'));
     }
-    await closePage(page);
-    return;
+  }
+
+  if (product) {
+    const filteredProducts = product.filter((detail) => detail.step === 0);
+    const pageParser = new PageParser(shop.d, []);
+    filteredProducts.forEach((detail: any) => {
+      pageParser.registerDetailExtractor(detail.type, detail);
+    });
+    const details = await pageParser.parse(page);
+    Object.entries(details).map(([key, value]) => {
+      rawProductInfos.push({ key, value });
+    });
+    request.productInfo = rawProductInfos;
+  }
+
+  const unexpectedError = await extractAttributePage(
+    page,
+    'kat-alert[variant=warning]',
+    'description',
+  );
+
+  if (
+    unexpectedError &&
+    (unexpectedError.includes(aznUnexpectedErrorText) ||
+      unexpectedError.includes(aznSizeText))
+  ) {
+    lookupInfoCause = 'incompleteInfo';
+    if (retries < RETRY_LIMIT - 1) {
+      throw new Error(ErrorType.AznUnexpectedError);
+    }
   }
 
   //  slow done
@@ -120,6 +179,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     Object.entries(details).map(([key, value]) => {
       rawProductInfos.push({ key, value });
     });
+    request.productInfo = rawProductInfos;
   }
 
   const price = rawProductInfos.find((info) => info.key === 'a_prc');
@@ -141,6 +201,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
         Object.entries(details).map(([key, value]) => {
           rawProductInfos.push({ key, value });
         });
+        request.productInfo = rawProductInfos;
       }
     }
   }
@@ -160,46 +221,44 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     Object.entries(details).map(([key, value]) => {
       rawProductInfos.push({ key, value });
     });
+    request.productInfo = rawProductInfos;
   }
 
   const url = page.url();
-  if (rawProductInfos.length) {
-    if (addProductInfo)
-      await addProductInfo({ productInfo: rawProductInfos, url });
-  } else {
-    if (retries < RETRY_LIMIT) {
-      throw new Error(ErrorType.AznProductInfoEmpty); //Retry logic
-    } else {
-      onNotFound && (await onNotFound('notFound'));
-    }
-  }
-  const endTime = Date.now();
-  const elapsedTime = Math.round((endTime - startTime) / 1000);
-
-  return `${targetShopId} - ${ean} took: ${elapsedTime} s`;
+  return await handleProductInfo({
+    productInfo: request.productInfo || [],
+    request,
+    addProductInfo,
+    lookupInfoCause,
+    onNotFound,
+    url,
+    ean,
+  });
 }
 
 export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
-  const { retries, onNotFound, s_hash, lookupRetryLimit } = request;
   if ('resolveTimeout' in request) {
     request?.resolveTimeout && request.resolveTimeout();
-  }
-  const RETRY_LIMIT =
-    typeof lookupRetryLimit === 'number'
-      ? lookupRetryLimit
-      : MAX_RETRIES_LOOKUP_INFO;
-
-  if (retries >= RETRY_LIMIT) {
-    await closePage(page);
-    onNotFound && (await onNotFound('notFound'));
-    const message = `Retries exceeded: ${s_hash}`;
-    return message;
   }
 
   const timeoutTime = Math.random() * (25000 - 20000) + 20000;
   const { promise, earlyResolve } = timeoutPromise(timeoutTime);
   request.resolveTimeout = earlyResolve;
-  const res = await Promise.race([querySellerInfos(page, request), promise]);
+  const res = await Promise.race([
+    querySellerInfos(page, request).finally(async () => {
+      await closePage(page);
+    }),
+    promise,
+  ]);
   earlyResolve();
   return res;
 }
+
+/*
+  limit: 3
+
+  0       1         2        3
+  |       |         |        |
+                    retries < limit-1       retries === limit
+
+                    */
