@@ -944,6 +944,9 @@ export abstract class BaseQueue<
     } finally {
       if (page) await closePage(page);
       this.clearTimeout(id);
+      if ('resolveTimeout' in request) {
+        request?.resolveTimeout && request.resolveTimeout();
+      }
     }
   }
 
