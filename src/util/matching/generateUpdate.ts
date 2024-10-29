@@ -105,6 +105,7 @@ export const generateMinimalUpdate = (
   });
   let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
   const tax = infoMap.get('tax');
+  const asin = infoMap.get('asin');
 
   const newCosts: Costs = {
     azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
@@ -158,7 +159,6 @@ export const generateMinimalUpdate = (
   const a_nm = infoMap.get('name');
   const a_rating = infoMap.get('a_rating');
   const a_reviewcnt = infoMap.get('a_reviewcnt');
-  const asin = infoMap.get('asin');
   const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
   const a_hash = createHash(a_lnk);
   update = {
@@ -166,6 +166,7 @@ export const generateMinimalUpdate = (
     ...(newSellPrice && { a_prc: newSellPrice, a_uprc: newSellUPrice }),
     a_nm,
     a_lnk,
+    asin,
     a_hash,
     a_qty,
     ...(a_rating && { a_rating: safeParsePrice(a_rating) }),
