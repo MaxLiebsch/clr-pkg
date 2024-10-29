@@ -176,7 +176,7 @@ export abstract class BaseQueue<
     this.queueStats = {
       visitedPages: [],
       proxyTypes: {
-        'de-p': 0,
+        des: 0,
         de: 0,
         mix: 0,
       },
@@ -348,7 +348,6 @@ export abstract class BaseQueue<
   If a request is rate limited, we need to jump to the next user agent
   
   */
-
   jumpToNextUserAgent(link: string) {
     const host = getHost(link);
     const currRequestCount = this.requestCountPerHost[host];
@@ -432,7 +431,6 @@ export abstract class BaseQueue<
   public workload() {
     return this.queue.length;
   }
-
   public addTasksToQueue(tasks: { task: Task; request: T }[]) {
     this.queue.push(...tasks);
     this.next();
@@ -480,83 +478,6 @@ export abstract class BaseQueue<
         console.error('Failed to clear storage:', e?.message);
       });
   };
-
-  private visitPage = async (
-    page: Page,
-    pageInfo: ICategory,
-    waitUntil: WaitUntil,
-    requestId: string,
-    allowedHosts: string[] = [],
-    proxyType: ProxyType,
-  ) => {
-    const originalGoto = page.goto;
-    page.goto = async function (url, options) {
-      if (proxyType !== 'mix') {
-        await notifyProxyChange(
-          proxyType,
-          pageInfo.link,
-          requestId,
-          Date.now(),
-          allowedHosts,
-        );
-      } else {
-        await registerRequest(url, requestId, allowedHosts, Date.now());
-      }
-      return originalGoto.apply(this, [url, options]);
-    };
-
-    return page.goto(pageInfo.link, {
-      waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
-      timeout:
-        this.queueTask.type === 'CRAWL_EAN'
-          ? EAN_PAGE_TIMEOUT
-          : DEFAULT_PAGE_TIMEOUT,
-    });
-  };
-
-  private async refreshPage(page: Page): Promise<HTTPResponse | null> {
-    return page.reload();
-  }
-
-  private terminateAndSetProxy = async ({
-    errorType,
-    link,
-    request,
-    shop,
-    eligableForPremiumProxy,
-    throwErr,
-  }: {
-    errorType: string;
-    eligableForPremiumProxy: boolean;
-    request: any;
-    link: string;
-    shop: Shop;
-    throwErr: boolean;
-  }) => {
-    const { allowedHosts, proxyType } = shop;
-    const { requestId } = request;
-    await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
-    const eligableForSupreme = useSupremeProxyTasks.includes(
-      this.queueTask.type,
-    );
-    if (eligableForPremiumProxy) {
-      request.prevProxyType = proxyType;
-      request.proxyType = 'de';
-    }
-    if (
-      eligableForPremiumProxy &&
-      eligableForSupreme &&
-      request.proxyType === 'de' &&
-      request.retries > 2
-    ) {
-      request.prevProxyType = request.proxyType;
-      request.proxyType = 'de-p';
-    }
-    if (throwErr) {
-      throw new Error(errorType);
-    }
-  };
-
   async wrapperFunction(
     task: Task,
     request: T,
@@ -633,15 +554,6 @@ export abstract class BaseQueue<
     let page: Page | undefined = undefined;
 
     try {
-      if (eligableForPremiumProxy && prevProxyType && retries > 0) {
-        await terminationPrevConnections(
-          requestId,
-          link,
-          allowedHosts,
-          prevProxyType,
-        );
-      }
-
       let disAllowedResourceTypes = resourceTypes?.crawl;
       if (
         resourceTypes &&
@@ -681,14 +593,17 @@ export abstract class BaseQueue<
           referer,
         });
       }
-      const response = await this.visitPage(
+      const response = await this.visitPage({
         page,
         pageInfo,
         waitUntil,
         requestId,
-        allowedHosts || [],
+        retries,
+        prevProxyType,
+        allowedHosts,
+        eligableForPremiumProxy,
         proxyType,
-      );
+      });
 
       if (response) {
         const status = response.status();
@@ -949,7 +864,6 @@ export abstract class BaseQueue<
       }
     }
   }
-
   private wrapperFunctionThen = (result: WrapperFunctionResponse) => {
     this.running--;
     this.next();
@@ -994,6 +908,101 @@ export abstract class BaseQueue<
     );
   };
 
+  private terminateAndSetProxy = async ({
+    errorType,
+    link,
+    request,
+    shop,
+    eligableForPremiumProxy,
+    throwErr,
+  }: {
+    errorType: string;
+    eligableForPremiumProxy: boolean;
+    request: any;
+    link: string;
+    shop: Shop;
+    throwErr: boolean;
+  }) => {
+    const { allowedHosts, proxyType } = shop;
+    const { requestId } = request;
+    await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
+    const eligableForSupreme = useSupremeProxyTasks.includes(
+      this.queueTask.type,
+    );
+    if (eligableForPremiumProxy) {
+      request.prevProxyType = proxyType;
+      request.proxyType = 'de';
+    }
+    if (
+      eligableForPremiumProxy &&
+      eligableForSupreme &&
+      request.proxyType === 'de' &&
+      request.retries >= 1
+    ) {
+      request.prevProxyType = request.proxyType;
+      request.proxyType = 'des';
+    }
+    if (throwErr) {
+      throw new Error(errorType);
+    }
+  };
+  private visitPage = async ({
+    page,
+    pageInfo,
+    waitUntil,
+    requestId,
+    allowedHosts = [],
+    proxyType,
+    prevProxyType,
+    eligableForPremiumProxy,
+    retries,
+  }: {
+    page: Page;
+    pageInfo: ICategory;
+    waitUntil: WaitUntil;
+    requestId: string;
+    allowedHosts?: string[];
+    proxyType: ProxyType;
+    prevProxyType?: ProxyType;
+    eligableForPremiumProxy: boolean;
+    retries: number;
+  }) => {
+    const originalGoto = page.goto;
+    page.goto = async function (url, options) {
+      const { link } = pageInfo;
+      if (proxyType !== 'mix') {
+        if (eligableForPremiumProxy && prevProxyType && retries > 0) {
+          await terminationPrevConnections(
+            requestId,
+            link,
+            allowedHosts,
+            prevProxyType,
+          );
+        }
+        await notifyProxyChange(
+          proxyType,
+          pageInfo.link,
+          requestId,
+          Date.now(),
+          allowedHosts,
+        );
+      } else {
+        await registerRequest(url, requestId, allowedHosts, Date.now());
+      }
+      return originalGoto.apply(this, [url, options]);
+    };
+
+    return page.goto(pageInfo.link, {
+      waitUntil: waitUntil ? waitUntil.entryPoint : 'networkidle2',
+      timeout:
+        this.queueTask.type === 'CRAWL_EAN'
+          ? EAN_PAGE_TIMEOUT
+          : DEFAULT_PAGE_TIMEOUT,
+    });
+  };
+  private async refreshPage(page: Page): Promise<HTTPResponse | null> {
+    return page.reload();
+  }
   private parseError(error: Error | unknown) {
     const isError = error instanceof Error;
     switch (true) {
