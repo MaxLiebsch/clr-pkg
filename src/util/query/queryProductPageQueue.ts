@@ -25,7 +25,7 @@ export async function queryProductPageQueue(page: Page, request: QueryRequest) {
     shop.pageErrors.forEach(async (error) => {
       const text = await getInnerText(page, error.sel);
       if (text && text.includes(error.text)) {
-        closePage(page);
+        await closePage(page);
         throw new Error(error.errorType);
       }
     });
