@@ -546,10 +546,10 @@ export abstract class BaseQueue<
     if (
       eligableForPremiumProxy &&
       eligableForSupreme &&
-      request.proxyType !== 'mix' &&
+      request.proxyType === 'de' &&
       request.retries > 2
     ) {
-      request.prevProxyType = proxyType;
+      request.prevProxyType = request.proxyType;
       request.proxyType = 'de-p';
     }
     if (throwErr) {
