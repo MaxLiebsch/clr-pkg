@@ -85,12 +85,12 @@ export type ProductRecord = Partial<
 >;
 
 export interface DbProduct {
-  ean: string;
   eanList: string[];
   curr?: string;
   sdmn: string;
   ctgry: string[];
   mnfctr: string;
+  sku?: string;
   hasMnfctr: boolean;
   nm: string;
   nm_vrfd?: Verification;
