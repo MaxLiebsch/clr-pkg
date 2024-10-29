@@ -22,13 +22,13 @@ export async function queryProductPageQueue(page: Page, request: QueryRequest) {
   }
 
   if (shop?.pageErrors && shop.pageErrors.length) {
-    shop.pageErrors.forEach(async (error) => {
+    for (const error of shop.pageErrors) {
       const text = await getInnerText(page, error.sel);
       if (text && text.includes(error.text)) {
         await closePage(page);
         throw new Error(error.errorType);
       }
-    });
+    }
   }
 
   if (product) {
