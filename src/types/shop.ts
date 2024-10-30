@@ -11,11 +11,10 @@ import { ProxyType } from './proxyAuth';
 import { ErrorTypes } from '../util.services/queue/ErrorTypes';
 import { PuppeteerLifeCycleEvent } from 'rebrowser-puppeteer';
 
-
 export interface PageErrors {
   text: string;
   sel: string;
-  errorType: ErrorTypes
+  errorType: ErrorTypes;
 }
 
 export interface Shop {
@@ -30,6 +29,7 @@ export interface Shop {
     webWorker: status;
     serviceWorker: status;
     sharedWorker: status;
+    webSocket?: status;
   };
   resourceTypes: {
     product?: ResourceTypes[];
