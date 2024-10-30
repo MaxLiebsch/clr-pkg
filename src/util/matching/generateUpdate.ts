@@ -6,6 +6,7 @@ import { AddProductInfo } from '../../types/query-request';
 import { Costs, DbProductRecord } from '../../types/product';
 import { getAznAvgPrice } from '../getAznAvgPrice';
 import { extractSellerRank } from '../extract/extractSellerRank';
+import { roundToTwoDecimals } from '../helpers';
 
 export const generateUpdate = (
   productInfo: AddProductInfo[],
@@ -107,7 +108,7 @@ export const generateMinimalUpdate = (
   const tax = infoMap.get('tax');
   const asin = infoMap.get('asin');
 
-  const newCosts: Costs = {
+  let newCosts: Costs = {
     azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
     varc: safeParsePrice(infoMap.get('costs.varc') || '0'),
     strg_1_hy: safeParsePrice(infoMap.get('costs.strg.1_hy') || '0'),
@@ -123,6 +124,10 @@ export const generateMinimalUpdate = (
   } = getAznAvgPrice(product, a_prc);
 
   if (newCosts.azn > 0 && newSellPrice > 1) {
+    if (!a_useCurrPrice) {
+      newCosts.azn = roundToTwoDecimals((newCosts.azn / a_prc) * avgPrice);
+    }
+
     const arbitrage = calculateAznArbitrage(
       buyPrice * (a_qty / qty),
       a_useCurrPrice ? newSellPrice : avgPrice,
@@ -139,6 +144,10 @@ export const generateMinimalUpdate = (
       a_useCurrPrice,
     };
   } else if (costs && costs.azn > 0 && newSellPrice > 1) {
+    if (!a_useCurrPrice) {
+      costs.azn = roundToTwoDecimals((costs.azn / a_prc) * avgPrice);
+    }
+
     const arbitrage = calculateAznArbitrage(
       buyPrice * (a_qty / qty),
       a_useCurrPrice ? newSellPrice : avgPrice,
