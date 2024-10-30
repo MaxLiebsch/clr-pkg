@@ -12,7 +12,7 @@ export const generateUpdate = (
   productInfo: AddProductInfo[],
   product: DbProductRecord,
 ) => {
-  let { prc: buyPrice, a_qty, qty, bsr } = product;
+  let { prc: buyPrice, a_qty, qty, bsr, asin: savedAsin } = product;
 
   a_qty = a_qty || 1;
 
@@ -20,6 +20,13 @@ export const generateUpdate = (
   productInfo.forEach((info) => {
     infoMap.set(info.key, info.value);
   });
+
+  const asin = infoMap.get('asin');
+
+  if (savedAsin && savedAsin !== asin) {
+    throw new Error('Asin mismatch');
+  }
+  
   let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
 
   const {
@@ -41,7 +48,6 @@ export const generateUpdate = (
 
   if (costs.azn <= 0.3) throw new Error('costs.azn is 0');
 
-  const asin = infoMap.get('asin');
   const a_nm = infoMap.get('name');
   const a_rating = infoMap.get('a_rating');
   const a_reviewcnt = infoMap.get('a_reviewcnt');
@@ -94,7 +100,7 @@ export const generateMinimalUpdate = (
   productInfo: AddProductInfo[],
   product: DbProductRecord,
 ) => {
-  let { bsr, prc: buyPrice, a_qty, qty, costs } = product;
+  let { bsr, prc: buyPrice, a_qty, qty, costs, asin: savedAsin } = product;
 
   a_qty = a_qty || 1;
 
@@ -104,9 +110,13 @@ export const generateMinimalUpdate = (
   productInfo.forEach((info) => {
     infoMap.set(info.key, info.value);
   });
+  const asin = infoMap.get('asin');
+
+  if (savedAsin && savedAsin !== asin) {
+    throw new Error('Asin mismatch');
+  }
   let a_prc = safeParsePrice(infoMap.get('a_prc') || '0');
   const tax = infoMap.get('tax');
-  const asin = infoMap.get('asin');
 
   let newCosts: Costs = {
     azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
