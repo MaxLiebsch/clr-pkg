@@ -200,7 +200,8 @@ export type AznProps =
 export interface Dimensions {
   height: number;
   length: number;
-  weight: number;
+  width: number;
+  weight?: number;
 }
 
 export interface AznProduct {
@@ -295,6 +296,7 @@ export interface KeepaProperties {
   brand?: string;
   iwhd?: Dimensions;
   pwhd?: Dimensions;
+  costs?: Costs;
   numberOfItems?: number;
   availabilityAmazon?: string;
   categoryTree?: { name: string; catId: number }[] | null;
