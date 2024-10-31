@@ -132,6 +132,13 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     }
   }
 
+  //  slow done
+  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
+    const { min, max } = shop.pauseOnProductPage;
+    let pause = Math.floor(Math.random() * max) + min;
+    await new Promise((r) => setTimeout(r, pause));
+  }
+
   if (product) {
     const filteredProducts = product.filter((detail) => detail.step === 0);
     const pageParser = new PageParser(shop.d, []);
@@ -160,13 +167,6 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
     if (retries < RETRY_LIMIT - 1) {
       throw new Error(ErrorType.AznUnexpectedError);
     }
-  }
-
-  //  slow done
-  if (shop?.pauseOnProductPage && shop.pauseOnProductPage.pause) {
-    const { min, max } = shop.pauseOnProductPage;
-    let pause = Math.floor(Math.random() * max) + min;
-    await new Promise((r) => setTimeout(r, pause));
   }
 
   if (product) {
@@ -253,12 +253,3 @@ export async function querySellerInfosQueue(page: Page, request: QueryRequest) {
   earlyResolve();
   return res;
 }
-
-/*
-  limit: 3
-
-  0       1         2        3
-  |       |         |        |
-                    retries < limit-1       retries === limit
-
-                    */
