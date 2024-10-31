@@ -295,6 +295,7 @@ export interface KeepaProperties {
   k_eanList?: string[];
   brand?: string;
   iwhd?: Dimensions;
+  cmpPrcThrshld?: number;
   pwhd?: Dimensions;
   costs?: Costs;
   numberOfItems?: number;
