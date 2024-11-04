@@ -124,9 +124,12 @@ export interface BSR {
 export interface Costs {
   prvsn?: number;
   tpt: number;
+  dfltTpt?: boolean;
+  estmtd?: boolean;
   ktpt?: number; // keepa transport fee per units
   varc: number;
   azn: number;
+  noStrgFee?: boolean;
   strg_1_hy: number;
   strg_2_hy: number;
 }
@@ -224,6 +227,7 @@ export interface AznProduct {
   a_qty?: number;
   a_orgn?: string;
   a_reviewcnt?: number;
+  a_estCost?: boolean;
   a_rating?: number;
   a_hash?: string;
   tax?: number;
@@ -298,7 +302,8 @@ export interface KeepaProperties {
   cmpPrcThrshld?: number;
   pwhd?: Dimensions;
   costs?: Costs;
-  numberOfItems?: number;
+  numberOfItems?: number; // numberOfItems === a_qty
+  a_qty?: number; // numberOfItems === a_qty
   availabilityAmazon?: string;
   categoryTree?: { name: string; catId: number }[] | null;
   salesRanks?: { [key: string]: number[][] } | null; // Sales Rank nullable
