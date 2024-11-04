@@ -1,4 +1,5 @@
 import { KeepaNameProperties } from '../types/keepa';
+import { ProxyType } from '../types/proxyAuth';
 import { Voice } from '../types/voices';
 import { Versions, puppeteerVersions } from '../util/versionProvider';
 
@@ -191,6 +192,12 @@ export const timezones = [
   'Europe/Moscow',
   'Europe/Lisbon',
 ];
+
+export const proxyTypeTimezones: { [key in ProxyType]: string[] } = {
+  de: ['Europe/Berlin'],
+  des: ['Europe/Berlin'],
+  mix: timezones,
+};
 
 export const acceptList = [
   'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -991,7 +998,8 @@ export const availability = [
   'sofort verfügbar',
   'verfügbar',
 ];
-export const aznProblemText = 'Leider ist ein Fehler aufgetreten. Bitte lade die Seite neu und versuche es noch einmal.'
+export const aznProblemText =
+  'Leider ist ein Fehler aufgetreten. Bitte lade die Seite neu und versuche es noch einmal.';
 export const aznNotFoundText = 'Ihre Produktsuche hat keine Treffer ergeben';
 export const aznNoFittingText =
   'Keine passenden Produkte gefunden. Aktualisieren Sie die Seite oder versuchen Sie es später erneut.';

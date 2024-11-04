@@ -1,5 +1,4 @@
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { Candidate, FailedPage } from '../../types';
 import { Shop } from '../../types/shop';
 import _, { sample } from 'underscore';
 import { ProxyAuth } from '../../types/proxyAuth';

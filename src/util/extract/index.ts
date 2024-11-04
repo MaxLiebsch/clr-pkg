@@ -23,8 +23,8 @@ import { deliveryTime } from '../deliveryTImeCleansing';
 import { get } from 'lodash';
 import { jsonrepair } from 'jsonrepair';
 import mime from 'mime-types';
-import { TimeoutError } from 'rebrowser-puppeteer'
-import { ProxyAuth } from '../../types/proxyAuth';
+import { TimeoutError } from 'rebrowser-puppeteer';
+import { ProxyAuth, ProxyType } from '../../types/proxyAuth';
 import { closePage } from '../browser/closePage';
 import { getPage } from '../browser/getPage';
 import { extractFromVariousLocations } from './extractFromVariousLocations';
@@ -423,6 +423,7 @@ export const getProductInfoWithBrowser = async (
   url: string,
   shop: ShopObject,
   browserInfo: BrowserInfo,
+  proxyType: ProxyType,
   extractLinks: boolean = true,
   proxyAuth: ProxyAuth,
 ): Promise<ProductInfoRequestResponse> => {
@@ -442,13 +443,14 @@ export const getProductInfoWithBrowser = async (
     sku: '',
   };
   const { exceptions, resourceTypes, waitUntil } = shop;
-  const {page} = await getPage({
+  const { page } = await getPage({
     browser: browserInfo.brs,
-    shop, 
+    shop,
     host: shop.d,
     requestCount: 0,
     disAllowedResourceTypes: shop.resourceTypes['crawl'],
     exceptions,
+    proxyType,
   });
 
   try {

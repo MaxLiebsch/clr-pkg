@@ -3,6 +3,7 @@ import {
   acceptEncodingList,
   acceptList,
   graphicsCardListByPlatform,
+  proxyTypeTimezones,
   screenResolutionsByPlatform,
   timezones,
   userAgentList,
@@ -179,7 +180,7 @@ interface PagePropertiesOptions {
   disAllowedResourceTypes?: ResourceType[];
   rules?: Rule[];
   host: string;
-  proxyType?: ProxyType;
+  proxyType: ProxyType;
 }
 
 export function isHostAllowed(hostname: string) {
@@ -209,7 +210,7 @@ const setPageProperties = async ({
   proxyType,
 }: PagePropertiesOptions): Promise<any> => {
   const { javascript } = shop;
-  let _timezones = proxyType === 'de' ? ['Europe/Berlin'] : timezones;
+  let _timezones = proxyTypeTimezones[proxyType] || timezones;
 
   await page.setRequestInterception(true);
 
@@ -424,14 +425,18 @@ const setPageProperties = async ({
       });
     });
   }
-
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(window, 'Websocket', {
-      get: function () {
-        throw new Error('Websocket are disabled.');
-      },
+  if (
+    javascript?.webSocket === undefined ||
+    javascript?.webSocket === 'disabled'
+  ) {
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'WebSocket', {
+        get: function () {
+          throw new Error('Websocket are disabled.');
+        },
+      });
     });
-  });
+  }
 
   // return {
   //   agent: _agent,
@@ -453,7 +458,7 @@ interface GetPageOptions {
   disAllowedResourceTypes?: ResourceType[];
   exceptions?: string[];
   rules?: Rule[];
-  proxyType?: ProxyType;
+  proxyType: ProxyType;
   host: string;
 }
 
