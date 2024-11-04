@@ -23,6 +23,8 @@ export * from './types/process'
 
 //UTIL
 export * from './util/queryURLBuilder';
+export * from './util/AznCategoryMapper'
+export * from './util/AznCategoryTrexIdMapper'
 export * from './util/extract/index';
 export * from './util/sanitize/index';
 export * from './util/dbOperations';

@@ -51,7 +51,6 @@ export const allowed = [
   // "dnsleaktest.com",
   // "eu.api.fpjs.io",
   // "fpjscdn.net",
-  // "127.0.0.1",
   // "fingerprint.com",
   // "api.fpjs.pro",
   // "api.rollbar.com",

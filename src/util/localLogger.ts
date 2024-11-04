@@ -25,7 +25,8 @@ export type CronjobTasks =
   | 'PROCESS_PROPS'
   | 'PENDING_KEEPAS'
   | 'BATCHES'
-  | 'RESURRECTION';
+  | 'RESURRECTION'
+  | 'RECALCULATE';
 
 export class LocalLogger {
   logDirectory = defaultLogDirectory;

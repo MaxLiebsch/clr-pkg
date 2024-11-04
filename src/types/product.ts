@@ -166,7 +166,9 @@ export type AznProps =
   | 'a_img'
   | 'asin'
   | 'a_prc'
+  | 'a_errors'
   | 'costs'
+  | 'gl'
   | 'drops30'
   | 'drops90'
   | 'iwhd'
@@ -216,7 +218,9 @@ export interface AznProduct {
   a_cur?: string;
   drops30?: number;
   drops90?: number;
+  a_errors?: string[];
   a_img?: string;
+  gl?: string;
   asin?: string;
   a_prc?: number;
   costs?: Costs;
@@ -225,6 +229,7 @@ export interface AznProduct {
   a_uprc?: number;
   bsr?: BSR[];
   a_qty?: number;
+  tRexId?: string;
   a_orgn?: string;
   a_reviewcnt?: number;
   a_estCost?: boolean;

@@ -23,6 +23,8 @@ export type LookupInfoPropType =
   | 'missing'
   | 'incomplete'
   | 'no_bsr'
+  | 'no_offer'
+  | 'error'
   | 'not_found';
 
 export enum LookupInfoProps {

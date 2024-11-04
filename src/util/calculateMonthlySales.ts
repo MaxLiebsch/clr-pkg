@@ -1,8 +1,6 @@
-import { P } from 'pino';
 import { getCoefficients } from '../static/aznMonthlySalesCoefficients';
 import { Categories, CategroyTree } from '../types/aznSalesRankCoefficients';
 import { AznCategoryMapper } from './AznCategoryMapper';
-import { get } from 'underscore';
 
 const aznCategoryMapper = AznCategoryMapper.getInstance(
   '../static/aznCategoryMapping.json',

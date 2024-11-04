@@ -251,8 +251,11 @@ export const crawlProducts = async (
       if (shop.ean) {
         const ean = (product.link as string).match(new RegExp(shop.ean, 'g'));
         if (ean) {
-          const cleanEan = ean[0].replaceAll(/\D/g, '');
-          product['ean'] = cleanEan;
+          const cleanEan = ean[0]
+            .replaceAll(/\D/g, '')
+            .toString()
+            .trim()
+            .padStart(13, '0');
           product['eanList'] = [cleanEan];
         }
       }
