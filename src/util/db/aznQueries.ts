@@ -6,7 +6,6 @@ import { LookupInfoProps } from '../../types/process/index.js';
 export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   a_pblsh: '',
   a_nm: '',
-  a_lnk: '',
   a_img: '',
   asin: '',
   a_cur: '',
@@ -20,7 +19,6 @@ export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   drops30: '',
   drops90: '',
   a_orgn: '',
-  a_hash: '',
   tax: '',
   a_mrgn: '',
   a_useCurrPrice: '',

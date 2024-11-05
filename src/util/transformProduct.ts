@@ -62,11 +62,9 @@ export const transformProduct = (
     deletedAt,
     s,
     a_props,
-    a_lnk,
     ctgry,
     e_mrgn_prc,
     e_ns_mrgn_prc,
-    e_lnk,
     pblsh,
     brand,
     shop,
@@ -120,25 +118,11 @@ export const transformProduct = (
 
   if (typeof ctgry === 'string') {
     product.ctgry = [ctgry];
-  }
-
-  if (!esin && e_lnk) {
-    const esin = parseEsinFromUrl(e_lnk);
-    if (esin) {
-      product.esin = esin;
-    }
-  }
+  } 
 
   if (!product.esin) {
     delete product.esin;
-  }
-
-  if (!asin && a_lnk) {
-    const asin = parseAsinFromUrl(a_lnk);
-    if (asin) {
-      product.asin = asin;
-    }
-  }
+  } 
 
   if (!product.asin) {
     delete product.asin;

@@ -176,7 +176,6 @@ export type AznProps =
   | 'a_uprc'
   | 'a_qty'
   | 'a_orgn'
-  | 'a_hash'
   | 'tax'
   | 'a_useCurrPrice'
   | 'a_reviewcnt'
@@ -234,7 +233,6 @@ export interface AznProduct {
   a_reviewcnt?: number;
   a_estCost?: boolean;
   a_rating?: number;
-  a_hash?: string;
   tax?: number;
   a_mrgn?: number;
   a_useCurrPrice?: boolean;
@@ -268,7 +266,6 @@ export type EbyProps =
   | 'e_pblsh'
   | 'e_nm'
   | 'e_pRange'
-  | 'e_lnk'
   | 'e_cur'
   | 'e_img'
   | 'esin'
@@ -276,7 +273,6 @@ export type EbyProps =
   | 'e_uprc'
   | 'e_qty'
   | 'e_orgn'
-  | 'e_hash'
   | 'e_mrgn'
   | 'e_mrgn_prc'
   | 'e_mrgn_pct'
@@ -353,7 +349,6 @@ export interface DbProductRecord
   e_uprc?: number;
   e_qty?: number;
   e_orgn?: string;
-  e_hash?: string;
   e_mrgn?: number;
   e_totalOfferCount?: number;
   e_mrgn_prc?: number;

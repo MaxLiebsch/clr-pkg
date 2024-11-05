@@ -38,11 +38,7 @@ export const generateUpdate = (
     throw new Error('Asin mismatch');
   }
 
-  const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
-  const a_hash = createHash(a_lnk);
   let update: Partial<DbProductRecord> = {
-    a_lnk,
-    a_hash,
     a_nm,
     asin,
     ...(a_rating && { a_rating: safeParsePrice(a_rating) }),
@@ -213,15 +209,11 @@ export const generateMinimalUpdate = (
   const a_nm = infoMap.get('name');
   const a_rating = infoMap.get('a_rating');
   const a_reviewcnt = infoMap.get('a_reviewcnt');
-  const a_lnk = 'https://www.amazon.de/dp/product/' + asin;
-  const a_hash = createHash(a_lnk);
   update = {
     ...update,
     ...(newSellPrice && { a_prc: newSellPrice, a_uprc: newSellUPrice }),
     a_nm,
-    a_lnk,
     asin,
-    a_hash,
     a_qty,
     ...(a_rating && { a_rating: safeParsePrice(a_rating) }),
     ...(a_reviewcnt && { a_reviewcnt: safeParsePrice(a_reviewcnt) }),
