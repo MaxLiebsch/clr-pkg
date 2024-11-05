@@ -1,8 +1,8 @@
-
 import puppeteer from 'rebrowser-puppeteer';
+import puppeteer1 from 'puppeteer';
 
 export const puppeteerVersions = {
-  '130.0.6723.91': puppeteer, // Puppeteer v23.7.0
+  '130.0.6723.91': puppeteer1, // Puppeteer v23.7.0
   '129.0.6668.100': puppeteer, // Puppeteer v23.5.3
   '129.0.6668.91': puppeteer, // Puppeteer v23.5.1
   '129.0.6668.89': puppeteer, // Puppeteer v23.5.0
