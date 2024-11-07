@@ -64,6 +64,9 @@ export * from './util/calcAznCosts';
 export * from './util/calcAznProvision';
 export * from './util/calcPriceRatio';
 export * from './util/retrieveAznArbitrage';
+export * from './util/recalculateAznMargin'
+
+// STATIC
 export * from './static/allowed';
 export * from './static/blocked';
 export * from './static/ebay';
