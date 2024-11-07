@@ -12,7 +12,7 @@ export function calcAznCosts(
   }
   if (costs.azn) {
     const provision = calculateAznProvision(costs.azn, costsBaseSellPrice);
-    return roundToTwoDecimals(provision * sellPrice);
+    return roundToTwoDecimals((provision / 100) * sellPrice);
   }
   return 0;
 }
