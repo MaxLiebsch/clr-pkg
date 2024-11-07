@@ -14,7 +14,15 @@ export const generateUpdate = (
   product: DbProductRecord,
 ): { update: Partial<DbProductRecord>; infoProp: LookupInfoPropType } => {
   let infoProp: LookupInfoPropType = 'complete';
-  let { prc: buyPrice, a_qty, qty, bsr, asin: savedAsin } = product;
+  let {
+    prc: buyPrice,
+    a_prc: existingSellPrice,
+    a_qty,
+    qty,
+    bsr,
+    asin: savedAsin,
+    costs: existingCosts,
+  } = product;
 
   a_qty = a_qty || 1;
 
@@ -65,11 +73,11 @@ export const generateUpdate = (
     a_qty,
   };
 
-  if (newSellPrice <= 1) {
+  if (!existingSellPrice || newSellPrice <= 1) {
     infoProp = 'incomplete';
   }
 
-  const costs = {
+  const newCosts = {
     azn: safeParsePrice(infoMap.get('costs.azn') || '0'),
     varc: safeParsePrice(infoMap.get('costs.varc') || '0'),
     strg_1_hy: safeParsePrice(infoMap.get('costs.strg.1_hy') || '0'),
@@ -77,23 +85,23 @@ export const generateUpdate = (
     tpt: safeParsePrice(infoMap.get('costs.tpt') || '0'),
   };
 
-  if (costs.azn <= 0.3) {
+  if (!existingCosts?.azn || newCosts.azn <= 0.3) {
     infoProp = 'incomplete';
   }
 
-  if (costs.azn > 0.3 && newSellPrice >= 1) {
-    // If we use the avg price, we need calculate the costs for the avg price, 
+  if (newCosts.azn > 0.3 && newSellPrice >= 1) {
+    // If we use the avg price, we need calculate the costs for the avg price,
     //but saving the costs for the current price
     const costsForCalculation = {
-      ...costs,
+      ...newCosts,
     };
-    
+
     if (!a_useCurrPrice) {
       costsForCalculation.azn = roundToTwoDecimals(
         (costsForCalculation.azn / a_prc) * avgPrice,
       );
     }
-    
+
     // prc * (a_qty / qty)  EK*(QTY Zielshop/QTY Herkunftsshop)
     const arbitrage = calculateAznArbitrage(
       buyPrice * (a_qty / qty),
@@ -106,9 +114,35 @@ export const generateUpdate = (
       ...update,
       ...arbitrage,
       costs: {
-        ...product.costs,
-        ...costs,
+        ...existingCosts,
+        ...newCosts,
       },
+      a_useCurrPrice,
+    };
+  } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
+    // If we use the avg price, we need calculate the costs for the avg price,
+    //but saving the costs for the current price
+    const costsForCalculation = {
+      ...existingCosts,
+    };
+
+    if (!a_useCurrPrice) {
+      costsForCalculation.azn = roundToTwoDecimals(
+        (costsForCalculation.azn / a_prc) * avgPrice,
+      );
+    }
+
+    // prc * (a_qty / qty)  EK*(QTY Zielshop/QTY Herkunftsshop)
+    const arbitrage = calculateAznArbitrage(
+      buyPrice * (a_qty / qty),
+      a_useCurrPrice ? newSellPrice : avgPrice,
+      costsForCalculation,
+      tax,
+    );
+
+    update = {
+      ...update,
+      ...arbitrage,
       a_useCurrPrice,
     };
   }
@@ -123,7 +157,7 @@ export const generateMinimalUpdate = (
 ): { update: Partial<DbProductRecord>; infoProp: LookupInfoPropType } => {
   let infoProp: LookupInfoPropType = 'incomplete';
 
-  let { bsr, prc: buyPrice, a_qty, qty, costs, asin: savedAsin } = product;
+  let { bsr, prc: buyPrice, a_qty, qty, costs: existingCosts, asin: savedAsin } = product;
 
   a_qty = a_qty || 1;
 
@@ -157,8 +191,7 @@ export const generateMinimalUpdate = (
   } = getAznAvgPrice(product, a_prc);
 
   if (newCosts.azn > 0.3 && newSellPrice >= 1) {
-
-    // If we use the avg price, we need calculate the costs for the avg price, 
+    // If we use the avg price, we need calculate the costs for the avg price,
     //but saving the costs for the current price
     const costsForCalculation = {
       ...newCosts,
@@ -184,15 +217,15 @@ export const generateMinimalUpdate = (
       },
       a_useCurrPrice,
     };
-  } else if (costs && costs.azn > 0.3 && newSellPrice >= 1) {
+  } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
     if (!a_useCurrPrice) {
-      costs.azn = roundToTwoDecimals((costs.azn / a_prc) * avgPrice);
+      existingCosts.azn = roundToTwoDecimals((existingCosts.azn / a_prc) * avgPrice);
     }
 
     const arbitrage = calculateAznArbitrage(
       buyPrice * (a_qty / qty),
       a_useCurrPrice ? newSellPrice : avgPrice,
-      costs,
+      existingCosts,
       tax,
     );
     update = {
