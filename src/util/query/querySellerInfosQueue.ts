@@ -21,6 +21,7 @@ import { closePage } from '../browser/closePage';
 import { ErrorType } from '../../util.services/queue/ErrorTypes';
 import { safeParsePrice } from '../safeParsePrice';
 import { sleep } from '../extract';
+import { handleProductInfo } from './handleProductInfo';
 
 function timeoutPromise(timeout: number) {
   let timeoutId: NodeJS.Timeout | undefined = undefined;
@@ -45,57 +46,6 @@ function timeoutPromise(timeout: number) {
     };
   });
   return { promise, timeoutId, earlyResolve };
-}
-
-async function handleProductInfo({
-  productInfo,
-  request,
-  addProductInfo,
-  lookupInfoCause,
-  onNotFound,
-  url,
-  ean,
-}: {
-  productInfo: AddProductInfo[];
-  request: QueryRequest;
-  addProductInfo?: AddProductInfoFn;
-  onNotFound?: OnNotFound;
-  lookupInfoCause?: LookupInfoCause;
-  ean: string;
-  url: string;
-}) {
-  if (!productInfo.length) {
-    onNotFound && (await onNotFound('notFound'));
-    return `${ean} not found on sc`;
-  } else {
-    const sellerRank = productInfo.find((info) => info.key === 'sellerRank');
-    const aznCosts = productInfo.find((info) => info.key === 'costs.azn');
-    if (sellerRank && sellerRank.value !== '-' && aznCosts) {
-      addProductInfo &&
-        (await addProductInfo({
-          productInfo: productInfo,
-          url,
-          cause: 'completeInfo',
-        }));
-      return `${ean} found`;
-    }
-    if (sellerRank && sellerRank.value === '-') {
-      addProductInfo &&
-        (await addProductInfo({
-          productInfo: productInfo,
-          url,
-          cause: 'missingSellerRank',
-        }));
-      return `${ean} missingSellerRank`;
-    }
-    addProductInfo &&
-      (await addProductInfo({
-        productInfo: productInfo,
-        url,
-        cause: 'incompleteInfo',
-      }));
-    return `${ean} incompleteInfo`;
-  }
 }
 
 async function querySellerInfos(page: Page, request: QueryRequest) {
@@ -226,6 +176,7 @@ async function querySellerInfos(page: Page, request: QueryRequest) {
 
   const url = page.url();
   return await handleProductInfo({
+    page,
     productInfo: request.productInfo || [],
     request,
     addProductInfo,

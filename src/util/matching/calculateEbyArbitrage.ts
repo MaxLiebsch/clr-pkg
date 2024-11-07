@@ -1,6 +1,8 @@
 import { ebayTier } from '../../static/ebay';
 import { EbyCategory } from '../../types/ebayCategory';
 import { DbProductRecord } from '../../types/product';
+import { calcNetPrice } from '../calcNetPrice';
+import { calcTax } from '../calcTax';
 import { roundToTwoDecimals } from '../helpers';
 
 export const calculateEbyArbitrage = (
@@ -8,8 +10,8 @@ export const calculateEbyArbitrage = (
   sellPrice: number,
   bruttoBuyPrice: number, //EK  // p.prc * (p.e_qty/p.qty) Herkunftshoppreis * (QTY Zielshop/QTY Herkunftsshop)
 ): Partial<DbProductRecord> | null => {
-  const nettoBuyPrice = bruttoBuyPrice / 1.19;
-  const taxCosts = roundToTwoDecimals(sellPrice - sellPrice / (1 + 19 / 100));
+  const nettoBuyPrice = calcNetPrice(bruttoBuyPrice, 19);
+  const taxCosts = calcTax(sellPrice, 19);
   let totalCosts = roundToTwoDecimals(nettoBuyPrice + taxCosts);
 
   if (!mappedCategory) return null;

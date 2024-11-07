@@ -17,19 +17,19 @@ export * from './types/product';
 export * from './types/shop';
 export * from './types/Sitemap';
 export * from './types/query-request';
-export * from './types/query'
-export * from './types/keepa'
-export * from './types/process'
+export * from './types/query';
+export * from './types/keepa';
+export * from './types/process';
 
 //UTIL
 export * from './util/queryURLBuilder';
-export * from './util/AznCategoryMapper'
-export * from './util/AznCategoryTrexIdMapper'
+export * from './util/AznCategoryMapper';
+export * from './util/AznCategoryTrexIdMapper';
 export * from './util/extract/index';
 export * from './util/sanitize/index';
 export * from './util/dbOperations';
 export * from './util/helpers';
-export * from './util/getAznAvgPrice'
+export * from './util/getAznAvgPrice';
 export * from './util/safeParsePrice';
 export * from './util/getMainDomainFromUrl';
 export * from './util/extract/saveParseJSON';
@@ -49,7 +49,7 @@ export * from './util/ProcessTImeTracker';
 export * from './util/parseAsinFromUrl';
 export * from './util/parseEsinFromUrl';
 export * from './util/transformProduct';
-export * from './util/extract/extractSellerRank'
+export * from './util/extract/extractSellerRank';
 export * from './util/matching/normalizeSIUnits';
 export * from './util/matching/compare_helper';
 export * from './util/matching/packageRecognition';
@@ -58,8 +58,12 @@ export * from './util/matching/calculateAznArbitrage';
 export * from './util/matching/calculateEbyArbitrage';
 export * from './util/matching/parseEbyCategories';
 export * from './util/matching/generateUpdate';
-export * from './util/calculateMonthlySales';
+export * from './util/calcMonthlySales';
 export * from './util/browser/yieldBrowserVersion';
+export * from './util/calcAznCosts';
+export * from './util/calcAznProvision';
+export * from './util/calcPriceRatio';
+export * from './util/retrieveAznArbitrage';
 export * from './static/allowed';
 export * from './static/blocked';
 export * from './static/ebay';
@@ -67,12 +71,11 @@ export * from './static/ebay';
 // BROWSER
 export * from './util/browser/browsers';
 export * from './util/browser/getPage';
-export * from './util/browser/closePage'
+export * from './util/browser/closePage';
 
 // SCAN
 export * from './util.services/queue/ScanQueue';
 export * from './util.services/scan/scanShop';
-
 
 // DB
 export * from './util/db/aznQueries';
@@ -101,9 +104,9 @@ export * from './util.services/crawl/crawlSubpage';
 export * from './util/crawl/browseProductPages';
 export * from './util/crawl/paginationURLBuilder';
 export * from './util/crawl/getCategories';
-export * from "./util/crawl/buildNextPageUrl";
-export * from './util/crawl/findPaginationAppendix'
-export * from  './util/crawl/pagination/recursiveMoreButtonPgn';
+export * from './util/crawl/buildNextPageUrl';
+export * from './util/crawl/findPaginationAppendix';
+export * from './util/crawl/pagination/recursiveMoreButtonPgn';
 export * from './util/crawl/pagination/scrollAndClickPgn';
 export * from './util/crawl/pagination/InfinitScrollPgn';
 export * from './util/crawl/getPageNumberFromPagination';
