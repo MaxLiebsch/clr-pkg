@@ -1,5 +1,5 @@
 import { DbProductRecord } from '../types/DbProductRecord';
-import { AznPlatform, EbyPlatform, ProductCore, SourceInfo } from '../types/Product.js';
+import { AznPlatform, EbyPlatform, ProductCore, SourceInfo } from '../types/What';
 
 import { CProduct } from './CProduct';
 import {
