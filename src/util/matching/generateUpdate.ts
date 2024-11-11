@@ -117,6 +117,7 @@ export const generateUpdate = (
     update = {
       ...update,
       ...arbitrageAndCosts,
+      a_qty,
       a_useCurrPrice,
     };
   } else if (
@@ -151,6 +152,7 @@ export const generateUpdate = (
     update = {
       ...update,
       ...arbitrageAndCosts,
+      a_qty,
       a_useCurrPrice,
     };
   }
@@ -169,13 +171,11 @@ export const generateMinimalUpdate = (
     bsr,
     prc: buyPrice,
     a_prc: oldSellPrice,
-    a_qty,
+    a_qty: sellQty = 1,
     qty,
     costs: existingCosts,
     asin: savedAsin,
   } = product;
-
-  a_qty = a_qty || 1;
 
   let update: Partial<DbProductRecord> = {};
 
@@ -221,7 +221,7 @@ export const generateMinimalUpdate = (
     const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
       oldListingPrice: oldSellPrice || 0,
       listingPrice: newSellPrice,
-      sellQty: a_qty,
+      sellQty,
       avgPrice,
       buyPrice,
       buyQty: qty,
@@ -233,10 +233,10 @@ export const generateMinimalUpdate = (
     update = {
       ...update,
       ...arbitrageAndCosts,
+      a_qty: sellQty,
       a_useCurrPrice,
     };
   } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
-    
     if (!existingCosts?.prvsn) {
       const provision = calcAznProvision(existingCosts.azn, newSellPrice);
       existingCosts.prvsn = provision;
@@ -244,7 +244,7 @@ export const generateMinimalUpdate = (
     const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
       oldListingPrice: oldSellPrice || 0,
       listingPrice: newSellPrice,
-      sellQty: a_qty,
+      sellQty,
       avgPrice,
       buyPrice,
       buyQty: qty,
@@ -256,6 +256,7 @@ export const generateMinimalUpdate = (
     update = {
       ...update,
       ...arbitrageAndCosts,
+      a_qty: sellQty,
       a_useCurrPrice,
     };
   }
@@ -272,7 +273,7 @@ export const generateMinimalUpdate = (
     ...(newSellPrice && { a_prc: newSellPrice, a_uprc: newSellUPrice }),
     a_nm,
     asin,
-    a_qty,
+    a_qty: sellQty,
     ...(a_rating && { a_rating: safeParsePrice(a_rating) }),
     ...(a_reviewcnt && { a_reviewcnt: safeParsePrice(a_reviewcnt) }),
     ...(tax && { tax: Number(tax) }),
