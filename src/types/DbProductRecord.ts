@@ -305,6 +305,7 @@ export interface KeepaProperties {
   iwhd?: Dimensions;
   cmpPrcThrshld?: number;
   drops30?: number;
+  costs?: Costs;
   drops90?: number;
   pwhd?: Dimensions;
   existingCosts?: Costs;
