@@ -4,7 +4,7 @@ import {
   EbyPlatform,
   ProductCore,
   SourceInfo,
-} from '../types/Product';
+} from '../types/Product.js';
 import { roundToTwoDecimals } from './helpers';
 
 export class CProduct {
