@@ -5,7 +5,7 @@ import {
   EbyPlatform,
   ProductCore,
   SourceInfo,
-} from '../types/product';
+} from '../types/Product';
 
 export class CProduct {
   private core: ProductCore;

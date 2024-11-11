@@ -4,7 +4,7 @@ import {
   EbyPlatform,
   ProductCore,
   SourceInfo,
-} from '../types/product';
+} from '../types/Product';
 import { CProduct } from './CProduct';
 import {
   CrawlEanProps,
