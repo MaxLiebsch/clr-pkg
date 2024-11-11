@@ -1,7 +1,7 @@
 import { Page } from 'rebrowser-puppeteer';
 import { browseProductPages } from '../../util/crawl/browseProductPages';
 import { submitQuery } from './submitQuery';
-import { Product, ProductRecord } from '../../types/product';
+import { Product, ProductRecord } from '../../types/DbProductRecord';
 import { closePage } from '../../util/browser/closePage';
 import {
   addBestMatchToProduct,

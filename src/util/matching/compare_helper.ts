@@ -1,6 +1,6 @@
 import path from 'path';
 import { TargetShop } from '../../types';
-import { CandidateProduct, Product } from '../../types/product';
+import { CandidateProduct, Product } from '../../types/DbProductRecord';
 import { ProdInfo } from '../../util.services/queue/QueryQueue';
 import { roundToTwoDecimals } from '../helpers';
 import { safeParsePrice } from '../safeParsePrice';

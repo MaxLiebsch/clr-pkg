@@ -1,6 +1,6 @@
 import { TargetShop } from '../../types';
 import { QueueTask } from '../../types/QueueTask';
-import { Product, ProductRecord } from '../../types/product';
+import { Product, ProductRecord } from '../../types/DbProductRecord';
 import { Query } from '../../types/query';
 import { ProdInfo, QueryQueue } from '../../util.services/queue/QueryQueue';
 import { queryShopQueue } from './queryShopQueue';

@@ -10,7 +10,7 @@ import {
   waitForSelector,
 } from '../helpers';
 import { crawlProducts } from '../crawl/crawlProducts';
-import { ProductRecord } from '../../types/product';
+import { ProductRecord } from '../../types/DbProductRecord';
 import { paginationUrlSchemaBuilder } from '../crawl/paginationURLBuilder';
 import { Query } from '../../types/query';
 import { ICategory } from '../crawl/getCategories';

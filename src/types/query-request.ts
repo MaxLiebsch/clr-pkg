@@ -3,7 +3,7 @@ import { ProdInfo, QueryQueue } from '../util.services/queue/QueryQueue';
 import { ICategory } from '../util/crawl/getCategories';
 import { IntermediateProdInfo } from '../util/query/matchTargetShopProdsWithRawProd';
 import { CrawlerQueue } from '../util.services/queue/CrawlerQueue';
-import { ProductRecord } from './product';
+import { ProductRecord } from './DbProductRecord';
 import { Query } from './query';
 import { ScanQueue } from '../util.services/queue/ScanQueue';
 import { Infos } from './Infos';

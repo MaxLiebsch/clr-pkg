@@ -1,5 +1,5 @@
 import { Page } from 'rebrowser-puppeteer';
-import { ProductRecord } from '../../types/product';
+import { ProductRecord } from '../../types/DbProductRecord';
 import { ShopObject } from '../../types';
 import { Query } from '../../types/query';
 import { browseProductPages } from '../../util/crawl/browseProductPages';

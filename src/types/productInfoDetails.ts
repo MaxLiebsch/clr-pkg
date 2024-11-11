@@ -1,4 +1,4 @@
-import { Content } from './product';
+import { Content } from './DbProductRecord';
 
 export interface DetailBase {
   content: Content;

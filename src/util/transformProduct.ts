@@ -1,4 +1,4 @@
-import { DbProductRecord } from '../types/product';
+import { DbProductRecord } from '../types/DbProductRecord';
 import { createHash } from './hash';
 import { getManufacturer, prefixLink } from './matching/compare_helper';
 import { parseAsinFromUrl } from './parseAsinFromUrl';

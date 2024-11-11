@@ -1,6 +1,6 @@
  
 import { UpdateQuery } from './aznQueries.js';
-import { DbProductRecord } from '../../types/product.js';
+import { DbProductRecord } from '../../types/DbProductRecord.js';
 import { ebayTier } from '../../static/ebay.js';
 
 export const ebyUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
@@ -21,7 +21,6 @@ export const ebyUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
   e_ns_costs: '',
   e_totalOfferCount: '',
   e_ns_mrgn: '',
-  e_ns_mrgn_prc: '',
   e_ns_mrgn_pct: '',
   e_tax: '',
   e_costs: '',

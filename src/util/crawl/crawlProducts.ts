@@ -9,7 +9,7 @@ import {
   replaceAllHiddenCharacters,
   waitForSelector,
 } from '../helpers';
-import { ProductRecord } from '../../types/product';
+import { ProductRecord } from '../../types/DbProductRecord';
 import { ICategory } from './getCategories';
 import { prefixLink } from '../matching/compare_helper';
 import { removeRandomKeywordInURL } from '../sanitize';

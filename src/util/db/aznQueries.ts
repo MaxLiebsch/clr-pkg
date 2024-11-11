@@ -1,4 +1,4 @@
-import { AznProduct } from '../../types/product.js';
+import { AznProduct } from '../../types/DbProductRecord.js';
 import { keepaProperties } from '../../constants/index.js';
 import { aznCategoryMapping } from '../../static/azn.js';
 import { LookupInfoProps } from '../../types/process/index.js';

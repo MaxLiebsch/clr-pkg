@@ -1,6 +1,6 @@
 import { Page } from 'rebrowser-puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
-import { DbProductRecord, ProductRecord } from '../../types/product';
+import { DbProductRecord, ProductRecord } from '../../types/DbProductRecord';
 import { QueueTask } from '../../types/QueueTask';
 import { QueryRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';

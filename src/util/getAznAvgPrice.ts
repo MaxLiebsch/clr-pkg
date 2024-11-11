@@ -1,4 +1,4 @@
-import { DbProductRecord } from '../types/product';
+import { DbProductRecord } from '../types/DbProductRecord';
 import { roundToTwoDecimals } from './helpers';
 
 export const getAznAvgPrice = (
@@ -42,3 +42,5 @@ export const getAznAvgPrice = (
   
   return { a_useCurrPrice, a_prc: newSellPrice, a_uprc, avgPrice };
 };
+
+

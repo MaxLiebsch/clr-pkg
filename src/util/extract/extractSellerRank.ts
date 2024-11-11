@@ -1,4 +1,4 @@
-import { BSR } from '../../types/product';
+import { BSR } from '../../types/DbProductRecord';
 import { safeParsePrice } from '../safeParsePrice';
 
 export function extractSellerRank(sellerRank: string, update: any, bsr?: BSR[]) {

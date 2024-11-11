@@ -24,7 +24,7 @@ import { get } from 'lodash';
 import { findProperty } from './findProperty';
 import { TableContent } from '../../types/table';
 import { detailExtractorRegistry } from './productDetailPageParser.gateway';
-import { Content } from '../../types/product';
+import { Content } from '../../types/DbProductRecord';
 
 export abstract class ExtractProductDetail {
   constructor() {}

@@ -1,5 +1,5 @@
 import { amazonTransportFee } from '../../constants';
-import { DbProductRecord } from '../../types/product';
+import { DbProductRecord } from '../../types/DbProductRecord';
 import { calcNetPrice } from '../calcNetPrice';
 import { calcTax } from '../calcTax';
 import { roundToTwoDecimals } from '../helpers';
