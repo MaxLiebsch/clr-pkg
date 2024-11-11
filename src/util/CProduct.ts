@@ -1,4 +1,3 @@
-import { roundToTwoDecimals } from '..';
 import { Costs } from '../types/DbProductRecord';
 import {
   AznPlatform,
@@ -6,6 +5,7 @@ import {
   ProductCore,
   SourceInfo,
 } from '../types/Product';
+import { roundToTwoDecimals } from './helpers';
 
 export class CProduct {
   private core: ProductCore;
@@ -87,13 +87,11 @@ export class CProduct {
 
     this.azn.useListingPrice = a_useCurrPrice;
 
-    return avgPrice
+    return avgPrice;
   }
 
   public recalculateAznArbitrage(newSellPrice: number): void {
     this.setArbitrageBasePrice(newSellPrice);
     // calculate arbitrage
-
-
   }
 }

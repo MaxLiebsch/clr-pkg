@@ -1,10 +1,5 @@
 import { DbProductRecord } from '../types/DbProductRecord';
-import {
-  AznPlatform,
-  EbyPlatform,
-  ProductCore,
-  SourceInfo,
-} from '../types/Product';
+
 import { CProduct } from './CProduct';
 import {
   CrawlEanProps,
@@ -12,6 +7,7 @@ import {
   LookupInfoProps,
   QueryEansOnEbyProps,
 } from '../types/process';
+import { AznPlatform, EbyPlatform, ProductCore, SourceInfo } from '../types/Product';
 
 export class ProductFacotry {
   static createFromApi(apiData: DbProductRecord): CProduct {
