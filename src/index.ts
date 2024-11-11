@@ -13,7 +13,7 @@ export * from './types/index';
 export * from './types/status';
 export * from './types/proxyAuth';
 export * from './types/QueueTask';
-export * from './types/product';
+export * from './types/DbProductRecord';
 export * from './types/shop';
 export * from './types/Sitemap';
 export * from './types/query-request';

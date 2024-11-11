@@ -1,11 +1,12 @@
 import { safeParsePrice } from '../safeParsePrice';
 import { getNumber } from './compare_helper';
 import { AddProductInfo } from '../../types/query-request';
-import { Costs, DbProductRecord } from '../../types/product';
+import { Costs, DbProductRecord } from '../../types/DbProductRecord';
 import { getAznAvgPrice } from '../getAznAvgPrice';
 import { extractSellerRank } from '../extract/extractSellerRank';
 import { LookupInfoPropType } from '../../types/process';
-import { retrieveAznArbitrage } from '../retrieveAznArbitrage';
+import { retrieveAznArbitrageAndCosts } from '../retrieveAznArbitrage';
+import { calcAznProvision } from '../calcAznProvision';
 
 export const generateUpdate = (
   productInfo: AddProductInfo[],
@@ -90,12 +91,19 @@ export const generateUpdate = (
   if (newCosts.azn > 0.3 && newSellPrice >= 1) {
     // If we use the avg price, we need calculate the costs for the avg price,
     //but saving the costs for the current price
+
     const costsForCalculation = {
       ...existingCosts,
       ...newCosts,
     };
 
-    const arbitrage = retrieveAznArbitrage({
+    if (!existingCosts?.prvsn) {
+      const provision = calcAznProvision(newCosts.azn, newSellPrice);
+      costsForCalculation.prvsn = provision;
+    }
+
+    const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
+      oldListingPrice: existingSellPrice || 0,
       listingPrice: a_prc,
       sellQty: a_qty,
       avgPrice,
@@ -108,21 +116,28 @@ export const generateUpdate = (
 
     update = {
       ...update,
-      ...arbitrage,
-      costs: {
-        ...existingCosts,
-        ...newCosts,
-      },
+      ...arbitrageAndCosts,
       a_useCurrPrice,
     };
-  } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
+  } else if (
+    existingCosts &&
+    existingCosts.azn > 0.3 &&
+    newSellPrice >= 1 &&
+    existingSellPrice
+  ) {
     // If we use the avg price, we need calculate the costs for the avg price,
     //but saving the costs for the current price
     const costsForCalculation = {
       ...existingCosts,
     };
 
-    const arbitrage = retrieveAznArbitrage({
+    if (!existingCosts?.prvsn) {
+      const provision = calcAznProvision(newCosts.azn, newSellPrice);
+      costsForCalculation.prvsn = provision;
+    }
+
+    const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
+      oldListingPrice: existingSellPrice,
       listingPrice: newSellPrice,
       sellQty: a_qty,
       avgPrice,
@@ -135,7 +150,7 @@ export const generateUpdate = (
 
     update = {
       ...update,
-      ...arbitrage,
+      ...arbitrageAndCosts,
       a_useCurrPrice,
     };
   }
@@ -153,7 +168,7 @@ export const generateMinimalUpdate = (
   let {
     bsr,
     prc: buyPrice,
-    a_prc: sellPrice,
+    a_prc: oldSellPrice,
     a_qty,
     qty,
     costs: existingCosts,
@@ -189,7 +204,7 @@ export const generateMinimalUpdate = (
     a_useCurrPrice,
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
-  } = getAznAvgPrice(product, a_prc || sellPrice || 0);
+  } = getAznAvgPrice(product, a_prc || oldSellPrice || 0);
 
   if (newCosts.azn > 0.3 && newSellPrice >= 1) {
     // If we use the avg price, we need calculate the costs for the avg price,
@@ -198,7 +213,13 @@ export const generateMinimalUpdate = (
       ...newCosts,
     };
 
-    const arbitrage = retrieveAznArbitrage({
+    if (!existingCosts?.prvsn) {
+      const provision = calcAznProvision(newCosts.azn, newSellPrice);
+      costsForCalculation.prvsn = provision;
+    }
+
+    const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
+      oldListingPrice: oldSellPrice || 0,
       listingPrice: newSellPrice,
       sellQty: a_qty,
       avgPrice,
@@ -208,17 +229,20 @@ export const generateMinimalUpdate = (
       costs: costsForCalculation,
       tax,
     });
+
     update = {
       ...update,
-      ...arbitrage,
-      costs: {
-        ...product.costs,
-        ...newCosts,
-      },
+      ...arbitrageAndCosts,
       a_useCurrPrice,
     };
   } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
-    const arbitrage = retrieveAznArbitrage({
+    
+    if (!existingCosts?.prvsn) {
+      const provision = calcAznProvision(existingCosts.azn, newSellPrice);
+      existingCosts.prvsn = provision;
+    }
+    const arbitrageAndCosts = retrieveAznArbitrageAndCosts({
+      oldListingPrice: oldSellPrice || 0,
       listingPrice: newSellPrice,
       sellQty: a_qty,
       avgPrice,
@@ -231,7 +255,7 @@ export const generateMinimalUpdate = (
 
     update = {
       ...update,
-      ...arbitrage,
+      ...arbitrageAndCosts,
       a_useCurrPrice,
     };
   }

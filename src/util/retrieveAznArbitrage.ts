@@ -1,9 +1,10 @@
-import { Costs } from '../types/product';
+import { Costs } from '../types/DbProductRecord';
 import { calcAznCosts } from './calcAznCosts';
 import { calculatePriceRatio } from './calcPriceRatio';
 import { calculateAznArbitrage } from './matching/calculateAznArbitrage';
 
 interface CalcAznArbitrage {
+  oldListingPrice: number;
   listingPrice: number;
   sellQty: number;
   buyQty: number;
@@ -14,7 +15,8 @@ interface CalcAznArbitrage {
   costs: Costs;
 }
 
-export const retrieveAznArbitrage = ({
+export const retrieveAznArbitrageAndCosts = ({
+  oldListingPrice,
   listingPrice,
   sellQty,
   buyPrice,
@@ -24,9 +26,10 @@ export const retrieveAznArbitrage = ({
   a_useCurrPrice,
   costs,
 }: CalcAznArbitrage) => {
+  
   const sellPrice = a_useCurrPrice ? listingPrice : avgPrice;
 
-  costs.azn = calcAznCosts(costs, listingPrice, sellPrice);
+  costs.azn = calcAznCosts(costs, oldListingPrice, sellPrice);
 
   const arbitrage = calculateAznArbitrage(
     calculatePriceRatio(buyPrice, sellQty, buyQty),
@@ -35,5 +38,5 @@ export const retrieveAznArbitrage = ({
     tax,
   );
 
-  return arbitrage;
+  return { ...arbitrage, costs };
 };

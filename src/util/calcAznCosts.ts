@@ -1,5 +1,5 @@
-import { Costs } from '../types/product';
-import { calculateAznProvision } from './calcAznProvision';
+import { Costs } from '../types/DbProductRecord';
+import { calcAznProvision } from './calcAznProvision';
 import { roundToTwoDecimals } from './helpers';
 
 export function calcAznCosts(
@@ -11,7 +11,7 @@ export function calcAznCosts(
     return roundToTwoDecimals((costs.prvsn / 100) * sellPrice);
   }
   if (costs.azn) {
-    const provision = calculateAznProvision(costs.azn, costsBaseSellPrice);
+    const provision = calcAznProvision(costs.azn, costsBaseSellPrice);
     return roundToTwoDecimals((provision / 100) * sellPrice);
   }
   return 0;
