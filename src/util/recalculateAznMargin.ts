@@ -38,6 +38,10 @@ export const recalculateAznMargin = (
       (spotterSet as any)[key] = val;
     });
 
+    if (!product.a_pblsh) {
+      spotterSet['a_pblsh'] = true;
+    }
+
     spotterSet['a_useCurrPrice'] = a_useCurrPrice;
   }
 };
