@@ -53,6 +53,7 @@ export const allowed = [
   'static.mueller.de',
   'www.thalia.de',
   'www.otto.de',
+  'static.otto.de',
   'www.quelle.de',
   'www.reichelt.de',
   'www.saturn.de',
