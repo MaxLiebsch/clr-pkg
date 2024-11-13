@@ -93,6 +93,7 @@ const args = [
   '--disable-setuid-sandbox',
   '--lang=de',
   '--disable-gpu',
+  '--disable-web-security',
   '--disable-webrtc',
   '--disable-blink-features=AutomationControlled',
   '--webrtc-ip-handling-policy=disable_non_proxied_udp',
