@@ -512,6 +512,7 @@ export async function humanScroll(page: Page, lastScrollPosition = 0) {
     .catch((e) => {});
 
   while (newScrollPosition < (maxScrollPosition ?? 0)) {
+
     // Random scroll step: between 100 and 600 pixels
     let scrollStep = Math.floor(Math.random() * 800) + 100;
 
@@ -524,7 +525,7 @@ export async function humanScroll(page: Page, lastScrollPosition = 0) {
       .catch((e) => {});
 
     // Random pause: between 100 and 500 milliseconds
-    let pause = Math.floor(Math.random() * 200) + 100;
+    let pause = Math.floor(Math.random() * 500) + 100;
     await new Promise((r) => setTimeout(r, pause));
 
     // Occasionally scroll up a little
