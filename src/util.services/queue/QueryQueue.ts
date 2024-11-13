@@ -65,6 +65,9 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   public idle() {
     return super.idle();
   }
+  public empty() {
+    return super.empty();
+  }
   public workload() {
     return super.workload();
   }

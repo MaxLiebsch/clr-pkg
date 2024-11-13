@@ -69,7 +69,9 @@ const useSupremeProxyTasks: TaskTypes[] = [
   'DEALS_ON_EBY',
 ];
 
-const timeoutTasks: TaskTypes[] = [];
+const timeoutTasks: TaskTypes[] = [
+  'CRAWL_SHOP'
+];
 
 const shuffleTasks: TaskTypes[] = [
   'CRAWL_EAN',
@@ -431,6 +433,10 @@ export abstract class BaseQueue<
       this.errorLog[errorType].lastOccurred = null;
     });
   }
+  public empty() {
+    return this.queue.length === 0 && this.running === 0;
+  }
+
   public idle() {
     return this.taskFinished;
   }
@@ -718,7 +724,7 @@ export abstract class BaseQueue<
       ) {
         this.queueStats.visitedPages.push(pageInfo.link);
       }
-      await requestCompleted(requestId);
+      // await requestCompleted(requestId);
       this.incrementRequestCount(link);
       const details = `🆗 Id: ${requestId}${message && typeof message === 'string' ? ` - ${message} - ` : ` - ${type} - `}${'targetShop' in request ? request.targetShop?.name : domain} - Hash: ${hash}`;
       return {
@@ -913,7 +919,6 @@ export abstract class BaseQueue<
       ` Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
     );
   };
-
   private terminateAndSetProxy = async ({
     errorType,
     link,
@@ -976,7 +981,9 @@ export abstract class BaseQueue<
     const originalGoto = page.goto;
     page.goto = async function (url, options) {
       const { link } = pageInfo;
-      if (proxyType !== 'mix') {
+      if (proxyType === 'mix') {
+        await registerRequest(url, requestId, allowedHosts, Date.now());
+      } else {
         if (eligableForPremiumProxy && prevProxyType && retries > 0) {
           await terminationPrevConnections(
             requestId,
@@ -992,8 +999,6 @@ export abstract class BaseQueue<
           Date.now(),
           allowedHosts,
         );
-      } else {
-        await registerRequest(url, requestId, allowedHosts, Date.now());
       }
       return originalGoto.apply(this, [url, options]);
     };

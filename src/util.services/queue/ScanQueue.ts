@@ -57,6 +57,9 @@ export class ScanQueue extends BaseQueue<ScanRequest> {
   public idle() {
     return super.idle();
   }
+  public empty() {
+    return super.empty();
+  }
   public workload() {
     return super.workload();
   }
