@@ -59,7 +59,7 @@ export const crawlProducts = async (
       console.log('productEls missing in ', pageInfo.link);
     if (!productEls) continue;
     process.env.DEBUG === 'true' &&
-      console.log('productEls:', productEls.length, ' in ', pageInfo.link);
+      console.log('productEls:', productEls.length, ' in ', product.sel);
 
     const { type, details } = product;
     for (let i = 0; i < productEls.length; i++) {
