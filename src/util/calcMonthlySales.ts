@@ -44,49 +44,49 @@ const findSalesRankAndCoefficients = (
     }
   }
 
-  const salesRanksKeys = Object.keys(salesRanks);
-  const exisitingCategoryIds = categoryIds.filter((id) => {
-    if (salesRanksKeys.includes(id.toString())) {
-      return true;
-    } else {
-      delete salesRanks[id];
-      return false;
-    }
-  });
-  for (let i = 0; i < exisitingCategoryIds.length; i++) {
-    const category = aznCategoryMapper.get(exisitingCategoryIds[i]);
-    if (category) {
-      const coefficients = getCoefficients(category as Categories);
-      if (coefficients) {
-        const salesRankArr = salesRanks[exisitingCategoryIds[i]];
-        if (salesRankArr) {
-          const salesRank = salesRankArr[salesRankArr.length - 1];
+  // const salesRanksKeys = Object.keys(salesRanks);
+  // const exisitingCategoryIds = categoryIds.filter((id) => {
+  //   if (salesRanksKeys.includes(id.toString())) {
+  //     return true;
+  //   } else {
+  //     delete salesRanks[id];
+  //     return false;
+  //   }
+  // });
+  // for (let i = 0; i < exisitingCategoryIds.length; i++) {
+  //   const category = aznCategoryMapper.get(exisitingCategoryIds[i]);
+  //   if (category) {
+  //     const coefficients = getCoefficients(category as Categories);
+  //     if (coefficients) {
+  //       const salesRankArr = salesRanks[exisitingCategoryIds[i]];
+  //       if (salesRankArr) {
+  //         const salesRank = salesRankArr[salesRankArr.length - 1];
 
-          if (salesRank[1] !== -1) {
-            return {
-              salesRank: salesRank[1],
-              coefficients,
-            };
-          }
-        }
-      }
+  //         if (salesRank[1] !== -1) {
+  //           return {
+  //             salesRank: salesRank[1],
+  //             coefficients,
+  //           };
+  //         }
+  //       }
+  //     }
 
-      const categoryTreeItem = categoryTree.find(
-        (treeItem) => treeItem.name === category,
-      );
-      if (categoryTreeItem) {
-        const salesRankArr = salesRanks[categoryTreeItem.catId];
-        if (salesRankArr) {
-          const salesRank = salesRankArr[salesRankArr.length - 1];
+  //     const categoryTreeItem = categoryTree.find(
+  //       (treeItem) => treeItem.name === category,
+  //     );
+  //     if (categoryTreeItem) {
+  //       const salesRankArr = salesRanks[categoryTreeItem.catId];
+  //       if (salesRankArr) {
+  //         const salesRank = salesRankArr[salesRankArr.length - 1];
 
-          if (salesRank[1] === -1) continue;
-          return {
-            salesRank: salesRank[1],
-            coefficients: getCoefficients(category as Categories),
-          };
-        }
-      }
-    }
-  }
+  //         if (salesRank[1] === -1) continue;
+  //         return {
+  //           salesRank: salesRank[1],
+  //           coefficients: getCoefficients(category as Categories),
+  //         };
+  //       }
+  //     }
+  //   }
+  // }
   return null;
 };
