@@ -63,8 +63,6 @@ const usePremiumProxyTasks: TaskTypes[] = [
 
 const useSupremeProxyTasks: TaskTypes[] = [
   'CRAWL_EAN',
-  'CRAWL_AZN_LISTINGS',
-  'CRAWL_EBY_LISTINGS',
   'DEALS_ON_AZN',
   'DEALS_ON_EBY',
 ];
