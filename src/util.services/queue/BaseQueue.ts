@@ -22,6 +22,7 @@ import {
   MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
   MAX_RETRIES_NOT_FOUND,
+  MAX_RETRIES_UNTIL_SUPREME,
   RANDOM_TIMEOUT_MAX,
   RANDOM_TIMEOUT_MIN,
   STANDARD_FREQUENCE,
@@ -948,7 +949,7 @@ export abstract class BaseQueue<
       eligableForPremiumProxy &&
       eligableForSupreme &&
       request.proxyType === 'de' &&
-      request.retries >= 1
+      request.retries >= MAX_RETRIES_UNTIL_SUPREME
     ) {
       request.prevProxyType = request.proxyType;
       request.proxyType = 'des';
