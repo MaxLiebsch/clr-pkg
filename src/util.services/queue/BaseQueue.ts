@@ -237,11 +237,11 @@ export abstract class BaseQueue<
     LoggerService.getSingleton().errorLogger.error(message);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  async connect(): Promise<void> {
+  async connect(csp?: boolean): Promise<void> {
     const currentVersion = this.versionChooser.next().value as Versions;
     this.queueStats.browserStarts += 1;
     try {
-      this.browser = await mainBrowser(this.proxyAuth, CHROME_VERSIONS[0]);
+      this.browser = await mainBrowser(this.proxyAuth, CHROME_VERSIONS[0], csp);
     } catch (error) {
       this.logError(`Browser crashed big time  ${error}`);
       await this.repair(`Browser crashed big time  ${error}`);

@@ -18,8 +18,8 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
     return super.log(msg);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  connect(): Promise<void> {
-    return super.connect();
+  connect(csp?:boolean): Promise<void> {
+    return super.connect(csp);
   }
   disconnect(taskFinished = false): Promise<void> {
     return super.disconnect(taskFinished);

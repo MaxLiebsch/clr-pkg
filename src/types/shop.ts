@@ -35,6 +35,7 @@ export interface Shop {
     product?: ResourceTypes[];
     crawl: ResourceTypes[];
   };
+  csp?: boolean;
   entryPoints: EntryPoint[];
   leaveDomainAsIs?: boolean;
   waitUntil: WaitUntil;

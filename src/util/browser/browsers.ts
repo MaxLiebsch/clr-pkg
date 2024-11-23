@@ -88,12 +88,11 @@ export const browserHealthCheck = async (browsers?: BrowserGroup) => {
   }
 };
 
-const args = [
+let args = [
   '--no-sandbox',
   '--disable-setuid-sandbox',
   '--lang=de',
   '--disable-gpu',
-  '--disable-web-security',
   '--disable-webrtc',
   '--disable-blink-features=AutomationControlled',
   '--webrtc-ip-handling-policy=disable_non_proxied_udp',
@@ -138,11 +137,16 @@ export const mainBrowsers = async (
 export const mainBrowser = async (
   proxyAuth: { host: string },
   version: Versions,
+  csp: boolean = true,
 ) => {
 
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
+  }
+
+  if(csp !== undefined && csp === false) {
+    args.push('--disable-web-security');
   }
 
   const provider = VersionProvider.getSingleton();
