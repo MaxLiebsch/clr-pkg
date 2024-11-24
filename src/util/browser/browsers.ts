@@ -2,7 +2,8 @@ import { proxies } from '../../constants';
 import { BrowserGroup, BrowserInfo } from '../../types';
 import { browserLoadChecker } from '../helpers';
 import { VersionProvider, Versions } from '../versionProvider';
-import puppeteer from 'rebrowser-puppeteer'
+import puppeteer from 'rebrowser-puppeteer';
+import os from 'os';
 
 let _browsers: BrowserGroup = {};
 
@@ -111,14 +112,15 @@ export const mainBrowsers = async (
       .reduce(async (acc: any, proxy, index) => {
         const _proxy = passwordAuth ? process.env.PROXY_URL : proxy;
         const proxySetting = '--proxy-server=' + _proxy;
-    
+
         if (!proxyPerPage) args.push(proxySetting);
         const res = await acc;
-        
+
         const b = await puppeteer.launch({
           headless: process.env.NODE_ENV === 'production' ? true : false,
           args,
           defaultViewport: null,
+          ignoreDefaultArgs: ['--enable-automation'],
         });
         console.log(await b.version());
         res[index] = {
@@ -139,20 +141,17 @@ export const mainBrowser = async (
   version: Versions,
   csp: boolean = true,
 ) => {
-
   if (proxyAuth) {
     const proxySetting = '--proxy-server=' + proxyAuth.host;
     args.push(proxySetting);
   }
 
-  if(csp !== undefined && csp === false) {
+  if (csp !== undefined && csp === false) {
     args.push('--disable-web-security');
   }
 
   const provider = VersionProvider.getSingleton();
   provider.switchVersion(version);
-
-  
 
   const options: any = {
     headless: process.env.HEADLESS === 'true' ? true : false,
@@ -161,8 +160,16 @@ export const mainBrowser = async (
     defaultViewport: null,
     timeout: 600000,
     protocolTimeout: 60000,
+    ignoreDefaultArgs: ['--enable-automation'],
   };
-  options['executablePath'] = provider.currentPuppeteer.executablePath();
+  
+  if (os.platform() === 'win32') {
+    options['executablePath'] =
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  } else if (os.platform() === 'linux') {
+    options['executablePath'] = '/usr/bin/google-chrome';
+  }
+
   const browser = await puppeteer.launch(options);
 
   console.log('Browser Version: ', await browser.version());

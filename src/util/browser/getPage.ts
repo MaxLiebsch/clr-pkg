@@ -275,9 +275,9 @@ const setPageProperties = async ({
     architecture,
     mobile: false,
     brands: [
-      { brand: 'Chromium', version },
-      { brand: 'Google Chrome', version },
-      { brand: 'Not-A.Brand', version: '99' },
+      { brand: 'Chromium', version: version.split('.')[0] },
+      { brand: 'Google Chrome', version: version.split('.')[0] },
+      { brand: 'Not_A Brand', version: '24' },
     ],
     model: '',
     platform,
