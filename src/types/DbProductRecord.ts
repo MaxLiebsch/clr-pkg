@@ -89,6 +89,7 @@ export interface DbProduct {
   cur?: string;
   sdmn: string;
   qty_v?: string;
+  mku?: string;
   qty_updatedAt?: string;
   nm_v?: string;
   nm_updatedAt?: string;
