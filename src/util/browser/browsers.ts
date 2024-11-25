@@ -90,12 +90,9 @@ export const browserHealthCheck = async (browsers?: BrowserGroup) => {
 };
 
 let args = [
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
   '--lang=de',
   '--disable-gpu',
   '--disable-webrtc',
-  '--disable-blink-features=AutomationControlled',
   '--webrtc-ip-handling-policy=disable_non_proxied_udp',
   '--force-webrtc-ip-handling-policy',
   '--start-maximized',
