@@ -90,6 +90,7 @@ export const browserHealthCheck = async (browsers?: BrowserGroup) => {
 };
 
 let args = [
+  '--no-sandbox',
   '--lang=de',
   '--disable-gpu',
   '--disable-webrtc',
