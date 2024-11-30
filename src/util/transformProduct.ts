@@ -104,10 +104,6 @@ export const transformProduct = (
     delete product.vrfd;
   }
 
-  if (shop) {
-    delete product.shop;
-  }
-
   if (brand) {
     delete product.brand;
   }
