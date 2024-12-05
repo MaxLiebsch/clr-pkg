@@ -94,6 +94,16 @@ let args = [
   '--lang=de',
   '--disable-gpu',
   '--disable-webrtc',
+  '--disable-dev-shm-usage',
+  '--no-first-run',
+  '--disable-extensions',
+  '--disable-breakpad',
+  '--safebrowsing-disable-auto-update',
+  '--disable-sync',
+  '--disable-default-apps',
+  '--disable-client-side-phishing-detection',
+  '--metrics-recording-only',
+  '--disable-hang-monitor',
   '--webrtc-ip-handling-policy=disable_non_proxied_udp',
   '--force-webrtc-ip-handling-policy',
   '--start-maximized',
@@ -160,7 +170,7 @@ export const mainBrowser = async (
     protocolTimeout: 60000,
     ignoreDefaultArgs: ['--enable-automation'],
   };
-  
+
   if (os.platform() === 'win32') {
     options['executablePath'] =
       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
