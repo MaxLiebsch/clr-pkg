@@ -43,10 +43,20 @@ export interface QueueStats {
   browserStarts: number;
 }
 
+export type CurrentStepDailySales =
+  | 'CRAWL_SHOP'
+  | 'CRAWL_EAN'
+  | 'LOOKUP_INFO'
+  | 'QUERY_EANS_EBY'
+  | 'LOOKUP_CATEGORY'
+  | 'CRAWL_AZN_LISTINGS'
+  | 'CRAWL_EBY_LISTINGS';
+
 export interface QueueTask {
   [key: string]: any;
   id: string;
   type: TaskTypes;
+  currentStep?: CurrentStepDailySales
   productLimit: number;
   proxyType?: ProxyType;
   timezones?: string[];

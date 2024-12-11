@@ -66,13 +66,12 @@ const useSupremeProxyTasks: TaskTypes[] = [
   'CRAWL_EAN',
   'CRAWL_AZN_LISTINGS',
   'CRAWL_EBY_LISTINGS',
+  'DAILY_SALES',
   'DEALS_ON_AZN',
   'DEALS_ON_EBY',
 ];
 
-const timeoutTasks: TaskTypes[] = [
-  'CRAWL_SHOP'
-];
+const timeoutTasks: TaskTypes[] = ['CRAWL_SHOP'];
 
 const shuffleTasks: TaskTypes[] = [
   'CRAWL_EAN',
@@ -91,7 +90,7 @@ const multipleQueues: TaskTypes[] = [
   'WHOLESALE_SEARCH',
 ];
 
-const resourceTypesPerTask: {
+const RESOURCETYPE_PER_TASK: {
   [taskType in TaskTypes]: 'crawl' | 'product';
 } = {
   DEALS_ON_EBY: 'product',
@@ -110,7 +109,11 @@ const resourceTypesPerTask: {
   LOOKUP_CATEGORY: 'crawl',
 };
 
-const neverUsePremiumProxyDomains = ['amazon.de', 'ebay.de'];
+const neverUsePremiumProxyDomains = [
+  'amazon.de',
+  'ebay.de',
+  'sellercentral.amazon.de',
+];
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
   const url = new URL(link);
@@ -497,7 +500,7 @@ export abstract class BaseQueue<
     id: string,
   ): Promise<WrapperFunctionResponse> {
     if (this.taskFinished) return;
-    let { type } = this.queueTask;
+    let { type, currentStep } = this.queueTask;
     const {
       retries,
       proxyType,
@@ -570,10 +573,10 @@ export abstract class BaseQueue<
       let disAllowedResourceTypes = resourceTypes?.crawl;
       if (
         resourceTypes &&
-        resourceTypes[resourceTypesPerTask[type]] !== undefined
+        resourceTypes[RESOURCETYPE_PER_TASK[currentStep || type]] !== undefined
       ) {
         disAllowedResourceTypes =
-          resourceTypes[resourceTypesPerTask[type]] || [];
+          resourceTypes[RESOURCETYPE_PER_TASK[currentStep || type]] || [];
       }
       const pageAndPrint = await getPage({
         browser: this.browser!,
@@ -775,7 +778,11 @@ export abstract class BaseQueue<
             this.pauseQueue('error');
           }
           if (isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)) {
-            if (errorType === ErrorType.RateLimit) {
+            if (
+              errorType === ErrorType.RateLimit ||
+              errorType === ErrorType.ERR_EMPTY_RESPONSE ||
+              errorType === ErrorType.Timeout
+            ) {
               await this.terminateAndSetProxy({
                 errorType,
                 eligableForPremiumProxy,
@@ -1038,7 +1045,8 @@ export abstract class BaseQueue<
         return ErrorType.ServerError;
       case isError && error.message === ErrorType.NotFound:
         return ErrorType.NotFound;
-      case `${error}`.includes('TimeoutError'):
+      case `${error}`.includes('TimeoutError') ||
+        `${error}`.includes('net::ERR_TIMED_OUT'):
         return ErrorType.Timeout;
       case `${error}`.includes('Protocol error') ||
         `${error}`.includes('ProtocolError'):
@@ -1049,8 +1057,6 @@ export abstract class BaseQueue<
         return ErrorType.RateLimit;
       case `${error}`.includes('net::ERR_TUNNEL_CONNECTION_FAILED'):
         return ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
-      case `${error}`.includes('net::ERR_TIMED_OUT'):
-        return ErrorType.ERR_TIMED_OUT;
       case `${error}`.includes('net::ERR_EMPTY_RESPONSE'):
         return ErrorType.ERR_EMPTY_RESPONSE;
       case `${error}`.includes('net::ERR_CONNECTION_CLOSED'):
@@ -1097,9 +1103,6 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-
-    console.log('Running: ', this.running, 'Queue:', this.queue.length);
-
     if (shuffleTasks.includes(this.queueTask.type)) {
       this.queue = shuffle(this.queue);
     }
