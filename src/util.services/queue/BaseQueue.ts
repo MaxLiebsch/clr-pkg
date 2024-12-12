@@ -172,7 +172,6 @@ export abstract class BaseQueue<
   if the timeouts need to be applied later
   */
   private errorLog: ErrorLog = errorLog;
-  private criticalErrorCount: number = 0;
   private eventEmitter: EventEmitter = globalEventEmitter;
   public total = 0;
   public actualProductLimit = 0;
@@ -412,7 +411,6 @@ export abstract class BaseQueue<
       });
     }
     this.errorLog = errorLog;
-    this.criticalErrorCount = 0;
     return this.queueTask;
   }
   resumeQueue() {
@@ -430,9 +428,6 @@ export abstract class BaseQueue<
         this.resumeQueue();
       }, 5000);
     });
-
-    // reset error count, so browser is not restarted again
-    this.criticalErrorCount = 0;
 
     //Reset errors
     Object.keys(this.errorLog).forEach((errorType) => {
@@ -753,38 +748,14 @@ export abstract class BaseQueue<
             errorType === ErrorType.RateLimit ||
             errorType === ErrorType.AccessDenied ||
             errorType === ErrorType.ServerError ||
-            errorType === ErrorType.NotFound
+            errorType === ErrorType.NotFound ||
+            errorType === ErrorType.ERR_EMPTY_RESPONSE ||
+            errorType === ErrorType.ERR_CONNECTION_CLOSED ||
+            errorType === ErrorType.Timeout
           ) {
-            if (this.criticalErrorCount > MAX_CRITICAL_ERRORS) {
-              this.jumpToNextUserAgent(link);
-              this.pauseQueue('error');
-            } else {
-              this.queueStats.errorTypeCount[errorType] += 1;
-              if (
-                isErrorFrequent(
-                  errorType,
-                  ACCESS_DENIED_FREQUENCE,
-                  this.errorLog,
-                )
-              ) {
-                this.criticalErrorCount += 1;
-                this.jumpToNextUserAgent(link);
-                page && (await this.resetCookies(page));
-              } else {
-                this.errorLog[errorType].count += 1;
-                this.errorLog[errorType].lastOccurred = Date.now();
-              }
-            }
-          }
-          if (errorType === ErrorType.ProtocolError) {
             this.queueStats.errorTypeCount[errorType] += 1;
-            this.pauseQueue('error');
-          }
-          if (isErrorFrequent(errorType, STANDARD_FREQUENCE, this.errorLog)) {
             if (
-              errorType === ErrorType.RateLimit ||
-              errorType === ErrorType.ERR_EMPTY_RESPONSE ||
-              errorType === ErrorType.Timeout
+              isErrorFrequent(errorType, ACCESS_DENIED_FREQUENCE, this.errorLog)
             ) {
               await this.terminateAndSetProxy({
                 errorType,
@@ -796,25 +767,12 @@ export abstract class BaseQueue<
               });
               this.jumpToNextUserAgent(link);
               page && (await this.resetCookies(page));
-
               if (type === 'CRAWL_SHOP') {
                 this.pauseQueue('error');
               }
-            } else if (errorType === ErrorType.ERR_TUNNEL_CONNECTION_FAILED) {
-              terminationPrevConnections(
-                requestId,
-                link,
-                allowedHosts,
-                proxyType,
-              );
-            } else if (
-              errorType !== ErrorType.EanOnEbyNotFound &&
-              errorType !== ErrorType.AznNotFound &&
-              errorType !== ErrorType.AznProductInfoEmpty &&
-              errorType !== ErrorType.AznUnexpectedError &&
-              errorType !== ErrorType.AznTimeout
-            ) {
-              this.pauseQueue('error');
+            } else {
+              this.errorLog[errorType].count += 1;
+              this.errorLog[errorType].lastOccurred = Date.now();
             }
           } else {
             this.errorLog[errorType].count += 1;
@@ -833,30 +791,18 @@ export abstract class BaseQueue<
 
       if (isDomainAllowed(pageInfo.link)) {
         if (error instanceof Error) {
-          if (errorType === ErrorType.Timeout) {
-            if (retries < (retriesOnFail || MAX_RETRIES)) {
-              await this.terminateAndSetProxy({
-                errorType,
-                request,
-                shop,
-                link,
-                throwErr: false,
-                eligableForPremiumProxy,
-              });
-              this.pushTask(task, { ...request, retries: retries + 1 });
-            } else {
-              if ('onNotFound' in request && request?.onNotFound) {
-                request.onNotFound('timeout');
-              }
-              return {
-                details,
-                status: 'error-handled-timeout-exceded',
-                retries,
-                proxyType,
-              };
-            }
-          } else {
+          if (retries < (retriesOnFail || MAX_RETRIES)) {
             this.pushTask(task, { ...request, retries: retries + 1 });
+          } else {
+            if ('onNotFound' in request && request?.onNotFound) {
+              request.onNotFound('timeout');
+            }
+            return {
+              details,
+              status: 'error-handled-timeout-exceded',
+              retries,
+              proxyType,
+            };
           }
         } else {
           this.pushTask(task, { ...request, retries: retries + 1 });
@@ -1040,7 +986,8 @@ export abstract class BaseQueue<
         return ErrorType.AznNotFound;
       case isError && error.message === ErrorType.EanOnEbyNotFound:
         return ErrorType.EanOnEbyNotFound;
-      case isError && error.message === ErrorType.RateLimit:
+      case (isError && error.message === ErrorType.RateLimit) ||
+        `${error}`.includes('net::ERR_HTTP2_PROTOCOL_ERROR'):
         return ErrorType.RateLimit;
       case isError && error.message === ErrorType.AccessDenied:
         return ErrorType.AccessDenied;
@@ -1056,8 +1003,6 @@ export abstract class BaseQueue<
         return ErrorType.ProtocolError;
       case `${error}`.includes('Navigating frame was detached'):
         return ErrorType.NavigatingFrameDetached;
-      case `${error}`.includes('net::ERR_HTTP2_PROTOCOL_ERROR'):
-        return ErrorType.RateLimit;
       case `${error}`.includes('net::ERR_TUNNEL_CONNECTION_FAILED'):
         return ErrorType.ERR_TUNNEL_CONNECTION_FAILED;
       case `${error}`.includes('net::ERR_EMPTY_RESPONSE'):
