@@ -50,7 +50,7 @@ import { createLabeledTimeout } from './createLabeledTimeout';
 
 type Task = (page: any, request: any) => Promise<any>;
 
-const usePremiumProxyTasks: TaskTypes[] = [
+const USE_PREMIUM_PROXY_TASKS: TaskTypes[] = [
   'CRAWL_SHOP',
   'CRAWL_EAN',
   'DEALS_ON_EBY',
@@ -62,7 +62,7 @@ const usePremiumProxyTasks: TaskTypes[] = [
   'MATCH_PRODUCTS',
 ];
 
-const useSupremeProxyTasks: TaskTypes[] = [
+const USE_SUPREME_PROXY_TASKS: TaskTypes[] = [
   'CRAWL_EAN',
   'CRAWL_AZN_LISTINGS',
   'CRAWL_EBY_LISTINGS',
@@ -71,9 +71,12 @@ const useSupremeProxyTasks: TaskTypes[] = [
   'DEALS_ON_EBY',
 ];
 
-const timeoutTasks: TaskTypes[] = ['CRAWL_SHOP'];
+const TIMEOUT_TASKS: TaskTypes[] = ['CRAWL_SHOP'];
 
-const shuffleTasks: TaskTypes[] = [
+const useTimeout = (queueTask: any) =>
+  TIMEOUT_TASKS.includes(queueTask.currentStep || queueTask.type);
+
+const SHUFFLE_REQUEST_TASKS: TaskTypes[] = [
   'CRAWL_EAN',
   'LOOKUP_INFO',
   'DEALS_ON_EBY',
@@ -84,7 +87,10 @@ const shuffleTasks: TaskTypes[] = [
   'LOOKUP_CATEGORY',
 ];
 
-const multipleQueues: TaskTypes[] = [
+const useShuffle = (queueTask: any) =>
+  SHUFFLE_REQUEST_TASKS.includes(queueTask.type);
+
+const MULTI_BROWSER_TASKS: TaskTypes[] = [
   'DAILY_SALES',
   'LOOKUP_INFO',
   'WHOLESALE_SEARCH',
@@ -109,7 +115,7 @@ const RESOURCETYPE_PER_TASK: {
   LOOKUP_CATEGORY: 'crawl',
 };
 
-const neverUsePremiumProxyDomains = [
+const FORBIDDEN_PROXY_DOMAINS = [
   'amazon.de',
   'ebay.de',
   'sellercentral.amazon.de',
@@ -118,8 +124,8 @@ const neverUsePremiumProxyDomains = [
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
   const url = new URL(link);
   return (
-    usePremiumProxyTasks.includes(taskType) &&
-    !neverUsePremiumProxyDomains.some((domain) => url.hostname.includes(domain))
+    USE_PREMIUM_PROXY_TASKS.includes(taskType) &&
+    !FORBIDDEN_PROXY_DOMAINS.some((domain) => url.hostname.includes(domain))
   );
 };
 
@@ -945,7 +951,7 @@ export abstract class BaseQueue<
     const { allowedHosts, proxyType } = shop;
     const { requestId } = request;
     await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
-    const eligableForSupreme = useSupremeProxyTasks.includes(
+    const eligableForSupreme = USE_SUPREME_PROXY_TASKS.includes(
       this.queueTask.type,
     );
     if (eligableForPremiumProxy) {
@@ -1076,8 +1082,10 @@ export abstract class BaseQueue<
   }
 
   next(): void {
+
+
     if (
-      multipleQueues.includes(this.queueTask.type) &&
+      MULTI_BROWSER_TASKS.includes(this.queueTask.type) &&
       this.queue.length === 0
     ) {
       this.eventEmitter.emit(`${this.queueId}-finished`, {
@@ -1103,13 +1111,13 @@ export abstract class BaseQueue<
       return;
     }
     this.running++;
-    if (shuffleTasks.includes(this.queueTask.type)) {
+    if (useShuffle(this.queueTask)) {
       this.queue = shuffle(this.queue);
     }
     const nextRequest = this.queue.shift();
     if (nextRequest) {
       const id = crypto.randomBytes(8).toString('hex');
-      if (timeoutTasks.includes(this.queueTask.type)) {
+      if (useTimeout(this.queueTask)) {
         const timeoutTime = this.randomTimeout(
           RANDOM_TIMEOUT_MIN,
           RANDOM_TIMEOUT_MAX,
