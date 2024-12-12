@@ -123,10 +123,7 @@ const FORBIDDEN_PROXY_DOMAINS = [
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
   const url = new URL(link);
-  return (
-    USE_PREMIUM_PROXY_TASKS.includes(taskType) &&
-    !FORBIDDEN_PROXY_DOMAINS.some((domain) => url.hostname.includes(domain))
-  );
+  return USE_PREMIUM_PROXY_TASKS.includes(taskType);
 };
 
 const getHost = (link: string) => {
@@ -1082,8 +1079,6 @@ export abstract class BaseQueue<
   }
 
   next(): void {
-
-
     if (
       MULTI_BROWSER_TASKS.includes(this.queueTask.type) &&
       this.queue.length === 0
