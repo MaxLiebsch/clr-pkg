@@ -324,15 +324,18 @@ export interface KeepaProperties {
   curr_ausprcs?: number;
   curr_salesRank?: number;
   curr_buyBoxPrice?: number;
+  curr_fba?: number;
   avg30_ahsprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ansprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ausprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_salesRank?: number; // Average of the Amazon history prices of the last 30 days
   avg30_buyBoxPrice?: number; // Average of the Amazon history prices of the last 30 days
+  avg30_fba?: number; // Average of the lowest fba history prices of the last 30 days
   avg90_ahsprcs?: number; // Average of the Amazon history prices of the last 90 days
   avg90_ansprcs?: number; // Average of the Amazon history prices of the last 90 days
   avg90_ausprcs?: number; // Average of the Amazon history prices of the last 90 days
   avg90_salesRank?: number; // Average of the Amazon history prices of the last 90 days
+  avg90_fba?: number; // Average of the lowest fba history prices of the last 90 days
   avg90_buyBoxPrice?: number; // Average of the Amazon history prices of the last
   buyBoxIsAmazon?: boolean;
   stockAmount?: number; //  The stock of the Amazon offer, if available. Otherwise undefined.
