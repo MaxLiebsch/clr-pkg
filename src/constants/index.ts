@@ -135,14 +135,17 @@ export const keepaProperties: KeepaNameProperties = [
   { name: 'curr_ansprcs' },
   { name: 'curr_ausprcs' },
   { name: 'curr_salesRank' },
+  { name: 'curr_buyBoxPrice' },
   { name: 'avg30_ahsprcs' }, // Average of the Amazon history prices of the last 30 days
   { name: 'avg30_ansprcs' }, // Average of the Amazon history prices of the last 30 days
   { name: 'avg30_ausprcs' }, // Average of the Amazon history prices of the last 30 days
   { name: 'avg30_salesRank' }, // Average of the Amazon history prices of the last 30 days
+  { name: 'avg30_buyBoxPrice' }, // Average of the Amazon history prices of the last 30 days
   { name: 'avg90_ahsprcs' }, // Average of the Amazon history prices of the last 90 days
   { name: 'avg90_ansprcs' }, // Average of the Amazon history prices of the last 90 days
   { name: 'avg90_ausprcs' }, // Average of the Amazon history prices of the last 90 days
   { name: 'avg90_salesRank' }, // Average of the Amazon history prices of the last 90 days
+  { name: 'avg90_buyBoxPrice' }, // Average of the Amazon history prices of the last 30 days
   { name: 'buyBoxIsAmazon' },
   { name: 'stockAmount' }, //  The stock of the Amazon offer, if available. Otherwise undefined.
   { name: 'stockBuyBox' }, // he stock of the buy box offer, if available. Otherwise undefined.
