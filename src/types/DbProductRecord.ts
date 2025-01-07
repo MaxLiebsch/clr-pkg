@@ -1,4 +1,4 @@
-import {  WithId } from 'mongodb';
+import { WithId } from 'mongodb';
 
 export type Content =
   | 'link'
@@ -299,6 +299,23 @@ export type EbyProps =
   | 'cat_prop'
   | 'catUpdatedAt';
 
+export type AvgPrices =
+  | 'avg30_buyBoxPrice'
+  | 'avg30_ansprcs'
+  | 'avg30_ahsprcs'
+  | 'avg90_buyBoxPrice'
+  | 'avg90_ansprcs'
+  | 'avg90_ahsprcs'
+
+export const AVG_PRICES: {[key in AvgPrices]:AvgPrices} = {
+  avg30_buyBoxPrice: 'avg30_buyBoxPrice',
+  avg30_ansprcs: 'avg30_ansprcs',
+  avg30_ahsprcs: 'avg30_ahsprcs',
+  avg90_buyBoxPrice: 'avg90_buyBoxPrice',
+  avg90_ansprcs: 'avg90_ansprcs',
+  avg90_ahsprcs: 'avg90_ahsprcs',
+}
+
 export interface KeepaProperties {
   categories?: number[] | null;
   k_eanList?: string[];
@@ -325,6 +342,8 @@ export interface KeepaProperties {
   curr_salesRank?: number;
   curr_buyBoxPrice?: number;
   curr_fba?: number;
+  a_avg_fld?: AvgPrices | null;
+  a_avg_price?: number;
   avg30_ahsprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ansprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ausprcs?: number; // Average of the Amazon history prices of the last 30 days

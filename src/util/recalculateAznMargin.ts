@@ -1,5 +1,5 @@
 import { DbProductRecord } from '../types/DbProductRecord';
-import { getAznAvgPrice } from './getAznAvgPrice';
+import { determineAdjustedSellPrice } from './getAznAvgPrice';
 import { retrieveAznArbitrageAndCosts } from './retrieveAznArbitrage';
 
 export const recalculateAznMargin = (
@@ -17,7 +17,7 @@ export const recalculateAznMargin = (
   } = product;
 
   if (costs && costs.azn > 0 && newSellPrice && buyPrice && sellQty && buyQty) {
-    const { a_prc, avgPrice, a_useCurrPrice } = getAznAvgPrice(
+    const { a_prc, avgPrice,avgField, a_useCurrPrice } = determineAdjustedSellPrice(
       product,
       newSellPrice,
     );
@@ -37,6 +37,9 @@ export const recalculateAznMargin = (
     Object.entries(arbitrageAndCosts).forEach(([key, val]) => {
       (spotterSet as any)[key] = val;
     });
+
+    spotterSet['a_avg_fld'] = avgField
+    spotterSet['a_avg_price'] = avgPrice;
 
     if (!product.a_pblsh) {
       spotterSet['a_pblsh'] = true;

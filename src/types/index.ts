@@ -132,7 +132,7 @@ export interface manufactuererObj {
   n: string;
 }
 
-export interface Medication {
+export interface IMedication {
   pzn: string;
   _id?: ObjectId | mongoose.Types.ObjectId;
   n: string;

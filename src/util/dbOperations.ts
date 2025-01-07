@@ -4,7 +4,7 @@ import { Med } from '../schemas/medication';
 import {
   Candidate,
   IManufactuerer,
-  Medication,
+  IMedication,
   RelatedProducts,
 } from '../types/index';
 import { ObjectId } from 'mongodb';
@@ -86,7 +86,7 @@ export const saveMedication = async (
     } else {
       pusher.a = a ? a : '';
       pusher.p = p ? p : '';
-      const newMedication: Medication = {
+      const newMedication: IMedication = {
         n: n,
         pzn: pzn,
         ps: ps,

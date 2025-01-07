@@ -2,7 +2,7 @@ import { safeParsePrice } from '../safeParsePrice';
 import { getNumber } from './compare_helper';
 import { AddProductInfo } from '../../types/query-request';
 import { Costs, DbProductRecord } from '../../types/DbProductRecord';
-import { getAznAvgPrice } from '../getAznAvgPrice';
+import { determineAdjustedSellPrice } from '../getAznAvgPrice';
 import { extractSellerRank } from '../extract/extractSellerRank';
 import { LookupInfoPropType } from '../../types/process';
 import { retrieveAznArbitrageAndCosts } from '../retrieveAznArbitrage';
@@ -60,13 +60,16 @@ export const generateUpdate = (
 
   const {
     avgPrice,
+    avgField,
     a_useCurrPrice,
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
-  } = getAznAvgPrice(product, a_prc || existingSellPrice || 0);
+  } = determineAdjustedSellPrice(product, a_prc || existingSellPrice || 0);
 
   update = {
     ...update,
+    a_avg_fld: avgField,
+    a_avg_price: avgPrice,
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
     a_qty,
@@ -119,6 +122,8 @@ export const generateUpdate = (
       ...arbitrageAndCosts,
       a_qty,
       a_useCurrPrice,
+      a_avg_fld: avgField,
+      a_avg_price: avgPrice,
     };
   } else if (
     existingCosts &&
@@ -154,6 +159,8 @@ export const generateUpdate = (
       ...arbitrageAndCosts,
       a_qty,
       a_useCurrPrice,
+      a_avg_fld: avgField,
+      a_avg_price: avgPrice,
     };
   }
 
@@ -201,10 +208,11 @@ export const generateMinimalUpdate = (
 
   const {
     avgPrice,
+    avgField,
     a_useCurrPrice,
     a_prc: newSellPrice,
     a_uprc: newSellUPrice,
-  } = getAznAvgPrice(product, a_prc || oldSellPrice || 0);
+  } = determineAdjustedSellPrice(product, a_prc || oldSellPrice || 0);
 
   if (newCosts.azn > 0.3 && newSellPrice >= 1) {
     // If we use the avg price, we need calculate the costs for the avg price,
@@ -235,6 +243,8 @@ export const generateMinimalUpdate = (
       ...arbitrageAndCosts,
       a_qty: sellQty,
       a_useCurrPrice,
+      a_avg_fld: avgField,
+      a_avg_price: avgPrice,
     };
   } else if (existingCosts && existingCosts.azn > 0.3 && newSellPrice >= 1) {
     if (!existingCosts?.prvsn) {
@@ -258,6 +268,8 @@ export const generateMinimalUpdate = (
       ...arbitrageAndCosts,
       a_qty: sellQty,
       a_useCurrPrice,
+      a_avg_fld: avgField,
+      a_avg_price: avgPrice,
     };
   }
 
