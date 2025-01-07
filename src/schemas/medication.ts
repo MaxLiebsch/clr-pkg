@@ -1,5 +1,5 @@
 import pkg, { Model } from 'mongoose';
-import { Medication, RichLink } from '../types';
+import { IMedication, RichLink } from '../types';
 const { model, Schema } = pkg;
 
 //a availability p price l link n name
@@ -39,7 +39,7 @@ const RelatedProducts = new Schema({
   pzn: { type: String, default: '' },
 });
 
-const Medication = new Schema<Medication, Model<Medication>, Medication>(
+const Medication = new Schema<IMedication, Model<IMedication>, IMedication>(
   {
     pzn: { type: String, required: true },
     n: { type: String, default: '' },
