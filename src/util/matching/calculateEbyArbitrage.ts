@@ -56,14 +56,11 @@ function calculateFee(
 }
 
 export function findMappedCategory(categories: number[]): EbyCategory | null {
-  let mappedCategory = null as EbyCategory | null;
-  categories.forEach((x: number) => {
-    const result = ebayTier.find(
-      (tier: EbyCategory) => tier.id === x,
-    ) as EbyCategory;
+  for (const categoryId of categories) {
+    const result = ebayTier.find((tier: EbyCategory) => tier.id === categoryId);
     if (result) {
-      mappedCategory = result;
+      return result;
     }
-  });
-  return mappedCategory;
+  }
+  return null;
 }

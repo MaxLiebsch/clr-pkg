@@ -71,7 +71,7 @@ const USE_SUPREME_PROXY_TASKS: TaskTypes[] = [
   'DEALS_ON_EBY',
 ];
 
-const TIMEOUT_TASKS: TaskTypes[] = ['CRAWL_SHOP'];
+const TIMEOUT_TASKS: TaskTypes[] = ['CRAWL_SHOP', "QUERY_EANS_EBY", "DEALS_ON_EBY", "DEALS_ON_AZN"];
 
 const useTimeout = (queueTask: any) =>
   TIMEOUT_TASKS.includes(queueTask.currentStep || queueTask.type);

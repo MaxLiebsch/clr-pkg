@@ -5,10 +5,9 @@ export const queryURLBuilder = (
   query: Query,
 ) => {
   const relevatUrlSchema = queryUrlSchema.find(
-    (schema) =>
-      schema.category.toLowerCase() === query.category.toLowerCase() ||
-      schema.category.toLowerCase() === 'default',
+    (schema) => schema.category.toLowerCase() === query.category.toLowerCase(),
   );
+
   if (!relevatUrlSchema) throw new Error('missing url schema');
   let url = '';
   let baseUrl = relevatUrlSchema.baseUrl;
