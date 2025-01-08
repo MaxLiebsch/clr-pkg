@@ -20,6 +20,7 @@ export const ebyUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
   e_mrgn_pct: '',
   e_ns_costs: '',
   e_totalOfferCount: '',
+  e_totalSoldOfferCount: "",
   e_ns_mrgn: '',
   e_ns_mrgn_pct: '',
   e_tax: '',

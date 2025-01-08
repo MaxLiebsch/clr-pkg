@@ -383,6 +383,7 @@ export interface DbProductRecord
   e_orgn?: string;
   e_mrgn?: number;
   e_totalOfferCount?: number;
+  e_totalSoldOfferCount?: number;
   e_mrgn_prc?: number;
   e_mrgn_pct?: number;
   e_ns_costs?: number;

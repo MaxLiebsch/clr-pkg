@@ -3,7 +3,7 @@
 export type QueryKeys = 'brand' | 'model' | 'product.price' | 'product.key' | 'product.value' | 'year' |'subVehicleType' | 'vehicleType'
 
 export interface Query {
-    category: string
+    category: QueryCategory
     brand: Brand
     year: Year
     vehicleType?: VehicleType
@@ -43,13 +43,15 @@ export interface Query {
     value: string
     price?: string
   }
+  
 
-
+  export type QueryCategory = 'default' | 'sold_products' | 'total_listings'
+  
   export interface QueryURLSchema {
     baseUrl: string;
     searchParams?: SearchParams;
     suffix?: string;
-    category: string;
+    category: QueryCategory;
   }
 
   export interface SearchParams {
