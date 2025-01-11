@@ -114,7 +114,7 @@ export interface DbProduct {
   nm_prop?: string;
   qty_batchId?: string;
   qty_prop?: string;
-
+  availUpdatedAt?: string;
   createdAt: string;
   shop?: string;
   updatedAt: string;
@@ -164,48 +164,6 @@ export interface EbyCategory {
   createdAt?: string;
 }
 
-export type AznProps =
-  | 'a_pblsh'
-  | 'a_nm'
-  | 'a_lnk'
-  | 'a_img'
-  | 'asin'
-  | 'a_prc'
-  | 'a_errors'
-  | 'costs'
-  | 'gl'
-  | 'drops30'
-  | 'drops90'
-  | 'iwhd'
-  | 'pwhd'
-  | 'a_uprc'
-  | 'a_qty'
-  | 'a_orgn'
-  | 'tax'
-  | 'a_useCurrPrice'
-  | 'a_reviewcnt'
-  | 'a_rating'
-  | 'a_mrgn'
-  | 'a_mrgn_pct'
-  | 'a_w_mrgn'
-  | 'a_w_mrgn_pct'
-  | 'a_p_w_mrgn'
-  | 'a_p_w_mrgn_pct'
-  | 'a_p_mrgn'
-  | 'a_vrfd'
-  | 'a_p_mrgn_pct'
-  | 'info_taskId'
-  | 'info_prop'
-  | 'keepaEanUpdatedAt'
-  | 'keepaEan_lckd'
-  | 'keepaUpdatedAt'
-  | 'keepa_lckd'
-  | 'aznUpdatedAt'
-  | 'azn_prop'
-  | 'azn_taskId'
-  | 'dealAznUpdatedAt'
-  | 'dealAznTaskId';
-
 export interface Dimensions {
   height: number;
   length: number;
@@ -214,8 +172,6 @@ export interface Dimensions {
 }
 
 export interface AznProduct {
-  availUpdatedAt?: string;
-  // AZN properties
   a_pblsh?: Boolean;
   a_nm?: string;
   a_lnk?: string;
@@ -264,40 +220,51 @@ export interface AznProduct {
   // dealazn properties
   dealAznUpdatedAt?: string;
   dealAznTaskId?: string;
+  // wholesale properties
+  a_status?: "complete" | "not found" | "keepa";
+  a_lookup_pending?: boolean;
 }
 
-export type EbyProps =
-  | 'e_pblsh'
-  | 'e_nm'
-  | 'e_pRange'
-  | 'e_cur'
-  | 'e_img'
-  | 'esin'
-  | 'e_prc'
-  | 'e_uprc'
-  | 'e_qty'
-  | 'e_orgn'
-  | 'e_mrgn'
-  | 'e_mrgn_prc'
-  | 'e_mrgn_pct'
-  | 'e_ns_costs'
-  | 'e_ns_mrgn'
-  | 'e_ns_mrgn_prc'
-  | 'e_ns_mrgn_pct'
-  | 'e_tax'
-  | 'e_costs'
-  | 'e_totalOfferCount'
-  | 'ebyCategories'
-  | 'e_vrfd'
-  | 'cat_taskId'
-  | 'ebyUpdatedAt'
-  | 'eby_taskId'
-  | 'dealEbyUpdatedAt'
-  | 'dealEbyTaskId'
-  | 'eby_prop'
-  | 'qEbyUpdatedAt'
-  | 'cat_prop'
-  | 'catUpdatedAt';
+export type EbyProduct = {
+  // Eby properties
+  e_pblsh?: boolean;
+  e_nm?: string;
+  e_pRange?: Prange;
+  e_lnk?: string;
+  e_cur?: string;
+  e_img?: string;
+  esin?: string;
+  e_prc?: number;
+  e_uprc?: number;
+  e_qty?: number;
+  e_orgn?: string;
+  e_mrgn?: number;
+  e_totalOfferCount?: number;
+  e_totalSoldOfferCount?: number;
+  e_mrgn_prc?: number;
+  e_mrgn_pct?: number;
+  e_ns_costs?: number;
+  e_ns_mrgn?: number;
+  e_ns_mrgn_pct?: number;
+  e_tax?: number;
+  e_costs?: number;
+  ebyCategories?: EbyCategory[];
+  e_vrfd?: Verification;
+  // lookup category
+  cat_taskId?: string;
+  // scrape listing
+  ebyUpdatedAt?: string;
+  eby_taskId?: string;
+  // dealeby properties
+  dealEbyUpdatedAt?: string;
+  dealEbyTaskId?: string;
+
+  eby_prop?: string;
+  qEbyUpdatedAt?: string;
+
+  cat_prop?: string;
+  catUpdatedAt?: string;
+};
 
 export type AvgPrices =
   | 'avg30_buyBoxPrice'
@@ -305,16 +272,16 @@ export type AvgPrices =
   | 'avg30_ahsprcs'
   | 'avg90_buyBoxPrice'
   | 'avg90_ansprcs'
-  | 'avg90_ahsprcs'
+  | 'avg90_ahsprcs';
 
-export const AVG_PRICES: {[key in AvgPrices]:AvgPrices} = {
+export const AVG_PRICES: { [key in AvgPrices]: AvgPrices } = {
   avg30_buyBoxPrice: 'avg30_buyBoxPrice',
   avg30_ansprcs: 'avg30_ansprcs',
   avg30_ahsprcs: 'avg30_ahsprcs',
   avg90_buyBoxPrice: 'avg90_buyBoxPrice',
   avg90_ansprcs: 'avg90_ansprcs',
   avg90_ahsprcs: 'avg90_ahsprcs',
-}
+};
 
 export interface KeepaProperties {
   categories?: number[] | null;
@@ -366,45 +333,7 @@ export interface DbProductRecord
   extends KeepaProperties,
     WithId<Document>,
     DbProduct,
-    AznProduct {
+    AznProduct,
+    EbyProduct {
   availUpdatedAt?: string;
-
-  // Eby properties
-  e_pblsh?: boolean;
-  e_nm?: string;
-  e_pRange?: Prange;
-  e_lnk?: string;
-  e_cur?: string;
-  e_img?: string;
-  esin?: string;
-  e_prc?: number;
-  e_uprc?: number;
-  e_qty?: number;
-  e_orgn?: string;
-  e_mrgn?: number;
-  e_totalOfferCount?: number;
-  e_totalSoldOfferCount?: number;
-  e_mrgn_prc?: number;
-  e_mrgn_pct?: number;
-  e_ns_costs?: number;
-  e_ns_mrgn?: number;
-  e_ns_mrgn_pct?: number;
-  e_tax?: number;
-  e_costs?: number;
-  ebyCategories?: EbyCategory[];
-  e_vrfd?: Verification;
-  // lookup category
-  cat_taskId?: string;
-  // scrape listing
-  ebyUpdatedAt?: string;
-  eby_taskId?: string;
-  // dealeby properties
-  dealEbyUpdatedAt?: string;
-  dealEbyTaskId?: string;
-
-  eby_prop?: string;
-  qEbyUpdatedAt?: string;
-
-  cat_prop?: string;
-  catUpdatedAt?: string;
 }

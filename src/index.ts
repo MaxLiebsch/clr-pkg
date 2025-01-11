@@ -23,6 +23,7 @@ export * from './types/process';
 
 //UTIL
 export * from './util/queryURLBuilder';
+export * from './util/ProductFactory';
 export * from './util/AznCategoryMapper';
 export * from './util/AznCategoryTrexIdMapper';
 export * from './util/extract/index';
@@ -64,7 +65,7 @@ export * from './util/calcAznCosts';
 export * from './util/calcAznProvision';
 export * from './util/calcPriceRatio';
 export * from './util/retrieveAznArbitrage';
-export * from './util/recalculateAznMargin'
+export * from './util/recalculateAznMargin';
 
 // STATIC
 export * from './static/allowed';
