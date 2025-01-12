@@ -60,6 +60,10 @@ export const queryURLBuilder = (
 
   url = baseUrl.replace('<query>', queryStr);
 
+  if(query.product?.price){
+    url = url.replace('<price>', query.product.price);
+  }
+
   if (continent) {
     url = url.replace('<continent>', continent);
   }
