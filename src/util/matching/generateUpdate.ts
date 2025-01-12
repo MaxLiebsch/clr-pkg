@@ -71,6 +71,7 @@ export const generateUpdate = (
     a_avg_fld: avgField,
     a_avg_price: avgPrice,
     a_prc: newSellPrice,
+    prc: buyPrice,
     a_uprc: newSellUPrice,
     a_qty,
   };
@@ -101,7 +102,10 @@ export const generateUpdate = (
     };
 
     if (!existingCosts?.prvsn) {
-      const provision = calcAznProvision(newCosts.azn, newSellPrice);
+      const provision = calcAznProvision(
+        newCosts.azn,
+        newSellPrice === 1 ? buyPrice : newSellPrice,
+      );
       costsForCalculation.prvsn = provision;
     }
 
@@ -138,7 +142,10 @@ export const generateUpdate = (
     };
 
     if (!existingCosts?.prvsn) {
-      const provision = calcAznProvision(newCosts.azn, newSellPrice);
+      const provision = calcAznProvision(
+        newCosts.azn,
+        newSellPrice === 1 ? buyPrice : newSellPrice,
+      );
       costsForCalculation.prvsn = provision;
     }
 

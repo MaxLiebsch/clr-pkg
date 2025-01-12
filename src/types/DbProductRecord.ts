@@ -222,6 +222,8 @@ export interface AznProduct {
   dealAznTaskId?: string;
   // wholesale properties
   a_status?: "complete" | "not found" | "keepa";
+  a_locked?: boolean;
+  e_locked?: boolean;
   a_lookup_pending?: boolean;
 }
 
