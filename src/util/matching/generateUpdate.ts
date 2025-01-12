@@ -88,7 +88,10 @@ export const generateUpdate = (
     tpt: safeParsePrice(infoMap.get('costs.tpt') || '0'),
   };
 
-  if (!existingCosts?.azn || newCosts.azn <= 0.3) {
+  if (
+    ((existingCosts && existingCosts.azn <= 0.3) || !existingCosts?.azn) &&
+    newCosts.azn <= 0.3
+  ) {
     infoProp = 'incomplete';
   }
 
