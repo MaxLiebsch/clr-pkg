@@ -183,6 +183,8 @@ export interface AznProduct {
   gl?: string;
   asin?: string;
   a_prc?: number;
+  a_avg_fld?: AvgPrices | null;
+  a_avg_price?: number;
   costs?: Costs;
   iwhd?: Dimensions;
   pwhd?: Dimensions;
@@ -221,9 +223,9 @@ export interface AznProduct {
   dealAznUpdatedAt?: string;
   dealAznTaskId?: string;
   // wholesale properties
-  a_status?: "complete" | "not found" | "keepa";
+  a_status?: 'complete' | 'not found' | 'keepa' | 'incomplete' | 'api';
   a_locked?: boolean;
-  e_locked?: boolean;
+  taskIds?: string[];
   a_lookup_pending?: boolean;
 }
 
@@ -231,8 +233,8 @@ export type EbyProduct = {
   // Eby properties
   e_pblsh?: boolean;
   e_nm?: string;
-  e_pRange?: Prange;
   e_lnk?: string;
+  e_pRange?: Prange;
   e_cur?: string;
   e_img?: string;
   esin?: string;
@@ -266,6 +268,10 @@ export type EbyProduct = {
 
   cat_prop?: string;
   catUpdatedAt?: string;
+  // wholesale properties
+  e_locked?: boolean;
+  e_status?: 'complete' | 'not found';
+  e_lookup_pending?: boolean;
 };
 
 export type AvgPrices =
@@ -311,8 +317,6 @@ export interface KeepaProperties {
   curr_salesRank?: number;
   curr_buyBoxPrice?: number;
   curr_fba?: number;
-  a_avg_fld?: AvgPrices | null;
-  a_avg_price?: number;
   avg30_ahsprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ansprcs?: number; // Average of the Amazon history prices of the last 30 days
   avg30_ausprcs?: number; // Average of the Amazon history prices of the last 30 days
