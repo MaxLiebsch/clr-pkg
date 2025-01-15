@@ -1,9 +1,9 @@
  
 import { UpdateQuery } from './aznQueries.js';
-import { DbProductRecord } from '../../types/DbProductRecord.js';
+import { EbyProduct } from '../../types/DbProductRecord.js';
 import { ebayTier } from '../../static/ebay.js';
 
-export const ebyUnsetProperties: { [key in keyof DbProductRecord]?: string } = {
+export const ebyUnsetProperties: { [key in keyof EbyProduct]?: string } = {
   //standard properties
   e_pblsh: '',
   e_nm: '',
