@@ -18,7 +18,6 @@ export const queryEansOnEbyQueue = async (
     addProduct,
     onNotFound,
     isFinished,
-    targetShop,
     limit,
     retries,
   } = request;

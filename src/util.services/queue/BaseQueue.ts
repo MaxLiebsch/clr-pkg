@@ -19,13 +19,11 @@ import {
   CHROME_VERSIONS,
   DEFAULT_PAGE_TIMEOUT,
   EAN_PAGE_TIMEOUT,
-  MAX_CRITICAL_ERRORS,
   MAX_RETRIES,
   MAX_RETRIES_NOT_FOUND,
   MAX_RETRIES_UNTIL_SUPREME,
   RANDOM_TIMEOUT_MAX,
   RANDOM_TIMEOUT_MIN,
-  STANDARD_FREQUENCE,
   refererList,
 } from '../../constants';
 import { yieldBrowserVersion } from '../../util/browser/yieldBrowserVersion';
@@ -71,7 +69,12 @@ const USE_SUPREME_PROXY_TASKS: TaskTypes[] = [
   'DEALS_ON_EBY',
 ];
 
-const TIMEOUT_TASKS: TaskTypes[] = ['CRAWL_SHOP', "QUERY_EANS_EBY", "DEALS_ON_EBY", "DEALS_ON_AZN"];
+const TIMEOUT_TASKS: TaskTypes[] = [
+  'CRAWL_SHOP',
+  'QUERY_EANS_EBY',
+  'DEALS_ON_EBY',
+  'DEALS_ON_AZN',
+];
 
 const useTimeout = (queueTask: any) =>
   TIMEOUT_TASKS.includes(queueTask.currentStep || queueTask.type);
@@ -94,6 +97,13 @@ const MULTI_BROWSER_TASKS: TaskTypes[] = [
   'DAILY_SALES',
   'LOOKUP_INFO',
   'WHOLESALE_SEARCH',
+];
+
+const EBY_RELATED_TASKS: TaskTypes[] = [
+  'DEALS_ON_EBY',
+  'CRAWL_EBY_LISTINGS',
+  'QUERY_EANS_EBY',
+  'LOOKUP_CATEGORY',
 ];
 
 const RESOURCETYPE_PER_TASK: {
@@ -566,6 +576,7 @@ export abstract class BaseQueue<
 
     this.queueStats.statusHeuristic['total'] += 1;
     let page: Page | undefined = undefined;
+    const host = getHost(link);
 
     try {
       let disAllowedResourceTypes = resourceTypes?.crawl;
@@ -578,9 +589,9 @@ export abstract class BaseQueue<
       }
       const pageAndPrint = await getPage({
         browser: this.browser!,
-        host: getHost(link),
+        host,
         shop,
-        requestCount: this.requestCountPerHost[getHost(link)] || 0,
+        requestCount: this.requestCountPerHost[host] || 0,
         disAllowedResourceTypes,
         exceptions,
         rules,
@@ -590,9 +601,9 @@ export abstract class BaseQueue<
 
       process.env.DEBUG === 'true' &&
         console.log(
-          getHost(link),
+          host,
           'requestCount: ',
-          this.requestCountPerHost[getHost(link)] || 0,
+          this.requestCountPerHost[host] || 0,
           'print: ',
           pageAndPrint.fingerprint,
         );
@@ -828,6 +839,15 @@ export abstract class BaseQueue<
     } finally {
       if (page) await closePage(page);
       this.clearTimeout(id);
+      if (EBY_RELATED_TASKS.includes(type) && host === 'ebay.de') {
+        await terminationPrevConnections(
+          requestId,
+          link,
+          allowedHosts,
+          proxyType,
+        );
+      }
+
       if ('resolveTimeout' in request) {
         request?.resolveTimeout && request.resolveTimeout();
       }
