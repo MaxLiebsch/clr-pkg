@@ -13,21 +13,24 @@ import { crawlProductsQueue } from '../crawl/crawlProductsQueue';
 import findPagination from '../crawl/findPagination';
 import { getPageNumberFromPagination } from '../crawl/getPageNumberFromPagination';
 import { crawlProducts } from '../crawl/crawlProducts';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
 import { findPaginationAppendix } from './findPaginationAppendix';
 import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
 import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
 import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
+import { clickAndExtract } from './pagination/clickAndExtract';
+
+const debug = process.env.DEBUG === 'true';
 
 export async function browseProductPagesQueue(
   page: Page,
-  request: CrawlerRequest,
+  request: ScrapeRequest,
 ) {
   const { shop, limit, addProduct, pageInfo, query, queue, productCount } =
-  request;
-  
+    request;
+
   const timeouts: NodeJS.Timeout[] = [];
   const { paginationEl: paginationEls, waitUntil, crawlActions } = shop;
 
@@ -46,7 +49,7 @@ export async function browseProductPagesQueue(
       if (type === 'scroll') {
         await humanScroll(page);
       }
-      if (type === 'button' && wait && subAction && sel) {
+      if (type === 'button' && subAction && sel) {
         if (subAction === 'waitBefore') {
           await new Promise((r) => setTimeout(r, 600));
         }
@@ -98,6 +101,7 @@ export async function browseProductPagesQueue(
         1,
       );
 
+      debug && console.log('totalpageCount:', pageCount);
       if (pageCount) {
         await findPaginationAppendix(paginationEls, page);
         const noOfPages = calculatePageCount(limit, pageCount);
@@ -143,8 +147,7 @@ export async function browseProductPagesQueue(
                 query?.product.value,
               );
             }
-            process.env.DEBUG === 'true' &&
-              console.log(initialPageUrl, 'nextUrl:', nextUrl);
+            debug && console.log(initialPageUrl, 'nextUrl:', nextUrl);
 
             queue.pushTask(crawlProductsQueue, {
               ...request,
@@ -211,6 +214,26 @@ export async function browseProductPagesQueue(
         closePage(page).then();
       });
       return 'crawled';
+    } else if (type === 'click-and-extract') {
+      const pageCount = await getPageNumberFromPagination(
+        page,
+        shop,
+        paginationEl,
+        productCount === undefined ? null : productCount,
+        1,
+      );
+      debug && console.log('totalpageCount:', pageCount);
+      await clickAndExtract({
+        limit: pageCount,
+        sel,
+        page,
+        shop,
+        wait,
+        pageInfo,
+        addProduct,
+        visible,
+        waitUntil,
+      });
     }
   } else {
     await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {

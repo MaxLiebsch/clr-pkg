@@ -4,14 +4,14 @@ import { getPageNumberFromPagination } from './getPageNumberFromPagination';
 import { paginationUrlSchemaBuilder } from './paginationURLBuilder';
 import { closePage } from '../browser/closePage';
 import { crawlProducts } from '../crawl/crawlProducts';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 import { myQuerySelectorAll } from '../helpers';
 import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
 
 export const crawlProductsQueue = async (
   page: Page,
-  request: CrawlerRequest,
+  request: ScrapeRequest,
 ) => {
   const {
     shop,

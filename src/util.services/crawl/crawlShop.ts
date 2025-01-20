@@ -4,9 +4,9 @@ import { subPageLoop } from './crawlSubPageLoop';
 import { performCrawlAction } from '../../util/crawl/performCrawlaction';
 import { closePage } from '../../util/browser/closePage';
 import { LoggerService } from '../../util/logger';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 
-export const crawlShop = async (page: Page, request: CrawlerRequest) => {
+export const crawlShop = async (page: Page, request: ScrapeRequest) => {
   const { shop, limit } = request;
   const { waitUntil, categories, crawlActions, manualCategories } = shop;
   const { mainCategory: mainCateg } = limit;

@@ -1,13 +1,13 @@
 import { Page } from 'rebrowser-puppeteer';
 import { ProxyAuth } from '../../types/proxyAuth';
 import { QueueTask } from '../../types/QueueTask';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 import { BaseQueue, WrapperFunctionResponse } from './BaseQueue';
 import { Infos } from '../../types/Infos';
 
-type Task = (page: Page, request: CrawlerRequest) => Promise<void>;
+type Task = (page: Page, request: ScrapeRequest) => Promise<void>;
 
-export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
+export class CrawlerQueue extends BaseQueue<ScrapeRequest> {
   private uniqueCategoryLinks: string[] = [];
 
   constructor(concurrency: number, proxyAuth: ProxyAuth, task: QueueTask) {
@@ -18,7 +18,7 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
     return super.log(msg);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  connect(csp?:boolean): Promise<void> {
+  connect(csp?: boolean): Promise<void> {
     return super.connect(csp);
   }
   disconnect(taskFinished = false): Promise<void> {
@@ -42,11 +42,11 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   resumeQueue() {
     return super.resumeQueue();
   }
-  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
-    return super.pauseQueue(reason);
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked', time?: number) {
+    return super.pauseQueue(reason, time);
   }
 
-  public addTasksToQueue(tasks: { task: Task; request: CrawlerRequest }[]) {
+  public addTasksToQueue(tasks: { task: Task; request: ScrapeRequest }[]) {
     return super.addTasksToQueue(tasks);
   }
 
@@ -68,8 +68,8 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
   }
   wrapperFunction(
     task: Task,
-    request: CrawlerRequest,
-    id: string
+    request: ScrapeRequest,
+    id: string,
   ): Promise<WrapperFunctionResponse> {
     return super.wrapperFunction(task, request, id);
   }
@@ -84,7 +84,7 @@ export class CrawlerQueue extends BaseQueue<CrawlerRequest> {
     );
   }
   // Push a new task to the queue
-  pushTask(task: Task, request: CrawlerRequest) {
+  pushTask(task: Task, request: ScrapeRequest) {
     return super.pushTask(task, request);
   }
   // Process the next task

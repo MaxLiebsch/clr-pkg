@@ -59,6 +59,7 @@ export interface Shop {
   categories: Categories;
   crawlActions: CrawlAction[];
   exceptions?: string[];
+  fetchExceptions?: string[];
   manualCategories?: ICategory[];
   rules?: Rule[];
   pageErrors?: PageErrors[];

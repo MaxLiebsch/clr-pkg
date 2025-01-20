@@ -5,6 +5,7 @@ import { Query } from '../../types/query';
 import { Shop } from '../../types/shop';
 import { get } from 'underscore';
 import { sleep } from '../extract';
+import { QueryAction } from '../../types/queryActions';
 
 export async function runActions(
   page: Page,
@@ -28,7 +29,7 @@ export async function runActions(
   }
 
   if (step) {
-    actions = actions.filter((a) => a.step === step);
+    actions = actions.filter((a): a is QueryAction => a.step === step);
   }
 
   if (actions) {

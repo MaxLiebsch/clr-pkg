@@ -43,6 +43,7 @@ export const allowed = [
   'www.fahrrad.de',
   'www.fressnapf.de',
   'fressnapf.app.baqend.com',
+  'api.os.fressnapf.com',
   'www.gamestop.de',
   'www.kaufland.de',
   'www.mediamarkt.de',

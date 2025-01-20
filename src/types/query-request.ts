@@ -90,10 +90,11 @@ export interface QueryRequest extends QRequest {
   onNotFound?: OnNotFound;
 }
 
-export interface CrawlerRequest extends QRequest {
+export interface ScrapeRequest extends QRequest {
   queue: CrawlerQueue;
   addProduct: (product: ProductRecord) => Promise<void>;
   limit: Limit;
+  updateProductLimit?: (limit: number) => void;
   categoriesHeuristic: {
     subCategories: {
       0: number;

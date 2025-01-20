@@ -14,6 +14,7 @@ import { allowed } from '../../static/allowed';
 import { Shop } from '../../types/shop';
 import { ProxyType } from '../../types/proxyAuth';
 import { VersionProvider } from '../versionProvider';
+import { closePage } from './closePage';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
@@ -246,6 +247,23 @@ const setPageProperties = async ({
       }
     }
   });
+
+  // page.on('requestfailed', async (request) => {
+  //   let url = request.url();
+  //   let error = request.failure();
+  //   if (url.includes('/graphql/get-product-list-counts') && error) {
+  //     console.error(`Request failed: ${request.url()}`);
+  //     throw new Error(error.errorText);
+  //   }
+  // });
+
+  // page.on('response', (resp) => {
+  //   let url = resp.url();
+  //   if (url.includes('/graphql/get-product-list-counts')) {
+  //     let status = resp.status();
+  //     console.log('status', status, url);
+  //   }
+  // });
 
   const userAgentMeta = rotateUserAgent(requestCount, host);
 

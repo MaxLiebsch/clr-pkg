@@ -6,7 +6,7 @@ import { LoggerService } from '../../util/logger';
 import { mainBrowser } from '../../util/browser/browsers';
 import { closePage } from '../../util/browser/closePage';
 import {
-  CrawlerRequest,
+  ScrapeRequest,
   QueryRequest,
   ScanRequest,
 } from '../../types/query-request';
@@ -157,7 +157,7 @@ export type WrapperFunctionResponse =
   | undefined;
 
 export abstract class BaseQueue<
-  T extends CrawlerRequest | QueryRequest | ScanRequest,
+  T extends ScrapeRequest | QueryRequest | ScanRequest,
 > {
   private queue: Array<{
     task: Task;
@@ -430,13 +430,13 @@ export abstract class BaseQueue<
       setTimeout(() => this.next(), index * 1000);
     }
   }
-  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked', time?: number) {
     if (this.pause) return;
     this.pause = true;
     this.repair(reason).then(() => {
       setTimeout(() => {
         this.resumeQueue();
-      }, 5000);
+      }, time ?? 5000);
     });
 
     //Reset errors
@@ -445,6 +445,7 @@ export abstract class BaseQueue<
       this.errorLog[errorType].lastOccurred = null;
     });
   }
+
   public empty() {
     return this.queue.length === 0 && this.running === 0;
   }
@@ -780,6 +781,12 @@ export abstract class BaseQueue<
               page && (await this.resetCookies(page));
               if (type === 'CRAWL_SHOP') {
                 this.pauseQueue('error');
+              }
+              console.log('currentStep:', currentStep)
+              if(currentStep === 'CRAWL_SHOP'){
+                // timeout for 1-3 minutes
+                const timeout = this.randomTimeout(60000, 180000)
+                this.pauseQueue('error', timeout);
               }
             } else {
               this.errorLog[errorType].count += 1;

@@ -4,26 +4,30 @@ import { getProductCount } from '../../util/helpers';
 import { retrieveSubPagesRecursive } from './retrieveSubPagesRecursive';
 import { closePage } from '../../util/browser/closePage';
 import { browseProductPagesQueue } from '../../util/crawl/browseProductPagesQueue';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 
-export const crawlSubpage = async (page: Page, request: CrawlerRequest) => {
-  const { shop, pageInfo, queue,  limit } = request;
+export const crawlSubpage = async (page: Page, request: ScrapeRequest) => {
+  const { shop, pageInfo, queue, limit, updateProductLimit } = request;
 
   const { productList } = shop;
   const { subCategory: subCateg } = limit;
 
   const subCategLnks = await getCategories(page, request, true);
 
-  const cntCategs = subCategLnks?.length ?? 0;
+  const totalCategories = subCategLnks?.length ?? 0;
 
   const productCount = await getProductCount(page, productList);
 
-  if (subCategLnks && cntCategs) {
+  if (productCount !== null && productCount > 0 && updateProductLimit) {
+    updateProductLimit(productCount);
+  }
+
+  if (subCategLnks && totalCategories) {
     const maxSubCategs = subCateg
-      ? subCateg > cntCategs
-        ? cntCategs
+      ? subCateg > totalCategories
+        ? totalCategories
         : subCateg
-      : cntCategs;
+      : totalCategories;
 
     for (let index = 0; index < maxSubCategs; index++) {
       const pageInfo: ICategory = {

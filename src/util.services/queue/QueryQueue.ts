@@ -13,7 +13,10 @@ export interface ProdInfo {
   nmSubSegments: string[];
 }
 
-type Task = (page: Page, request: QueryRequest) => Promise<string | undefined | void>;
+type Task = (
+  page: Page,
+  request: QueryRequest,
+) => Promise<string | undefined | void>;
 
 export class QueryQueue extends BaseQueue<QueryRequest> {
   /*
@@ -28,7 +31,7 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
     return super.log(msg);
   }
   /*  BROWSER RELATED FUNCTIONS  */
-  connect(csp?:boolean): Promise<void> {
+  connect(csp?: boolean): Promise<void> {
     return super.connect(csp);
   }
   disconnect(taskFinished = false): Promise<void> {
@@ -41,7 +44,7 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   public pullTasksFromQueue() {
     return super.pullTasksFromQueue();
   }
-  
+
   connected() {
     return super.connected();
   }
@@ -59,8 +62,8 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   resumeQueue() {
     return super.resumeQueue();
   }
-  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
-    return super.pauseQueue(reason);
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked', time?: number) {
+    return super.pauseQueue(reason, time);
   }
   public idle() {
     return super.idle();
@@ -74,7 +77,7 @@ export class QueryQueue extends BaseQueue<QueryRequest> {
   wrapperFunction(
     task: Task,
     request: QueryRequest,
-    id: string
+    id: string,
   ): Promise<WrapperFunctionResponse> {
     return super.wrapperFunction(task, request, id);
   }

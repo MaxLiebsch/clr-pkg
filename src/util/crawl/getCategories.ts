@@ -14,25 +14,32 @@ import {
 import { CrawlerQueue } from '../../util.services/queue/CrawlerQueue';
 import { prefixLink } from '../matching/compare_helper';
 import findSubCategories from './findSubCategories';
-import { CrawlerRequest, ScanRequest } from '../../types/query-request';
+import { ScrapeRequest, ScanRequest } from '../../types/query-request';
 import { ScanQueue } from '../../util.services/queue/ScanQueue';
 import { extractAttributeElementHandle } from '../extract/extractAttributeFromHandle';
+
+const debug = process.env.DEBUG === 'true';
 
 export interface ICategory {
   name: string;
   link: string;
+  skipSubCategories?: boolean;
   entryCategory?: string;
 }
 
 export const getCategories = async (
   page: Page,
-  request: CrawlerRequest | ScanRequest,
+  request: ScrapeRequest | ScanRequest,
   sub: boolean = false,
 ) => {
-  const { queue, shop } = request;
+  const { queue, shop, pageInfo } = request;
   const { categories: categorieEls, d: domain, ece } = shop;
   const categorieLinks: ICategory[] = [];
   if (sub) {
+    if (pageInfo?.skipSubCategories) {
+      debug && console.log('Skipping subcategories');
+      return null;
+    }
     const subCategories = categorieEls.subCategories;
     const { subCategoryHandle, subCategory } = await findSubCategories(
       page,

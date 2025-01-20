@@ -4,11 +4,11 @@ import { getCategories } from '../../util/crawl/getCategories';
 import { subPageLoop } from './crawlSubPageLoop';
 import { closePage } from '../../util/browser/closePage';
 import { browseProductPagesQueue } from '../../util/crawl/browseProductPagesQueue';
-import { CrawlerRequest } from '../../types/query-request';
+import { ScrapeRequest } from '../../types/query-request';
 
 export const retrieveSubPagesRecursive = async (
   page: Page,
-  request: CrawlerRequest,
+  request: ScrapeRequest,
 ) => {
   const { shop, pageInfo,limit } = request;
 

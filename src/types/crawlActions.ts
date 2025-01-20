@@ -19,7 +19,7 @@ export interface BaseAction {
   interval?: number;
   name: string;
   step?: number;
-  action: string;
+  action: 'waitBefore' | 'waitAfter' | 'click' | 'delete' | 'scroll';
 }
 
 export interface RemoveAction extends BaseAction {

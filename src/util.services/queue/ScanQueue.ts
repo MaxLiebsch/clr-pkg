@@ -42,8 +42,8 @@ export class ScanQueue extends BaseQueue<ScanRequest> {
   resumeQueue() {
     return super.resumeQueue();
   }
-  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked') {
-    return super.pauseQueue(reason);
+  pauseQueue(reason: 'error' | 'rate-limit' | 'blocked', time?: number) {
+    return super.pauseQueue(reason, time);
   }
 
   public addTasksToQueue(tasks: { task: Task; request: ScanRequest }[]) {
