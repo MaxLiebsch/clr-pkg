@@ -57,6 +57,7 @@ export const allowed = [
   'static.otto.de',
   'www.quelle.de',
   'www.reichelt.de',
+  'www.reichelt.com',
   'www.saturn.de',
   'www.sportspar.de',
   'www.voelkner.de',
