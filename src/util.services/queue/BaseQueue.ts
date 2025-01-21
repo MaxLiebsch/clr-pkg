@@ -72,6 +72,7 @@ const USE_SUPREME_PROXY_TASKS: TaskTypes[] = [
 const TIMEOUT_TASKS: TaskTypes[] = [
   'CRAWL_SHOP',
   'QUERY_EANS_EBY',
+  'CRAWL_EAN',
   'DEALS_ON_EBY',
   'DEALS_ON_AZN',
 ];
