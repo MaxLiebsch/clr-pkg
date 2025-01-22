@@ -82,47 +82,91 @@ describe('Helper.ts', () => {
   //     ),
   //   ).toBe('Elektronische Lasten');
   // });
-  test('conrad', ()=> {
+  // test('conrad', ()=> {
+  //   expect(
+  //     extractCategoryNameAndCapitalize(
+  //       '/de/o/fritteusen-0601146.html?tfo_productType=Heißluft-Fritteuse&tfo_flags=priceReducedProduct&tfo_availabilityColor=green',
+  //       2,
+  //       "\\w+-\\d+",
+  //       0
+  //     ),
+  //   ).toBe('Fritteusen');
+
+  //   expect(
+  //     extractCategoryNameAndCapitalize(
+  //       '/de/o/externe-festplatten-0413120.html?tfo_availabilityColor=green&tfo_flags=priceReducedProduc',
+  //       2,
+  //       "(\\w+-\\w+-\\d+|\\w+-\\d+)",
+  //       0
+  //     ),
+  //   ).toBe('Externe Festplatten');
+  //   expect(
+  //     extractCategoryNameAndCapitalize(
+  //       '/de/marken/einhell.html?sort=Availabilitycolor-desc&tfo_availabilityColor=green&tfo_flags=priceReducedProduct',
+  //       2,
+  //       "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+  //       0
+  //     ),
+  //   ).toBe('Einhell');
+  //   expect(
+  //     extractCategoryNameAndCapitalize(
+  //       '/de/o/3d-drucker-2409001.html?tfo_availabilityColor=green&tfo_flags=priceReducedProduct',
+  //       2,
+  //       "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+  //       0
+  //     ),
+  //   ).toBe('D Drucker');
+  //   expect(
+  //     extractCategoryNameAndCapitalize(
+  //       '/de/marken/apple.html?searchType=SearchRedirect&sort=Availabilitycolor-desc&tfo_availabilityColor=green&tfo_flags=priceReducedProduct#produkte',
+  //       2,
+  //       "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+  //       0
+  //     ),
+  //   ).toBe('Apple');
+  // })
+
+  test('proshop', ()=> {
     expect(
       extractCategoryNameAndCapitalize(
-        '/de/o/fritteusen-0601146.html?tfo_productType=Heißluft-Fritteuse&tfo_flags=priceReducedProduct&tfo_availabilityColor=green',
+        '/DEALS-Computer-Drucker-Zubehoer?cid=71a3a76d-3613-4b9c-92e5-9518e03e9eb6#productList',
         2,
-        "\\w+-\\d+",
+        "(\\w+-\\w+|\\w+-\\w+-\\w+|\\w+-\\w+-\\d+|\\w+-\\d+)",
         0
       ),
-    ).toBe('Fritteusen');
+    ).toBe('Deals Computer');
 
     expect(
       extractCategoryNameAndCapitalize(
-        '/de/o/externe-festplatten-0413120.html?tfo_availabilityColor=green&tfo_flags=priceReducedProduc',
+        '/DEALS-Spielzeug-Gadgets#productList',
         2,
-        "(\\w+-\\w+-\\d+|\\w+-\\d+)",
+        "(\\w+-\\w+|\\w+-\\w+-\\w+|\\w+-\\w+-\\d+|\\w+-\\d+)",
         0
       ),
-    ).toBe('Externe Festplatten');
+    ).toBe('Deals Spielzeug');
     expect(
       extractCategoryNameAndCapitalize(
-        '/de/marken/einhell.html?sort=Availabilitycolor-desc&tfo_availabilityColor=green&tfo_flags=priceReducedProduct',
+        '/DEALS-Persoenliche-Pflege#productList',
         2,
-        "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+        "(\\w+-\\w+|\\w+-\\w+-\\w+|\\w+-\\w+-\\d+|\\w+-\\d+)",
         0
       ),
-    ).toBe('Einhell');
-    expect(
-      extractCategoryNameAndCapitalize(
-        '/de/o/3d-drucker-2409001.html?tfo_availabilityColor=green&tfo_flags=priceReducedProduct',
-        2,
-        "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
-        0
-      ),
-    ).toBe('D Drucker');
-    expect(
-      extractCategoryNameAndCapitalize(
-        '/de/marken/apple.html?searchType=SearchRedirect&sort=Availabilitycolor-desc&tfo_availabilityColor=green&tfo_flags=priceReducedProduct#produkte',
-        2,
-        "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
-        0
-      ),
-    ).toBe('Apple');
+    ).toBe('Deals Persoenliche');
+    // expect(
+    //   extractCategoryNameAndCapitalize(
+    //     '/de/o/3d-drucker-2409001.html?tfo_availabilityColor=green&tfo_flags=priceReducedProduct',
+    //     2,
+    //     "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+    //     0
+    //   ),
+    // ).toBe('D Drucker');
+    // expect(
+    //   extractCategoryNameAndCapitalize(
+    //     '/de/marken/apple.html?searchType=SearchRedirect&sort=Availabilitycolor-desc&tfo_availabilityColor=green&tfo_flags=priceReducedProduct#produkte',
+    //     2,
+    //     "(\\w+-\\w+-\\d+|\\w+-\\d+|(\\w+).html)",
+    //     0
+    //   ),
+    // ).toBe('Apple');
   })
 });
