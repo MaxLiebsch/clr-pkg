@@ -24,6 +24,7 @@ export interface ICategory {
   name: string;
   link: string;
   skipSubCategories?: boolean;
+  scrapeCurrentPageProducts?: boolean;
   entryCategory?: string;
 }
 
@@ -96,10 +97,15 @@ export const getCategories = async (
           categorieEls?.exclude,
         );
       } else if (categoryLink) {
+        const categoryNameSegmentPos =
+          typeof categorieEls?.categoryNameSegmentPos === 'number'
+            ? categorieEls.categoryNameSegmentPos
+            : 1;
         const categoryName = extractCategoryNameAndCapitalize(
           categoryLink,
-          categorieEls.categoryNameSegmentPos ?? 1,
-          categorieEls.categoryRegexp,
+          categoryNameSegmentPos,
+          categorieEls?.categoryRegexp,
+          categorieEls?.regexpMatchIndex,
         );
         if (categoryName) {
           testAndPushUrl(

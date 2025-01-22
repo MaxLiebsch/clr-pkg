@@ -4,6 +4,7 @@ export interface Categories {
     wait?: number;
     categoryNameSegmentPos?: number;
     categoryRegexp?: string;
+    regexpMatchIndex?: number;
     visible?: boolean;
     type: string;
     subCategories: SubCategoriesSel[];

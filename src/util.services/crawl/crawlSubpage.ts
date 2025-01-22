@@ -6,6 +6,8 @@ import { closePage } from '../../util/browser/closePage';
 import { browseProductPagesQueue } from '../../util/crawl/browseProductPagesQueue';
 import { ScrapeRequest } from '../../types/query-request';
 
+const debug = process.env.DEBUG === 'true';
+
 export const crawlSubpage = async (page: Page, request: ScrapeRequest) => {
   const { shop, pageInfo, queue, limit, updateProductLimit } = request;
 
@@ -15,6 +17,7 @@ export const crawlSubpage = async (page: Page, request: ScrapeRequest) => {
   const subCategLnks = await getCategories(page, request, true);
 
   const totalCategories = subCategLnks?.length ?? 0;
+  debug && console.log(`${shop.d} total subcategories: ${totalCategories}`);
 
   const productCount = await getProductCount(page, productList);
 
@@ -41,7 +44,18 @@ export const crawlSubpage = async (page: Page, request: ScrapeRequest) => {
         pageInfo,
       });
     }
-    await closePage(page);
+
+    if (pageInfo?.scrapeCurrentPageProducts) {
+      await browseProductPagesQueue(page, {
+        ...request,
+        limit,
+        productCount,
+        retries: 0,
+        pageInfo,
+      });
+    } else {
+      await closePage(page);
+    }
   } else {
     await browseProductPagesQueue(page, {
       ...request,

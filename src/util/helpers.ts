@@ -125,11 +125,16 @@ export function extractCategoryNameAndCapitalize(
   url: string,
   segmentIndex: number,
   categoryRegexp?: string,
+  regexpMatchIndex?: number,
 ): string {
   try {
     if (categoryRegexp) {
+      const part = typeof regexpMatchIndex === 'number' ? regexpMatchIndex : 1;
       return capitalizeWords(
-        extractPart(url, categoryRegexp, 1).replace(/[-]/, ' '),
+        extractPart(url, categoryRegexp, part)
+          .replaceAll(/[-]/g, ' ')
+          .replaceAll(/\.html/g, '')
+          .replaceAll(/[\d+]/g, '').trim(),
       );
     }
     const urlObj = new URL(url);
@@ -191,7 +196,7 @@ export const getProductCount = async (
             if (productsPerPage && cnt) {
               return cnt * productsPerPage;
             } else {
-              return  cnt || 0;
+              return cnt || 0;
             }
           }
         }
@@ -512,7 +517,6 @@ export async function humanScroll(page: Page, lastScrollPosition = 0) {
     .catch((e) => {});
 
   while (newScrollPosition < (maxScrollPosition ?? 0)) {
-
     // Random scroll step: between 100 and 600 pixels
     let scrollStep = Math.floor(Math.random() * 800) + 100;
 
