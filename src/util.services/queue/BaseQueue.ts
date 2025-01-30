@@ -346,7 +346,6 @@ export abstract class BaseQueue<
           (page) => page.url() !== 'chrome://new-tab-page/',
         );
         this.running = filteredPages.length;
-        console.log('synced:this.running:', this.running);
       }
     } catch (error) {
       this.logError({ msg: 'Cannot sync running and open pages' });
@@ -1068,19 +1067,7 @@ export abstract class BaseQueue<
       this.eventEmitter.emit(`${this.queueId}-finished`, {
         queueId: this.queueId,
       });
-    }
-    console.log(
-      'this.running:',
-      this.running,
-      'this.queue.length:',
-      this.queue.length,
-      'this.pause:',
-      this.pause,
-      'this.taskFinished:',
-      this.taskFinished,
-      'this.repairing:',
-      this.repairing,
-    );
+    } 
     if (
       this.pause ||
       this.taskFinished ||
