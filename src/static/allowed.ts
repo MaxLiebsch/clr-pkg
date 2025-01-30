@@ -18,6 +18,7 @@ export const allowed = [
   'www.euronics.de',
   'cdn.euronics.de',
   'www.galaxus.de',
+  'static02.galaxus.com',
   'www.galeria.de',
   'www.hornbach.de',
   'www.pieper.de',

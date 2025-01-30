@@ -346,6 +346,7 @@ export abstract class BaseQueue<
           (page) => page.url() !== 'chrome://new-tab-page/',
         );
         this.running = filteredPages.length;
+        console.log('synced:this.running:', this.running);
       }
     } catch (error) {
       this.logError({ msg: 'Cannot sync running and open pages' });
@@ -780,14 +781,14 @@ export abstract class BaseQueue<
               });
               this.jumpToNextUserAgent(link);
               page && (await this.resetCookies(page));
-              if (type === 'CRAWL_SHOP') {
-                this.pauseQueue('error');
-              }
-              if (currentStep === 'CRAWL_SHOP') {
-                // timeout for 1-3 minutes
-                const timeout = this.randomTimeout(60000, 180000);
-                this.pauseQueue('error', timeout);
-              }
+              // if (type === 'CRAWL_SHOP') {
+              //   this.pauseQueue('error');
+              // }
+              // if (currentStep === 'CRAWL_SHOP') {
+              //   // timeout for 1-3 minutes
+              //   const timeout = this.randomTimeout(60000, 180000);
+              //   this.pauseQueue('error', timeout);
+              // }
             } else {
               this.errorLog[errorType].count += 1;
               this.errorLog[errorType].lastOccurred = Date.now();
@@ -1068,6 +1069,18 @@ export abstract class BaseQueue<
         queueId: this.queueId,
       });
     }
+    console.log(
+      'this.running:',
+      this.running,
+      'this.queue.length:',
+      this.queue.length,
+      'this.pause:',
+      this.pause,
+      'this.taskFinished:',
+      this.taskFinished,
+      'this.repairing:',
+      this.repairing,
+    );
     if (
       this.pause ||
       this.taskFinished ||
@@ -1111,6 +1124,8 @@ export abstract class BaseQueue<
           this.wrapperFunctionThen,
         );
       }
+    } else {
+      this.running--;
     }
   }
 }
