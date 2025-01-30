@@ -133,7 +133,6 @@ const FORBIDDEN_PROXY_DOMAINS = [
 ];
 
 const eligableForPremium = (link: string, taskType: TaskTypes) => {
-  const url = new URL(link);
   return USE_PREMIUM_PROXY_TASKS.includes(taskType);
 };
 
@@ -783,10 +782,9 @@ export abstract class BaseQueue<
               if (type === 'CRAWL_SHOP') {
                 this.pauseQueue('error');
               }
-              console.log('currentStep:', currentStep)
-              if(currentStep === 'CRAWL_SHOP'){
+              if (currentStep === 'CRAWL_SHOP') {
                 // timeout for 1-3 minutes
-                const timeout = this.randomTimeout(60000, 180000)
+                const timeout = this.randomTimeout(60000, 180000);
                 this.pauseQueue('error', timeout);
               }
             } else {
@@ -923,7 +921,7 @@ export abstract class BaseQueue<
     const { requestId } = request;
     await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
     const eligableForSupreme = USE_SUPREME_PROXY_TASKS.includes(
-      this.queueTask.type,
+      this.queueTask?.currentStep || this.queueTask.type,
     );
     if (eligableForPremiumProxy) {
       request.prevProxyType = proxyType;
