@@ -845,12 +845,18 @@ export abstract class BaseQueue<
     } finally {
       if (page) await closePage(page);
       this.clearTimeout(id);
-      await terminationPrevConnections(
-        requestId,
-        link,
-        allowedHosts,
-        proxyType,
-      );
+      if (
+        (EBY_RELATED_TASKS.includes(type) && host === 'ebay.de') ||
+        proxyType === 'de' ||
+        proxyType === 'des'
+      ) {
+        await terminationPrevConnections(
+          requestId,
+          link,
+          allowedHosts,
+          proxyType,
+        );
+      }
 
       if ('resolveTimeout' in request) {
         request?.resolveTimeout && request.resolveTimeout();
