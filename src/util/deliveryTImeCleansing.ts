@@ -4,6 +4,11 @@ export const deliveryTime = (status: string): string | undefined => {
   const tageRegex = status.match(/tag/gi);
   const weekRegex = status.match(/woche/gi);
   const inStockRegex = status.match(/InStock/gi);
+  const BackOrder = status.match(/BackOrder/gi);
+  const LimitedAvailability = status.match(/LimitedAvailability/gi);
+  const InStoreOnly = status.match(/InStoreOnly/gi);
+  const Reserved = status.match(/Reserved/gi);
+  const Discontinued = status.match(/Discontinued/gi);
   const outOfStockRegex = status.match(/OutOfStock/gi);
   const soldOutRegex = status.match(/SoldOut/gi);
   const numberRegex = status.match(/\b[0-9]{1}\b|\b[0-9]{2}\b/g);
@@ -17,6 +22,14 @@ export const deliveryTime = (status: string): string | undefined => {
   const lieferbarRegex = status.match(/lieferbar/gi);
   const ausverkauft = status.match(/ausverkauft/gi);
   const einigen = status.match(/einigen/gi);
+
+  if (Reserved || Discontinued || InStoreOnly || LimitedAvailability) {
+    return String(deliveryStatus.l2);
+  }
+
+  if(BackOrder) {
+    return String(deliveryStatus.l1);
+  }
 
   if (outOfStockRegex || soldOutRegex) {
     return String(deliveryStatus.l2);
@@ -62,10 +75,9 @@ export const deliveryTime = (status: string): string | undefined => {
     if (nArr.length === 1) {
       return `in ${nArr[0]} Tagen lieferbar`;
     }
-    return ''
+    return '';
   }
   if (zeitnahRegex && !numberRegex) {
     return 'in 1-3 Tagen lieferbar';
   }
-
 };
