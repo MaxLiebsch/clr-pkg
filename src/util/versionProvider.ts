@@ -2,7 +2,7 @@ import puppeteer from 'rebrowser-puppeteer';
 import puppeteer1 from 'puppeteer';
 
 export const puppeteerVersions = {
-  '132.0.6834.110': puppeteer1, // Puppeteer v24.1.1
+  '133.0.6943.53': puppeteer1, // Puppeteer v24.2.0
   '129.0.6668.100': puppeteer, // Puppeteer v23.5.3
   '129.0.6668.91': puppeteer, // Puppeteer v23.5.1
   '129.0.6668.89': puppeteer, // Puppeteer v23.5.0
@@ -15,7 +15,7 @@ export const puppeteerVersions = {
 export type Versions = keyof typeof puppeteerVersions;
 
 export class VersionProvider {
-  public currentPuppeteerVersion: Versions = '132.0.6834.110';
+  public currentPuppeteerVersion: Versions = '133.0.6943.53';
   public puppeteerInstance: any = puppeteer;
   public puppeteer = puppeteerVersions;
 
