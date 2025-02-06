@@ -1,5 +1,11 @@
 export interface PaginationElement {
-  type: 'pagination' | 'infinite_scroll'| 'recursive-more-button' | 'scroll-and-click' | 'click-and-extract';
+  type:
+    | 'pagination'
+    | 'infinite_scroll'
+    | 'recursive-more-button'
+    | 'scroll-and-click'
+    | 'click-and-extract'
+    | 'scroll-and-extract';
   sel: string;
   nav: string;
   findPaginationStrategy?: 'estimate';

@@ -24,6 +24,11 @@ import { findPaginationAppendix } from './findPaginationAppendix';
 import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
 import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
 import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
+import { clickAndExtract } from './pagination/clickAndExtract';
+import { scrollAndExtract } from './pagination/scrollAndExtract';
+import { findProductContainer } from './findProductContainer';
+
+const debug = process.env.DEBUG === 'true';
 
 export async function browseProductPages(
   page: Page,
@@ -34,14 +39,19 @@ export async function browseProductPages(
   query?: Query,
 ) {
   const timeouts: NodeJS.Timeout[] = [];
-  const { paginationEl: paginationEls, waitUntil, crawlActions, productList } = shop;
+  const {
+    paginationEl: paginationEls,
+    waitUntil,
+    crawlActions,
+    productList,
+  } = shop;
 
   let { pagination, paginationEl } = await findPagination(
     page,
     paginationEls,
     limit,
   );
-  process.env.DEBUG === 'true' && console.log('pagination:', pagination);
+  debug && console.log('pagination:', pagination);
   const limitPages = limit?.pages ? limit?.pages : 1;
 
   const productCount = await getProductCount(page, productList);
@@ -77,10 +87,10 @@ export async function browseProductPages(
         paginationEl,
         productCount,
       );
-      process.env.DEBUG && console.log('pageCount:', pageCount);
+      debug && console.log('pageCount:', pageCount);
 
       if (pageCount) {
-        await findPaginationAppendix(paginationEls, page)
+        await findPaginationAppendix(paginationEls, page);
         const noOfPages = limitPages
           ? limitPages > pageCount
             ? pageCount
@@ -106,7 +116,7 @@ export async function browseProductPages(
                 query?.product.value,
               );
             }
-            process.env.DEBUG && console.log('nextUrl:', nextUrl);
+            debug && console.log('nextUrl:', nextUrl);
             await page
               .goto(nextUrl, {
                 waitUntil: waitUntil ? waitUntil.product : 'load',
@@ -136,7 +146,7 @@ export async function browseProductPages(
         return 'crawled';
       }
     } else if (type === 'infinite_scroll') {
-      const scrolling = await infinitSrollPgn({page}) 
+      const scrolling = await infinitSrollPgn({ page });
       if (scrolling === 'finished') {
         await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(
           () => {
@@ -177,11 +187,49 @@ export async function browseProductPages(
         endOfPageSel,
         visible,
         waitUntil,
-        pageCount
+        pageCount,
       });
       await crawlProducts(page, shop, addProductCb, pageInfo, 1).finally(() => {
         timeouts.forEach((timeout) => clearInterval(timeout));
         closePage(page).then();
+      });
+      return 'crawled';
+    } else if (type === 'click-and-extract') {
+      const pageCount = await getPageNumberFromPagination(
+        page,
+        shop,
+        paginationEl,
+        productCount === undefined ? null : productCount,
+        1,
+      );
+      debug && console.log('totalpageCount:', pageCount);
+      await clickAndExtract({
+        limit: pageCount,
+        sel,
+        page,
+        shop,
+        wait,
+        pageInfo,
+        addProduct: addProductCb,
+        visible,
+        waitUntil,
+      });
+      return 'crawled';
+    } else if (type === 'scroll-and-extract') {
+      const productContainer = await findProductContainer(
+        shop.productList,
+        page,
+      );
+      if (!productContainer) return;
+      await scrollAndExtract({
+        page,
+        addProduct: addProductCb,
+        limit: limitPages,
+        shop,
+        productContainerSelector: productContainer.selector,
+        paginationBtnSelector: paginationEl.sel,
+        waitUntil: waitUntil,
+        pageInfo: pageInfo,
       });
       return 'crawled';
     }

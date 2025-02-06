@@ -110,6 +110,7 @@ export * from './util/crawl/paginationURLBuilder';
 export * from './util/crawl/getCategories';
 export * from './util/crawl/buildNextPageUrl';
 export * from './util/crawl/findPaginationAppendix';
+export * from './util/crawl/pagination/scrollAndExtract';
 export * from './util/crawl/pagination/recursiveMoreButtonPgn';
 export * from './util/crawl/pagination/scrollAndClickPgn';
 export * from './util/crawl/pagination/InfinitScrollPgn';

@@ -134,7 +134,8 @@ export function extractCategoryNameAndCapitalize(
         extractPart(url, categoryRegexp, part)
           .replaceAll(/[-]/g, ' ')
           .replaceAll(/\.html/g, '')
-          .replaceAll(/[\d+]/g, '').trim(),
+          .replaceAll(/[\d+]/g, '')
+          .trim(),
       );
     }
     const urlObj = new URL(url);
@@ -231,7 +232,9 @@ export const clickBtn = async (
         page.click(sel).catch((e) => {}),
       ]);
     } else {
-      await page.click(sel).catch((e) => {});
+      await page.click(sel).catch((e) => {
+        console.log('click button', e.message);
+      });
       if (waitDuration) {
         await new Promise((r) => setTimeout(r, waitDuration));
       }
@@ -245,6 +248,9 @@ export const clickBtn = async (
         }
       }, sel)
       .catch((e) => console.log('evaluate button', e.message));
+    if (waitDuration) {
+      await new Promise((r) => setTimeout(r, waitDuration));
+    }
   }
 };
 

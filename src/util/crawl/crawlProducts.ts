@@ -26,6 +26,8 @@ import { Shop } from '../../types/shop';
 import { NestedNameDetail } from '../../types/productInfoDetails';
 import { sleep } from '../extract';
 
+const debug = process.env.DEBUG === 'true';
+
 export const crawlProducts = async (
   page: Page,
   shop: Shop,
@@ -40,7 +42,7 @@ export const crawlProducts = async (
     await sleep(pause);
   }
 
-  process.env.DEBUG === 'true' && console.log('pageNo:', pageNo, pageInfo.link);
+  debug && console.log('pageNo:', pageNo, pageInfo.link);
 
   const shouldScroll = crawlActions.find((a) => a.type === 'scroll');
 
@@ -54,12 +56,11 @@ export const crawlProducts = async (
     if (!selector) continue;
 
     const productEls = await myQuerySelectorAll(page, product.sel);
-    process.env.DEBUG === 'true' &&
+    debug &&
       !productEls &&
       console.log('productEls missing in ', pageInfo.link);
     if (!productEls) continue;
-    process.env.DEBUG === 'true' &&
-      console.log('productEls:', productEls.length, ' in ', product.sel);
+    debug && console.log('productEls:', productEls.length, ' in ', product.sel);
 
     const { type, details } = product;
     for (let i = 0; i < productEls.length; i++) {

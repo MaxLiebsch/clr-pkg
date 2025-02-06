@@ -21,6 +21,8 @@ import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
 import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
 import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
 import { clickAndExtract } from './pagination/clickAndExtract';
+import { scrollAndExtract } from './pagination/scrollAndExtract';
+import { findProductContainer } from './findProductContainer';
 
 const debug = process.env.DEBUG === 'true';
 
@@ -234,6 +236,24 @@ export async function browseProductPagesQueue(
         visible,
         waitUntil,
       });
+      return 'crawled';
+    } else if (type === 'scroll-and-extract') {
+      const productContainer = await findProductContainer(
+        shop.productList,
+        page,
+      );
+      if (!productContainer) return;
+      await scrollAndExtract({
+        page,
+        addProduct,
+        limit: limit.pages,
+        shop,
+        productContainerSelector: productContainer.selector,
+        paginationBtnSelector: paginationEl.sel,
+        waitUntil: waitUntil,
+        pageInfo: pageInfo,
+      });
+      return 'crawled';
     }
   } else {
     await crawlProducts(page, shop, addProduct, pageInfo, 1).finally(() => {

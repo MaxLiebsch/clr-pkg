@@ -1,7 +1,6 @@
 import { Page } from 'rebrowser-puppeteer';
 import { clickBtn, humanScroll, waitForSelector } from '../../helpers';
 import { WaitUntil } from '../../../types/shop';
-import { PaginationElement } from '../../../types/paginationElement';
 
 interface ScrollAndClickPgnOpts {
   page: Page;
