@@ -12,7 +12,6 @@ import { allowed } from '../../static/allowed';
 import { Shop } from '../../types/shop';
 import { ProxyType } from '../../types/proxyAuth';
 import { VersionProvider } from '../versionProvider';
-import { EventEmitter } from 'events';
 import { globalEventEmitter } from '../events';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
