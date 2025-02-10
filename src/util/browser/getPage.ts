@@ -1,7 +1,5 @@
 import { Browser, Page, ResourceType } from 'rebrowser-puppeteer';
 import {
-  acceptEncodingList,
-  acceptList,
   graphicsCardListByPlatform,
   proxyTypeTimezones,
   screenResolutionsByPlatform,
@@ -14,7 +12,8 @@ import { allowed } from '../../static/allowed';
 import { Shop } from '../../types/shop';
 import { ProxyType } from '../../types/proxyAuth';
 import { VersionProvider } from '../versionProvider';
-import { closePage } from './closePage';
+import { EventEmitter } from 'events';
+import { globalEventEmitter } from '../events';
 
 //Amazon has 9,5 pages per session, Instagram 11,6
 //Absprungrate 35,1% Amazon, 35,8% Instagram (Seite wird wieder verlassen ohne Aktionen)
@@ -248,23 +247,6 @@ const setPageProperties = async ({
     }
   });
 
-  // page.on('requestfailed', async (request) => {
-  //   let url = request.url();
-  //   let error = request.failure();
-  //   if (url.includes('/graphql/get-product-list-counts') && error) {
-  //     console.error(`Request failed: ${request.url()}`);
-  //     throw new Error(error.errorText);
-  //   }
-  // });
-
-  // page.on('response', (resp) => {
-  //   let url = resp.url();
-  //   if (url.includes('/graphql/get-product-list-counts')) {
-  //     let status = resp.status();
-  //     console.log('status', status, url);
-  //   }
-  // });
-
   const userAgentMeta = rotateUserAgent(requestCount, host);
 
   const { agent, platformVersion } = userAgentMeta;
@@ -317,94 +299,6 @@ const setPageProperties = async ({
 
   await page.emulateTimezone(timezone);
 
-  // const languages = languagesLists[requestCount % languagesLists.length];
-  // const language = languageList[requestCount % languageList.length];
-
-  // const voices = voicesList.slice(requestCount % voicesList.length, undefined);
-
-  // if (voices.length < 6 && requestCount) {
-  //   let i = 0;
-  //   while (voices.length < 5) {
-  //     voices.push(voicesList[i]);
-  //     i++;
-  //   }
-  // }
-  // if (voices.some((voice) => !voice.default)) {
-  //   voices[0].default = true;
-  // }
-
-  // await page.evaluateOnNewDocument((voices) => {
-  //   Object.defineProperty(speechSynthesis, 'getVoices', {
-  //     get: function () {
-  //       return () => voices;
-  //     },
-  //   });
-  // }, voices);
-
-  // await page.evaluateOnNewDocument(() => {
-  //   const originalQuery = window.navigator.permissions.query;
-  //   //@ts-ignore
-  //   return (window.navigator.permissions.query = (parameters) => {
-  //     if (parameters.name === 'notifications') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //     } else if (parameters.name === 'geolocation') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'accelerometer') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'background-fetch') {
-  //       return Promise.resolve({ state: 'granted' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'background-sync') {
-  //       return Promise.resolve({ state: 'granted' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'clipboard-write') {
-  //       return Promise.resolve({ state: 'granted' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'display-capture') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'camera') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'microphone') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'clipboard-read') {
-  //       return Promise.resolve({ state: 'granted' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'gyroscope') {
-  //       return Promise.resolve({ state: 'granted' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'midi') {
-  //       return Promise.resolve({ state: 'granted' });
-  //     } else if (parameters.name === 'persistent-storage') {
-  //       return Promise.resolve({ state: 'prompt' });
-  //       //@ts-ignore
-  //     } else if (parameters.name === 'magnetometer') {
-  //       return Promise.resolve({ state: 'granted' });
-  //     } else {
-  //       return originalQuery(parameters);
-  //     }
-  //   });
-  // });
-
-  // await page.evaluateOnNewDocument(() => {
-  //   // We can mock this in as much depth as we need for the test.
-  //   console.log = function () {}; // Disable console.log temporarily
-  //   // Override the Error stack getter to prevent detection
-  //   Object.defineProperty(Error.prototype, 'stack', {
-  //     get: function () {
-  //       return ''; // Return an empty string or a custom stack
-  //     },
-  //   });
-  // });
-
-  // const graphicCard = rotateGraphicUnit(platform, requestCount, host);
-
-  // await new WebGlVendor(graphicCard).onPageCreated(page);
-
   if (
     javascript?.webWorker === undefined ||
     javascript?.webWorker === 'disabled'
@@ -455,18 +349,6 @@ const setPageProperties = async ({
       });
     });
   }
-
-  // return {
-  //   agent: _agent,
-  //   viewPort,
-  //   graphicCard,
-  //   timezone,
-  //   languages,
-  //   language,
-  //   accept,
-  //   acceptEncoding,
-  //   voices: '',
-  // };
 };
 
 interface GetPageOptions {
@@ -474,6 +356,7 @@ interface GetPageOptions {
   shop: Shop;
   requestCount: number;
   disAllowedResourceTypes?: ResourceType[];
+  watchedRoutes?: string[];
   exceptions?: string[];
   rules?: Rule[];
   proxyType: ProxyType;
@@ -488,9 +371,21 @@ export async function getPage({
   exceptions,
   rules,
   host,
+  watchedRoutes,
   proxyType,
 }: GetPageOptions) {
   const page = await browser.newPage();
+
+  if (watchedRoutes) {
+    page.on('requestfailed', async (request) => {
+      let url = request.url();
+      let error = request.failure();
+      if (watchedRoutes.some((route) => url.includes(route)) && error) {
+        globalEventEmitter.emit('watchedRouteError', new Error(error.errorText));
+      }
+    });
+  }
+
   initFingerPrintForHost(host);
   const fingerprint = await setPageProperties({
     page,

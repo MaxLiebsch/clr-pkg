@@ -24,6 +24,7 @@ export interface Shop {
   ne?: string; // name
   purlschema?: string;
   allowedHosts?: string[];
+  watchedRoutes?: string[];
   fetch?: boolean; // fetch with get
   javascript?: {
     webWorker: status;

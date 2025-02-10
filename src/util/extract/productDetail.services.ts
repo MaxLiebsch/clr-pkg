@@ -30,7 +30,7 @@ export abstract class ExtractProductDetail {
   constructor() {}
   abstract extractDetail(
     element: ElementHandle,
-    detail: Details,
+    detail: unknown,
   ): Promise<string | string[] | null>;
 }
 export class ListExtractor implements ExtractProductDetail {

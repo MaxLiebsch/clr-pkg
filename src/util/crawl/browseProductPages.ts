@@ -59,7 +59,7 @@ export async function browseProductPages(
   if (crawlActions && crawlActions.length > 0) {
     for (let i = 0; i < crawlActions.length; i++) {
       const action = crawlActions[i];
-      const { action: subAction, type, sel, interval } = action;
+      const { action: subAction, type, sel, interval, wait } = action;
 
       if (type === 'element' && subAction === 'delete' && interval) {
         timeouts.push(
@@ -71,6 +71,19 @@ export async function browseProductPages(
       }
       if (type === 'scroll') {
         await humanScroll(page);
+      }
+
+      if (type === 'button' && subAction && sel) {
+        if (subAction === 'waitBefore') {
+          await new Promise((r) => setTimeout(r, 600));
+        }
+        await clickBtn(
+          page,
+          sel,
+          wait || false,
+          waitUntil,
+          'waitDuration' in action ? action.waitDuration : undefined,
+        );
       }
     }
   }

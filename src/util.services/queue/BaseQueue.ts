@@ -40,11 +40,14 @@ import { Shop, WaitUntil } from '../../types/shop';
 import {
   notifyProxyChange,
   registerRequest,
-  requestCompleted,
   terminationPrevConnections,
 } from '../../util/proxyFunctions';
 import { isValidURL } from '../../util/isURLvalid';
 import { createLabeledTimeout } from './createLabeledTimeout';
+
+const errorEmitter = new EventEmitter();
+
+const debug = process.env.DEBUG === 'true';
 
 type Task = (page: any, request: any) => Promise<any>;
 
@@ -503,6 +506,7 @@ export abstract class BaseQueue<
         console.error('Failed to clear storage:', e?.message);
       });
   };
+
   async wrapperFunction(
     task: Task,
     request: T,
@@ -588,10 +592,12 @@ export abstract class BaseQueue<
         disAllowedResourceTypes =
           resourceTypes[RESOURCETYPE_PER_TASK[currentStep || type]] || [];
       }
+
       const pageAndPrint = await getPage({
         browser: this.browser!,
         host,
         shop,
+        watchedRoutes: shop.watchedRoutes,
         requestCount: this.requestCountPerHost[host] || 0,
         disAllowedResourceTypes,
         exceptions,
@@ -600,7 +606,14 @@ export abstract class BaseQueue<
       });
       page = pageAndPrint.page;
 
-      process.env.DEBUG === 'true' &&
+      const errorPromise = new Promise((_, reject) => {
+        globalEventEmitter.once('watchedRouteError', (args) => {
+          console.log('watchedRouteError', args);
+          reject(args);
+        });
+      });
+
+      debug &&
         console.log(
           host,
           'requestCount: ',
@@ -731,7 +744,7 @@ export abstract class BaseQueue<
         });
       }
 
-      const message = await task(page, request);
+      const message = await Promise.race([task(page, request), errorPromise]);
       if (
         type === 'CRAWL_SHOP' &&
         !this.queueStats.visitedPages.includes(pageInfo.link)
@@ -750,8 +763,7 @@ export abstract class BaseQueue<
     } catch (error) {
       const errorType = this.parseError(error);
 
-      process.env.DEBUG === 'true' &&
-        console.log('WrapperFunction:Error:', error);
+      debug && console.log('WrapperFunction:Error:', error);
       if (this.taskFinished) return;
 
       if (!this.repairing) {
@@ -906,6 +918,7 @@ export abstract class BaseQueue<
       ` Details: ${result?.details}, Status: ${result?.status}, Retries: ${result?.retries} ProxyType: ${result?.proxyType}`,
     );
   };
+
   private terminateAndSetProxy = async ({
     errorType,
     link,
@@ -922,20 +935,32 @@ export abstract class BaseQueue<
     throwErr: boolean;
   }) => {
     const { allowedHosts, proxyType } = shop;
-    const { requestId } = request;
+    const { requestId, retries } = request;
     await terminationPrevConnections(requestId, link, allowedHosts, proxyType);
     const eligableForSupreme = USE_SUPREME_PROXY_TASKS.includes(
       this.queueTask?.currentStep || this.queueTask.type,
     );
-    if (eligableForPremiumProxy) {
+
+    if (
+      eligableForPremiumProxy &&
+      proxyType === 'de' &&
+      shop.proxyType === 'mix' &&
+      retries % 2 === 1
+    ) {
+      request.prevProxyType = proxyType;
+      request.proxyType = 'mix';
+    }
+
+    if (eligableForPremiumProxy && retries % 2 === 0) {
       request.prevProxyType = proxyType;
       request.proxyType = 'de';
     }
+
     if (
       eligableForPremiumProxy &&
       eligableForSupreme &&
       request.proxyType === 'de' &&
-      request.retries >= MAX_RETRIES_UNTIL_SUPREME
+      retries >= MAX_RETRIES_UNTIL_SUPREME
     ) {
       request.prevProxyType = request.proxyType;
       request.proxyType = 'des';
