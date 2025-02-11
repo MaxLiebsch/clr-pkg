@@ -38,6 +38,9 @@ export async function queryProductPageQueue(page: Page, request: QueryRequest) {
     });
     const details = await pageParser.parse(page);
     Object.entries(details).map(([key, value]) => {
+      if(key === 'ean' && value){
+        value = (value as string).replaceAll(/\D/g, '');
+      }
       rawProductInfos.push({ key, value });
     });
   }
