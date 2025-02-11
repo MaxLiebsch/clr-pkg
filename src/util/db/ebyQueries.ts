@@ -7,6 +7,7 @@ export const ebyUnsetProperties: { [key in keyof EbyProduct]?: string } = {
   //standard properties
   e_pblsh: '',
   e_nm: '',
+  e_produktart: '',
   e_pRange: '',
   e_cur: '',
   e_img: '',

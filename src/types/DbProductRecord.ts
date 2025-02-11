@@ -98,6 +98,7 @@ export interface DbProduct {
   sku?: string;
   hasMnfctr: boolean;
   nm: string;
+  nm_produktart?: string;
   a: string;
   nm_vrfd?: Verification;
   matched?: boolean;
@@ -174,6 +175,7 @@ export interface Dimensions {
 export interface AznProduct {
   a_pblsh?: Boolean;
   a_nm?: string;
+  a_produktart?: string;
   a_lnk?: string;
   drops30?: number;
   drops90?: number;
@@ -233,6 +235,7 @@ export type EbyProduct = {
   // Eby properties
   e_pblsh?: boolean;
   e_nm?: string;
+  e_produktart?: string;
   e_lnk?: string;
   e_pRange?: Prange;
   e_cur?: string;
