@@ -18,7 +18,7 @@ import { buildNextPageUrl } from './buildNextPageUrl';
 import { calculatePageCount } from './calculatePageCount';
 import { findPaginationAppendix } from './findPaginationAppendix';
 import { recursiveMoreButtonPgn } from './pagination/recursiveMoreButtonPgn';
-import { scrollAndClickPgn } from './pagination/scrollAndClickPgn';
+import { scrollAndClick } from './pagination/scrollAndClick';
 import { infinitSrollPgn } from './pagination/InfinitScrollPgn';
 import { clickAndExtract } from './pagination/clickAndExtract';
 import { scrollAndExtract } from './pagination/scrollAndExtract';
@@ -201,7 +201,7 @@ export async function browseProductPagesQueue(
         productCount === undefined ? null : productCount,
         1,
       );
-      await scrollAndClickPgn({
+      await scrollAndClick({
         limit: limit.pages,
         page,
         sel,
@@ -249,7 +249,7 @@ export async function browseProductPagesQueue(
         limit: limit.pages,
         shop,
         productContainerSelector: productContainer.selector,
-        paginationBtnSelector: paginationEl.sel,
+        paginationEl,
         waitUntil: waitUntil,
         pageInfo: pageInfo,
       });

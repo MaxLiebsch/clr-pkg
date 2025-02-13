@@ -10,6 +10,8 @@ export interface PaginationElement {
   nav: string;
   findPaginationStrategy?: 'estimate';
   endOfPageSel?: string;
+  timeoutAfterBtnClick?: number;
+  activeSearchLoadSel?: string;
   visible?: boolean;
   wait?: boolean;
   initialUrl?: {

@@ -13,7 +13,7 @@ interface ScrollAndClickPgnOpts {
   pageCount?: number
 }
 
-export async function scrollAndClickPgn({
+export async function scrollAndClick({
   page,
   sel,
   limit,

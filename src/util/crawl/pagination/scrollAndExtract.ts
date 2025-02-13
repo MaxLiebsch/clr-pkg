@@ -4,6 +4,7 @@ import { Shop, WaitUntil } from '../../../types/shop';
 import { crawlProducts } from '../crawlProducts';
 import { ICategory } from '../getCategories';
 import { ProductRecord } from '../../../types/DbProductRecord';
+import { PaginationElement } from '../../../types/paginationElement';
 
 const debug = process.env.DEBUG === 'true';
 
@@ -13,9 +14,9 @@ interface ScrollAndExtratProps {
   limit: number;
   wait?: boolean;
   waitUntil: WaitUntil;
+  paginationEl: PaginationElement;
   shop: Shop;
   pageInfo: ICategory;
-  paginationBtnSelector: string;
   expect?: any;
   addProduct: (product: ProductRecord) => Promise<void>;
 }
@@ -24,7 +25,7 @@ export async function scrollAndExtract({
   limit,
   page,
   productContainerSelector,
-  paginationBtnSelector,
+  paginationEl,
   wait,
   waitUntil,
   shop,
@@ -32,6 +33,12 @@ export async function scrollAndExtract({
   pageInfo,
 }: ScrollAndExtratProps) {
   let cnt = 0;
+
+  const {
+    sel: paginationBtnSelector,
+    timeoutAfterBtnClick,
+    activeSearchLoadSel,
+  } = paginationEl;
 
   const availableWindow = await availableWindowHeight(page);
 
@@ -64,20 +71,21 @@ export async function scrollAndExtract({
     cnt++;
     debug && console.log('nextScrollPositon:', nextScrollPositon, 'cnt:', cnt);
 
-    const btn = await waitForSelector(
-      page,
-      paginationBtnSelector,
-      500,
-      false,
-    );
+    const btn = await waitForSelector(page, paginationBtnSelector, 500, false);
     if (btn) {
+      debug && console.log('btn exists');
       await clickBtn(
         page,
         paginationBtnSelector,
         wait ?? false,
         waitUntil,
-        500,
+        timeoutAfterBtnClick || 500,
       );
+      //if activeSearchLoadSel is present, wait for it to disappear
+      if (activeSearchLoadSel) {
+        await page.waitForSelector(activeSearchLoadSel, { hidden: true });
+      }
+
       const relativePosition = await getRelativePositionProductContainer(
         page,
         productContainerSelector,

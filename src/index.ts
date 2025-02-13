@@ -112,7 +112,7 @@ export * from './util/crawl/buildNextPageUrl';
 export * from './util/crawl/findPaginationAppendix';
 export * from './util/crawl/pagination/scrollAndExtract';
 export * from './util/crawl/pagination/recursiveMoreButtonPgn';
-export * from './util/crawl/pagination/scrollAndClickPgn';
+export * from './util/crawl/pagination/scrollAndClick';
 export * from './util/crawl/pagination/InfinitScrollPgn';
 export * from './util/crawl/getPageNumberFromPagination';
 export * from './util/crawl/findPagination';
