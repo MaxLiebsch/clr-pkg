@@ -294,6 +294,22 @@ export const AVG_PRICES: { [key in AvgPrices]: AvgPrices } = {
   avg90_ahsprcs: 'avg90_ahsprcs',
 };
 
+export interface UnitCount {
+  unitValue: number
+  unitType: string
+}
+
+export interface Variation {
+  asin: string
+  attributes: Attribute[]
+}
+
+export interface Attribute {
+  dimension: string
+  value: string
+}
+
+
 export interface KeepaProperties {
   categories?: number[] | null;
   k_eanList?: string[];
@@ -302,9 +318,11 @@ export interface KeepaProperties {
   cmpPrcThrshld?: number;
   drops30?: number;
   costs?: Costs;
+  variations?: Variation[];
   drops90?: number;
   pwhd?: Dimensions;
   existingCosts?: Costs;
+  unitCount?: UnitCount;
   numberOfItems?: number; // numberOfItems === a_qty
   a_qty?: number; // numberOfItems === a_qty
   availabilityAmazon?: string;
