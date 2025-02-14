@@ -1095,6 +1095,15 @@ export abstract class BaseQueue<
       this.eventEmitter.emit(`${this.queueId}-finished`, {
         queueId: this.queueId,
       });
+    } else if (
+      this.totalReached === false &&
+      this.queueTask.type === 'SCAN_SHOP' &&
+      this.queue.length === 0
+    ) {
+      this.totalReached = true;
+      this.eventEmitter.emit(`${this.queueId}-finished`, {
+        queueId: this.queueId,
+      });
     }
     if (
       this.pause ||

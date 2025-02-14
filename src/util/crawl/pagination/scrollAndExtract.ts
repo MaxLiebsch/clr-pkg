@@ -94,9 +94,25 @@ export async function scrollAndExtract({
         endPosition = relativePosition?.bottom - availableWindow / 2;
         debug && console.log('New EndPosition:', endPosition);
       }
+    } else {
+      debug && console.log('btn does not exist');
+      await humanScroll(page, endPosition);
+      //if activeSearchLoadSel is present, wait for it to disappear
+      if (activeSearchLoadSel) {
+        await page.waitForSelector(activeSearchLoadSel, { hidden: true });
+      }
+
+      const relativePosition = await getRelativePositionProductContainer(
+        page,
+        productContainerSelector,
+      );
+      if (relativePosition) {
+        endPosition = relativePosition?.bottom - availableWindow / 2;
+        debug && console.log('New EndPosition:', endPosition);
+      }
     }
-    await crawlProducts(page, shop, addProduct, pageInfo, 1);
     await scrollToPosition(page, nextScrollPositon);
+    await crawlProducts(page, shop, addProduct, pageInfo, 1);
     const currentScrollPosition = await retrieveCurrScrollPostion(page);
     nextScrollPositon = Math.floor(currentScrollPosition + availableWindow * 2);
   } while (cnt <= limit * 2 && nextScrollPositon <= endPosition);
