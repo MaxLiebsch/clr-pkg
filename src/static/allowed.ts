@@ -12,6 +12,7 @@ export const allowed = [
   'ub.galaxus.de',
   'www.brasty.de',
   'www.deloox.de',
+  'cdn.deloox.com',
   'www.parfuem365.de',
   'www.flaconi.de',
   'www.babymarkt.com', 
