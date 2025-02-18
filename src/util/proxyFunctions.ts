@@ -19,6 +19,29 @@ export async function notifyProxyChange(
   }
 }
 
+export async function setupAllowedDomains(allowedDomains: string[]) {
+  const encodedAllowedDomains = encodeURIComponent(JSON.stringify(allowedDomains));
+  const response = await fetch(
+    `http://127.0.0.1:8080/add-allowed-domains?domains=${encodedAllowedDomains}`,
+  );
+  if (response.status === 200) {
+    return response.text();
+  }else {
+    throw new Error(`Failed to setup allowed domains. Status code: ${response.status}`);
+  }
+}
+
+export async function getCurrentAllowedDomains() {
+  const response = await fetch(
+    `http://127.0.0.1:8080/allowed-domains`,
+  );
+  if (response.status === 200) {
+    return response.text();
+  }else{
+    throw new Error(`Failed to get allowed domains. Status code: ${response.status}`);
+  }
+}
+
 export async function terminateConnection(requestId: string) {
   const response = await fetch(
     `http://127.0.0.1:8080/terminate?requestId=${requestId}`,

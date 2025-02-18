@@ -34,7 +34,7 @@ export const crawlProductsQueue = async (
   const lastPage = pageNo === noOfPages;
 
   if (
-    paginationEls.length &&
+    paginationEl &&
     dynamic &&
     lastPage &&
     paginationType === 'pagination'

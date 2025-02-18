@@ -68,8 +68,6 @@ export * from './util/retrieveAznArbitrage';
 export * from './util/recalculateAznMargin';
 
 // STATIC
-export * from './static/allowed';
-export * from './static/blocked';
 export * from './static/ebay';
 
 // BROWSER

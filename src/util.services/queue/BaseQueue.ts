@@ -33,7 +33,6 @@ import { Infos } from '../../types/Infos';
 import { isDomainAllowed } from '../../util/isDomainAllowed';
 import { createHash } from '../../util/hash';
 import crypto from 'crypto';
-import EventEmitter from 'events';
 import { globalEventEmitter } from '../../util/events';
 import { ICategory } from '../../util/crawl/getCategories';
 import { Shop, WaitUntil } from '../../types/shop';
@@ -44,8 +43,6 @@ import {
 } from '../../util/proxyFunctions';
 import { isValidURL } from '../../util/isURLvalid';
 import { createLabeledTimeout } from './createLabeledTimeout';
-
-const errorEmitter = new EventEmitter();
 
 const debug = process.env.DEBUG === 'true';
 
@@ -185,7 +182,8 @@ export abstract class BaseQueue<
   if the timeouts need to be applied later
   */
   private errorLog: ErrorLog = errorLog;
-  private eventEmitter: EventEmitter = globalEventEmitter;
+  private eventEmitter = globalEventEmitter;
+  private allowedDomains: string[] = [];
   public total = 0;
   public actualProductLimit = 0;
   private totalReached = false;
@@ -229,6 +227,7 @@ export abstract class BaseQueue<
     };
     this.concurrency = concurrency;
     this.proxyAuth = proxyAuth;
+    this.initEventListeners();
   }
   /* LOGGING */
   async log(msg: string | { [key: string]: any }) {
@@ -452,7 +451,11 @@ export abstract class BaseQueue<
   public empty() {
     return this.queue.length === 0 && this.running === 0;
   }
-
+  initEventListeners() {
+    this.eventEmitter.on('set-allowed-domains', (domains: string[]) => {
+      this.allowedDomains = domains;
+    });
+  }
   public idle() {
     return this.taskFinished;
   }
@@ -608,7 +611,7 @@ export abstract class BaseQueue<
 
       const errorPromise = new Promise((_, reject) => {
         globalEventEmitter.once('watchedRouteError', (args) => {
-          console.log('watchedRouteError', args);
+          debug && console.log('watchedRouteError', args);
           reject(args);
         });
       });
@@ -818,7 +821,7 @@ export abstract class BaseQueue<
 
       const details = `⛔ Id: ${requestId} - ${type} - ${error} - ${domain} - Hash: ${hash}`;
 
-      if (isDomainAllowed(pageInfo.link)) {
+      if (isDomainAllowed(pageInfo.link, this.allowedDomains)) {
         if (error instanceof Error) {
           if (retries < (retriesOnFail || MAX_RETRIES)) {
             this.pushTask(task, { ...request, retries: retries + 1 });

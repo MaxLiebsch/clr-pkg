@@ -1,9 +1,7 @@
-import {allowed} from '../static/allowed';
-
-export const isDomainAllowed = (url: string) => {
+export const isDomainAllowed = (url: string, allowedDomains: string[]) => {
   try {
     const parsedUrl = new URL(url);
-    if (allowed.some((domain) => parsedUrl.hostname.includes(domain))) {
+    if (allowedDomains.some((domain) => parsedUrl.hostname.includes(domain))) {
       return true;
     } else {
       return false;
