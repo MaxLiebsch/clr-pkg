@@ -1,10 +1,6 @@
 import { getCoefficients } from '../static/aznMonthlySalesCoefficients';
 import { Categories, CategroyTree } from '../types/aznSalesRankCoefficients';
-import { AznCategoryMapper } from './AznCategoryMapper';
 
-const aznCategoryMapper = AznCategoryMapper.getInstance(
-  '../static/aznCategoryMapping.json',
-);
 export function calculateMonthlySales(
   categoryIds: number[],
   salesRanks: { [key: number]: number[][] },
@@ -18,7 +14,8 @@ export function calculateMonthlySales(
   if (!salesRankAndCoefficients) return null;
   const { salesRank, coefficients } = salesRankAndCoefficients;
   const { a, b } = coefficients;
-  return Math.min(5000, Math.floor(a * Math.exp(b * salesRank)));
+  const monthlySold = Math.floor(a * Math.exp(b * salesRank));
+  return monthlySold >= 5000 ? null : monthlySold;
 }
 
 const findSalesRankAndCoefficients = (
