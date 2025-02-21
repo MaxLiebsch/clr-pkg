@@ -41,7 +41,6 @@ export const aznUnsetProperties: { [key in keyof AznProduct]: string } = {
   // lookup info
   info_taskId: '',
   // keepa properties
-  keepaEanUpdatedAt: '',
   keepaEan_lckd: '',
   keepaUpdatedAt: '',
   keepa_lckd: '',

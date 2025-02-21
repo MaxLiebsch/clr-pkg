@@ -108,7 +108,6 @@ export class ProductFactory {
       stockAmount: apiData?.stockAmount,
       stockBuyBox: apiData?.stockBuyBox,
       totalOfferCount: apiData?.totalOfferCount,
-      keepaEanUpdatedAt: apiData?.keepaEanUpdatedAt,
       keepaUpdatedAt: apiData?.keepaUpdatedAt,
     };
     const eby: EbyProduct = {

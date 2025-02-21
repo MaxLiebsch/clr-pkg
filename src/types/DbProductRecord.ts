@@ -213,7 +213,6 @@ export interface AznProduct {
   infoUpdatedAt?: string;
   info_prop?: string;
   // keepa properties
-  keepaEanUpdatedAt?: string;
   keepaEan_lckd?: boolean;
   keepaUpdatedAt?: string;
   keepa_lckd?: boolean;
