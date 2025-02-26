@@ -329,6 +329,8 @@ export interface KeepaProperties {
   salesRanks?: { [key: string]: number[][] } | null; // Sales Rank nullable
   monthlySold?: number;
   monthlySoldSource?: 'keepa' | 'forecast';
+  lastSoldUpdate?: number;
+  monthlySoldHistory?: number[][]; // Monthly sold history
   ahstprcs?: number[][]; // Amazon history prices
   anhstprcs?: number[][]; // Amazon new history prices
   auhstprcs?: number[][]; // Amazon used history prices
