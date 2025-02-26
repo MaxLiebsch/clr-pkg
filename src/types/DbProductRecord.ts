@@ -328,6 +328,7 @@ export interface KeepaProperties {
   categoryTree?: { name: string; catId: number }[] | null;
   salesRanks?: { [key: string]: number[][] } | null; // Sales Rank nullable
   monthlySold?: number;
+  monthlySoldSource?: 'keepa' | 'forecast';
   ahstprcs?: number[][]; // Amazon history prices
   anhstprcs?: number[][]; // Amazon new history prices
   auhstprcs?: number[][]; // Amazon used history prices
