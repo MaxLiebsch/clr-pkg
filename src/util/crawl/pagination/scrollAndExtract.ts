@@ -84,6 +84,7 @@ export async function scrollAndExtract({
       //if activeSearchLoadSel is present, wait for it to disappear
       if (activeSearchLoadSel) {
         await page.waitForSelector(activeSearchLoadSel, { hidden: true });
+        debug && console.log('activeSearchLoadSel is present');
       }
 
       const relativePosition = await getRelativePositionProductContainer(
