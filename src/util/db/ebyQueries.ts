@@ -73,7 +73,7 @@ export const resetEbyProductQuery = (
 export const totalPositivEbay = {
   $and: [
     { e_pblsh: true },
-    { e_prc: { $gt: 0 } },
+    { 'e_pRange.median': { $gt: 0 } },
     { e_uprc: { $gt: 0 } },
     { e_mrgn: { $gt: 0 } },
     { e_mrgn_pct: { $gt: 0 } },

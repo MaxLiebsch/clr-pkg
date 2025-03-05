@@ -30,8 +30,6 @@ export class ProductFactory {
 
       ean_taskId: apiData?.ean_taskId,
       ean_prop: apiData?.ean_prop,
-      nm_batchId: apiData?.nm_batchId,
-      qty_batchId: apiData?.qty_batchId,
       nm_prop: apiData?.nm_prop,
       qty_prop: apiData?.qty_prop,
       availUpdatedAt: apiData?.availUpdatedAt,

@@ -111,9 +111,7 @@ export interface DbProduct {
   ean_taskId?: string;
   eanUpdatedAt?: string;
   ean_prop?: string;
-  nm_batchId?: string;
   nm_prop?: string;
-  qty_batchId?: string;
   qty_prop?: string;
   availUpdatedAt?: string;
   createdAt: string;
@@ -145,6 +143,7 @@ export interface Verification {
   isMatch?: boolean;
   qty?: number;
   nm_prop?: string;
+  mdl?: string;
   qty_prop?: string;
   qty_score?: number;
   score?: number;
